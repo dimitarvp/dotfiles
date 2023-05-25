@@ -6,21 +6,16 @@ source ~/.zsh/fzy.zsh
 source ~/.zsh/autocomplete.zsh
 source ~/.zsh/aliases.zsh
 source ~/.zsh/git.zsh
+source ~/.zsh/gnu.zsh
 
 source ~/.zsh/java.zsh
 
-export PATH=/usr/local/opt/bison/bin:$PATH # GNU bison
-export PATH=/usr/local/opt/texinfo/bin:$PATH # GNU texinfo
-export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH # GNU tar
 export PATH=$PATH:$HOME/OneDrive/vrobot.programs # Cloud-synced scripts
 export PATH=/usr/local/opt/ruby/bin:$PATH # Ruby
 export PATH=$HOME/.local/bin:$PATH # Programs installed through package managers
 export PATH=$PATH:$HOME/bin # Programs installed outside package managers
 export PATH=$PATH:$HOME/scripts # Local scripts
 export PATH=/usr/local/sbin:$PATH # where Homebrew puts globally available binaries
-
-# Include GNU bison when linking
-export LDFLAGS="-L/usr/local/opt/bison/lib"
 
 # PSPG default command line options
 export PSPG="--style 16 --force-uniborder --bold-labels --highlight-odd-rec --border 2 --no-sound"
@@ -215,13 +210,6 @@ export PATH="/usr/local/opt/sqlite/bin:$PATH"
 
 source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-
-# To use all GNU core utilities, uncomment these:
-export PATH="/usr/local/opt/coreutils/libexec/gnubin:${PATH}"
-export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:${MANPATH}"
-
-# GNU grep.
-export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"
 
 fpath+=${ZDOTDIR:-$HOME}/.zsh_functions
 
