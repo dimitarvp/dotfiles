@@ -12,6 +12,7 @@ source ~/.zsh/erlang.zsh
 source ~/.zsh/elixir.zsh
 source ~/.zsh/java.zsh
 source ~/.zsh/golang.zsh
+source ~/.zsh/rust.zsh
 
 source ~/.zsh/paths.zsh
 
@@ -123,27 +124,6 @@ bindkey '^U' peco_find_git_uncommitted
 # FUZZY FINDER: skim
 export SKIM_DEFAULT_COMMAND='fd -t f || git ls-tree -r --name-only HEAD || rg --files || find .'
 # --------------------------------------------------
-
-# ----------------------------------------
-# Rust
-#
-export PATH="$HOME/.cargo/bin:$PATH"
-
-# Accelerate Rust's autocomplete daemon by pointing it at Rust's sources.
-export RUST_SRC_PATH="$(rustc --print sysroot)/lib/rustlib/src/rust/library"
-
-# Use well-known location for `sccache` storage.
-export SCCACHE_DIR=~/.cache/sccache
-
-# Utilize `sccache` when compiling Rust.
-export RUSTC_WRAPPER=`which sccache`
-
-# Taken from https://github.com/messense/homebrew-macos-cross-toolchains
-export CC_x86_64_unknown_linux_gnu=x86_64-unknown-linux-gnu-gcc
-export CXX_x86_64_unknown_linux_gnu=x86_64-unknown-linux-gnu-g++
-export AR_x86_64_unknown_linux_gnu=x86_64-unknown-linux-gnu-ar
-export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=x86_64-unknown-linux-gnu-gcc
-# ----------------------------------------
 
 # curl: prioritise the version installed from `homebrew`.
 export PATH="/usr/local/opt/curl/bin:$PATH"
