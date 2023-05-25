@@ -21,14 +21,10 @@ source ~/.zsh/package_managers.zsh
 
 source ~/.zsh/fuzzy_finders/fzf.zsh
 source ~/.zsh/fuzzy_finders/peco.zsh
+source ~/.zsh/fuzzy_finders/skim.zsh
 
 # PSPG default command line options
 export PSPG="--style 16 --force-uniborder --bold-labels --highlight-odd-rec --border 2 --no-sound"
-
-# --------------------------------------------------
-# FUZZY FINDER: skim
-export SKIM_DEFAULT_COMMAND='fd -t f || git ls-tree -r --name-only HEAD || rg --files || find .'
-# --------------------------------------------------
 
 # V language.
 export PATH="$HOME/bin/v:$PATH"
