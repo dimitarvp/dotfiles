@@ -13,6 +13,7 @@ source ~/.zsh/elixir.zsh
 source ~/.zsh/java.zsh
 source ~/.zsh/golang.zsh
 source ~/.zsh/rust.zsh
+source ~/.zsh/ocaml.zsh
 source ~/.zsh/ruby.zsh
 source ~/.zsh/python.zsh
 
