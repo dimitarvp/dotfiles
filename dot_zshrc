@@ -24,6 +24,7 @@ source ~/.zsh/fuzzy_finders/peco.zsh
 source ~/.zsh/fuzzy_finders/skim.zsh
 source ~/.zsh/fuzzy_finders/fzy.zsh
 
+source ~/.zsh/programs/asdf.zsh
 source ~/.zsh/programs/docker.zsh
 source ~/.zsh/programs/emacs.zsh
 source ~/.zsh/programs/git.zsh
@@ -51,8 +52,6 @@ jwtd() {
 # direnv hook; must always be the last in the config.
 eval "$(direnv hook zsh)"
 
-. $HOME/.asdf/asdf.sh
-. $HOME/.asdf/completions/asdf.bash
 
 source /Users/dimi/Library/Preferences/org.dystroy.broot/launcher/bash/br
 
