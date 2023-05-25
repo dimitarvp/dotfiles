@@ -8,6 +8,7 @@ source ~/.zsh/aliases.zsh
 source ~/.zsh/git.zsh
 source ~/.zsh/gnu.zsh
 
+source ~/.zsh/erlang.zsh
 source ~/.zsh/java.zsh
 
 export PATH=$PATH:$HOME/OneDrive/vrobot.programs # Cloud-synced scripts
@@ -19,18 +20,6 @@ export PATH=/usr/local/sbin:$PATH # where Homebrew puts globally available binar
 
 # PSPG default command line options
 export PSPG="--style 16 --force-uniborder --bold-labels --highlight-odd-rec --border 2 --no-sound"
-
-# --------------------------------------------------
-# Erlang.
-
-# Erlang installed through `asdf`: always build docs.
-export KERL_BUILD_DOCS=yes
-export KERL_INSTALL_MANPAGES=yes
-export KERL_INSTALL_HTMLDOCS=yes
-
-# Enable Erlang/Elixir REPL history
-export ERL_AFLAGS="-kernel shell_history enabled"
-# --------------------------------------------------
 
 # --------------------------------------------------
 # FUZZY FINDER: fzf
