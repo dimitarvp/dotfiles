@@ -3,20 +3,6 @@ source ~/.zsh/ohmyzsh.zsh
 source ~/.zsh/zsh.zsh # always put history opts after `oh-my-zsh` init or it will override this file.
 source ~/.zsh/zplug.zsh
 source ~/.zsh/fzy.zsh
-
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='mvim'
-# fi
-
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
-
-# ssh
-# export SSH_KEY_PATH="~/.ssh/rsa_id"
-
 source ~/.zsh/autocomplete.zsh
 source ~/.zsh/aliases.zsh
 source ~/.zsh/git.zsh
