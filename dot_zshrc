@@ -46,7 +46,6 @@ jwtd() {
 }
 
 # opam configuration
-test -r /Users/dimi/.opam/opam-init/init.sh && . /Users/dimi/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true
 
 # direnv hook; must always be the last in the config.
 eval "$(direnv hook zsh)"
