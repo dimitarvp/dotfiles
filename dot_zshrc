@@ -6,15 +6,6 @@ source ~/.zsh/autocomplete.zsh
 source ~/.zsh/aliases.zsh
 source ~/.zsh/gnu.zsh
 
-source ~/.zsh/languages/erlang.zsh
-source ~/.zsh/languages/elixir.zsh
-source ~/.zsh/languages/java.zsh
-source ~/.zsh/languages/golang.zsh
-source ~/.zsh/languages/rust.zsh
-source ~/.zsh/languages/ocaml.zsh
-source ~/.zsh/languages/ruby.zsh
-source ~/.zsh/languages/python.zsh
-
 source ~/.zsh/backups.zsh
 source ~/.zsh/env.zsh
 source ~/.zsh/paths.zsh
@@ -35,3 +26,13 @@ source ~/.zsh/programs/emplace.zsh
 source ~/.zsh/programs/git.zsh
 source ~/.zsh/programs/pspg.zsh
 source ~/.zsh/programs/tabulator.zsh
+
+source ~/.zsh/languages/erlang.zsh
+source ~/.zsh/languages/elixir.zsh
+source ~/.zsh/languages/java.zsh
+source ~/.zsh/languages/golang.zsh
+source ~/.zsh/languages/rust.zsh
+source ~/.zsh/languages/ocaml.zsh
+source ~/.zsh/languages/ruby.zsh
+source ~/.zsh/languages/python.zsh
+
