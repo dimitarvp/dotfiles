@@ -7,7 +7,8 @@ source ~/.zsh/autocomplete.zsh
 source ~/.zsh/aliases.zsh
 source ~/.zsh/git.zsh
 
-export PATH=/usr/local/opt/openjdk/bin:$PATH # OpenJDK
+source ~/.zsh/java.zsh
+
 export PATH=/usr/local/opt/bison/bin:$PATH # GNU bison
 export PATH=/usr/local/opt/texinfo/bin:$PATH # GNU texinfo
 export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH # GNU tar
@@ -137,10 +138,6 @@ bindkey '^U' peco_find_git_uncommitted
 # FUZZY FINDER: skim
 export SKIM_DEFAULT_COMMAND='fd -t f || git ls-tree -r --name-only HEAD || rg --files || find .'
 # --------------------------------------------------
-
-# JENV (multiple Java versions).
-export PATH="$HOME/.jenv/bin:$PATH"
-eval "$(jenv init -)"
 
 # Go: installed binaries.
 export PATH="$HOME/go/bin:$PATH"
