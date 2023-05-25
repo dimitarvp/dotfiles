@@ -4,7 +4,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 export RUST_SRC_PATH="$(rustc --print sysroot)/lib/rustlib/src/rust/library"
 
 # Use well-known location for `sccache` storage.
-export SCCACHE_DIR=~/.cache/sccache
+export SCCACHE_DIR=$HOME/.cache/sccache
 
 # Utilize `sccache` when compiling Rust.
 export RUSTC_WRAPPER=`which sccache`

@@ -1,38 +1,38 @@
-source ~/.zsh/p10k.zsh
-source ~/.zsh/ohmyzsh.zsh
-source ~/.zsh/zsh.zsh # always put history opts after `oh-my-zsh` init or it will override this file.
-source ~/.zsh/zplug.zsh
-source ~/.zsh/autocomplete.zsh
-source ~/.zsh/aliases.zsh
-source ~/.zsh/gnu.zsh
+source $HOME/.zsh/p10k.zsh
+source $HOME/.zsh/ohmyzsh.zsh
+source $HOME/.zsh/zsh.zsh # always put history opts after `oh-my-zsh` init or it will override this file.
+source $HOME/.zsh/zplug.zsh
+source $HOME/.zsh/autocomplete.zsh
+source $HOME/.zsh/aliases.zsh
+source $HOME/.zsh/gnu.zsh
 
-source ~/.zsh/backups.zsh
-source ~/.zsh/env.zsh
-source ~/.zsh/paths.zsh
-source ~/.zsh/package_managers.zsh
-source ~/.zsh/system.zsh
+source $HOME/.zsh/backups.zsh
+source $HOME/.zsh/env.zsh
+source $HOME/.zsh/paths.zsh
+source $HOME/.zsh/package_managers.zsh
+source $HOME/.zsh/system.zsh
 
-source ~/.zsh/fuzzy_finders/fzf.zsh
-source ~/.zsh/fuzzy_finders/fzf_tab.zsh
-source ~/.zsh/fuzzy_finders/peco.zsh
-source ~/.zsh/fuzzy_finders/skim.zsh
-source ~/.zsh/fuzzy_finders/fzy.zsh
+source $HOME/.zsh/fuzzy_finders/fzf.zsh
+source $HOME/.zsh/fuzzy_finders/fzf_tab.zsh
+source $HOME/.zsh/fuzzy_finders/peco.zsh
+source $HOME/.zsh/fuzzy_finders/skim.zsh
+source $HOME/.zsh/fuzzy_finders/fzy.zsh
 
-source ~/.zsh/programs/asdf.zsh
-source ~/.zsh/programs/direnv.zsh
-source ~/.zsh/programs/docker.zsh
-source ~/.zsh/programs/emacs.zsh
-source ~/.zsh/programs/emplace.zsh
-source ~/.zsh/programs/git.zsh
-source ~/.zsh/programs/pspg.zsh
-source ~/.zsh/programs/tabulator.zsh
+source $HOME/.zsh/programs/asdf.zsh
+source $HOME/.zsh/programs/direnv.zsh
+source $HOME/.zsh/programs/docker.zsh
+source $HOME/.zsh/programs/emacs.zsh
+source $HOME/.zsh/programs/emplace.zsh
+source $HOME/.zsh/programs/git.zsh
+source $HOME/.zsh/programs/pspg.zsh
+source $HOME/.zsh/programs/tabulator.zsh
 
-source ~/.zsh/languages/erlang.zsh
-source ~/.zsh/languages/elixir.zsh
-source ~/.zsh/languages/java.zsh
-source ~/.zsh/languages/golang.zsh
-source ~/.zsh/languages/rust.zsh
-source ~/.zsh/languages/ocaml.zsh
-source ~/.zsh/languages/ruby.zsh
-source ~/.zsh/languages/python.zsh
+source $HOME/.zsh/languages/erlang.zsh
+source $HOME/.zsh/languages/elixir.zsh
+source $HOME/.zsh/languages/java.zsh
+source $HOME/.zsh/languages/golang.zsh
+source $HOME/.zsh/languages/rust.zsh
+source $HOME/.zsh/languages/ocaml.zsh
+source $HOME/.zsh/languages/ruby.zsh
+source $HOME/.zsh/languages/python.zsh
 
