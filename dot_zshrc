@@ -25,6 +25,7 @@ source ~/.zsh/fuzzy_finders/skim.zsh
 source ~/.zsh/fuzzy_finders/fzy.zsh
 
 source ~/.zsh/programs/asdf.zsh
+source ~/.zsh/programs/direnv.zsh
 source ~/.zsh/programs/docker.zsh
 source ~/.zsh/programs/emacs.zsh
 source ~/.zsh/programs/git.zsh
@@ -48,10 +49,6 @@ jwtd() {
         echo "Signature: $(echo "${1}" | awk -F'.' '{print $3}')"
     fi
 }
-
-# direnv hook; must always be the last in the config.
-eval "$(direnv hook zsh)"
-
 
 source /Users/dimi/Library/Preferences/org.dystroy.broot/launcher/bash/br
 
