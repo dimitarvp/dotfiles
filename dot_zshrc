@@ -6,14 +6,14 @@ source ~/.zsh/autocomplete.zsh
 source ~/.zsh/aliases.zsh
 source ~/.zsh/gnu.zsh
 
-source ~/.zsh/erlang.zsh
-source ~/.zsh/elixir.zsh
-source ~/.zsh/java.zsh
-source ~/.zsh/golang.zsh
-source ~/.zsh/rust.zsh
-source ~/.zsh/ocaml.zsh
-source ~/.zsh/ruby.zsh
-source ~/.zsh/python.zsh
+source ~/.zsh/languages/erlang.zsh
+source ~/.zsh/languages/elixir.zsh
+source ~/.zsh/languages/java.zsh
+source ~/.zsh/languages/golang.zsh
+source ~/.zsh/languages/rust.zsh
+source ~/.zsh/languages/ocaml.zsh
+source ~/.zsh/languages/ruby.zsh
+source ~/.zsh/languages/python.zsh
 
 source ~/.zsh/backups.zsh
 source ~/.zsh/env.zsh
