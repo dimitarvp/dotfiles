@@ -11,6 +11,7 @@ source ~/.zsh/gnu.zsh
 source ~/.zsh/erlang.zsh
 source ~/.zsh/elixir.zsh
 source ~/.zsh/java.zsh
+source ~/.zsh/golang.zsh
 
 source ~/.zsh/paths.zsh
 
@@ -122,9 +123,6 @@ bindkey '^U' peco_find_git_uncommitted
 # FUZZY FINDER: skim
 export SKIM_DEFAULT_COMMAND='fd -t f || git ls-tree -r --name-only HEAD || rg --files || find .'
 # --------------------------------------------------
-
-# Go: installed binaries.
-export PATH="$HOME/go/bin:$PATH"
 
 # ----------------------------------------
 # Rust
