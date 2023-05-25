@@ -13,11 +13,10 @@ source ~/.zsh/elixir.zsh
 source ~/.zsh/java.zsh
 source ~/.zsh/golang.zsh
 source ~/.zsh/rust.zsh
+source ~/.zsh/ruby.zsh
 
 source ~/.zsh/paths.zsh
 source ~/.zsh/package_managers.zsh
-
-export PATH=/usr/local/opt/ruby/bin:$PATH # Ruby
 
 # PSPG default command line options
 export PSPG="--style 16 --force-uniborder --bold-labels --highlight-odd-rec --border 2 --no-sound"
