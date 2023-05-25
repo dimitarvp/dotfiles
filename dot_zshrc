@@ -12,11 +12,10 @@ source ~/.zsh/erlang.zsh
 source ~/.zsh/elixir.zsh
 source ~/.zsh/java.zsh
 
-export PATH=$PATH:$HOME/OneDrive/vrobot.programs # Cloud-synced scripts
+source ~/.zsh/paths.zsh
+
 export PATH=/usr/local/opt/ruby/bin:$PATH # Ruby
 export PATH=$HOME/.local/bin:$PATH # Programs installed through package managers
-export PATH=$PATH:$HOME/bin # Programs installed outside package managers
-export PATH=$PATH:$HOME/scripts # Local scripts
 export PATH=/usr/local/sbin:$PATH # where Homebrew puts globally available binaries
 
 # PSPG default command line options
