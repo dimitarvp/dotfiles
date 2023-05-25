@@ -15,6 +15,7 @@ source ~/.zsh/ocaml.zsh
 source ~/.zsh/ruby.zsh
 source ~/.zsh/python.zsh
 
+source ~/.zsh/env.zsh
 source ~/.zsh/paths.zsh
 source ~/.zsh/package_managers.zsh
 
@@ -47,8 +48,6 @@ function lll {
   cd "$(llama "$@")"
 }
 
-export NVIM_LSP_LOG=$HOME/.cache/nvim/lsp.log
-export LVIM_LSP_LOG=$HOME/.cache/lvim/lsp.log
 
 # https://github.com/tversteeg/emplace
 eval "$(emplace init zsh)"
