@@ -9,6 +9,7 @@ source ~/.zsh/git.zsh
 source ~/.zsh/gnu.zsh
 
 source ~/.zsh/erlang.zsh
+source ~/.zsh/elixir.zsh
 source ~/.zsh/java.zsh
 
 export PATH=$PATH:$HOME/OneDrive/vrobot.programs # Cloud-synced scripts
@@ -248,8 +249,6 @@ export LIBRARY_PATH=/usr/local/opt/gcc@12/lib/gcc/12:/usr/local/opt/libgccjit/li
 source '/Users/dimi/Library/Application Support/org.dystroy.broot/launcher/bash/br'
 
 export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
-
-export PATH="$PATH:$HOME/bin/elixir-ls/release"
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
