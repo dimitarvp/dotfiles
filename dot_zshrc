@@ -20,6 +20,7 @@ source ~/.zsh/paths.zsh
 source ~/.zsh/package_managers.zsh
 
 source ~/.zsh/fuzzy_finders/fzf.zsh
+source ~/.zsh/fuzzy_finders/fzf_tab.zsh
 source ~/.zsh/fuzzy_finders/peco.zsh
 source ~/.zsh/fuzzy_finders/skim.zsh
 
@@ -73,23 +74,6 @@ source $HOME/scripts/dimi_backup_setup
 
 # Uncomment this to enable `fzf` completion when pressing TAB.
 export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
-
-# --------------------------------------------------
-# BEGIN `fzf-tab` settings
-
-# disable sort when completing `git checkout`
-zstyle ':completion:*:git-checkout:*' sort false
-# set descriptions format to enable group support
-zstyle ':completion:*:descriptions' format '[%d]'
-# set list-colors to enable filename colorizing
-zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
-# preview directory's content with exa when completing cd
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
-# switch group using `,` and `.`
-zstyle ':fzf-tab:*' switch-group ',' '.'
-
-# END `fzf-tab` settings
-# --------------------------------------------------
 
 function lll {
   cd "$(llama "$@")"
