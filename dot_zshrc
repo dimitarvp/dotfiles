@@ -44,10 +44,5 @@ ulimit -n 98304
 # Setup variables and scripts for local backup.
 source $HOME/scripts/dimi_backup_setup
 
-function lll {
-  cd "$(llama "$@")"
-}
-
-
 # https://github.com/tversteeg/emplace
 eval "$(emplace init zsh)"
