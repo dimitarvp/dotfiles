@@ -50,8 +50,6 @@ jwtd() {
     fi
 }
 
-source /Users/dimi/Library/Preferences/org.dystroy.broot/launcher/bash/br
-
 ulimit -n 98304
 
 source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
