@@ -14,6 +14,7 @@ source ~/.zsh/java.zsh
 source ~/.zsh/golang.zsh
 source ~/.zsh/rust.zsh
 source ~/.zsh/ruby.zsh
+source ~/.zsh/python.zsh
 
 source ~/.zsh/paths.zsh
 source ~/.zsh/package_managers.zsh
@@ -157,11 +158,6 @@ source /Users/dimi/Library/Preferences/org.dystroy.broot/launcher/bash/br
 # Fuzzy `cd` finder
 #. /usr/local/etc/profile.d/z.sh
 #eval "$(zoxide init zsh)"
-
-# Python 3.8
-export PATH="/usr/local/opt/python@3.8/bin:$PATH"
-export LDFLAGS="-L/usr/local/opt/python@3.8/lib"
-export PKG_CONFIG_PATH="/usr/local/opt/python@3.8/lib/pkgconfig"
 
 ulimit -n 98304
 
