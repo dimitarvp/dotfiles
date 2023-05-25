@@ -15,6 +15,7 @@ source ~/.zsh/ocaml.zsh
 source ~/.zsh/ruby.zsh
 source ~/.zsh/python.zsh
 
+source ~/.zsh/backups.zsh
 source ~/.zsh/env.zsh
 source ~/.zsh/paths.zsh
 source ~/.zsh/package_managers.zsh
