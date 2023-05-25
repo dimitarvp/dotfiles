@@ -45,8 +45,6 @@ jwtd() {
     fi
 }
 
-# opam configuration
-
 # direnv hook; must always be the last in the config.
 eval "$(direnv hook zsh)"
 
@@ -55,19 +53,12 @@ eval "$(direnv hook zsh)"
 
 source /Users/dimi/Library/Preferences/org.dystroy.broot/launcher/bash/br
 
-# Fuzzy `cd` finder
-#. /usr/local/etc/profile.d/z.sh
-#eval "$(zoxide init zsh)"
-
 ulimit -n 98304
 
 source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 fpath+=${ZDOTDIR:-$HOME}/.zsh_functions
-
-# Allow `parallel` to inherit environment variables from current shell.
-#. `which env_parallel.zsh`
 
 # Setup variables and scripts for local backup.
 source $HOME/scripts/dimi_backup_setup
@@ -88,11 +79,6 @@ export LVIM_LSP_LOG=$HOME/.cache/lvim/lsp.log
 # Emacs-friendly LIBRARY_PATH
 # NOTE: this does not help and that's why it's commented out. The symlink below does the job.
 export LIBRARY_PATH=/usr/local/opt/gcc@12/lib/gcc/12:/usr/local/opt/libgccjit/lib/gcc/current:/usr/local/opt/gcc@12/lib/gcc/12/gcc/x86_64-apple-darwin21/12
-
-# Also make sure to ALWAYS have this symlinked because Emacs expects the library `/usr/local/lib/libgccjit.0.dylib` to exist.
-# sudo ln -s -v /usr/local/opt/libgccjit/lib/gcc/current/libgccjit.0.dylib /usr/local/lib/ 
-
-source '/Users/dimi/Library/Application Support/org.dystroy.broot/launcher/bash/br'
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
