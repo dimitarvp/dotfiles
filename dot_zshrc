@@ -29,10 +29,8 @@ source ~/.zsh/programs/direnv.zsh
 source ~/.zsh/programs/docker.zsh
 source ~/.zsh/programs/emacs.zsh
 source ~/.zsh/programs/git.zsh
+source ~/.zsh/programs/pspg.zsh
 source ~/.zsh/programs/tabulator.zsh
-
-# PSPG default command line options
-export PSPG="--style 16 --force-uniborder --bold-labels --highlight-odd-rec --border 2 --no-sound"
 
 # YTFZF: Specify cache directory.
 YTFZF_CACHE=~/.cache/ytfzf
