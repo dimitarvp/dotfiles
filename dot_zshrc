@@ -1,3 +1,5 @@
+# !/bin/zsh
+
 source ~/.zsh/p10k.zsh
 source ~/.zsh/ohmyzsh.zsh
 source ~/.zsh/zsh.zsh # always put history opts after `oh-my-zsh` init or it will override this file.
