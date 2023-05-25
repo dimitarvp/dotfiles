@@ -29,12 +29,10 @@ source ~/.zsh/programs/direnv.zsh
 source ~/.zsh/programs/docker.zsh
 source ~/.zsh/programs/emacs.zsh
 source ~/.zsh/programs/git.zsh
+source ~/.zsh/programs/tabulator.zsh
 
 # PSPG default command line options
 export PSPG="--style 16 --force-uniborder --bold-labels --highlight-odd-rec --border 2 --no-sound"
-
-# Tabulator shell scripts.
-export PATH="$PATH:$HOME/bin/tabulator/bin"
 
 # YTFZF: Specify cache directory.
 YTFZF_CACHE=~/.cache/ytfzf
