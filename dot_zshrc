@@ -35,10 +35,3 @@ source ~/.zsh/programs/emplace.zsh
 source ~/.zsh/programs/git.zsh
 source ~/.zsh/programs/pspg.zsh
 source ~/.zsh/programs/tabulator.zsh
-
-# YTFZF: Specify cache directory.
-YTFZF_CACHE=~/.cache/ytfzf
-
-# YTFZF: Always choose best video and audio qualities.
-export YTFZF_PREF="bestvideo[height<=?1080]+bestaudio/best"
-
