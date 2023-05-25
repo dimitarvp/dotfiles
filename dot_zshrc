@@ -1,156 +1,8 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
-# Set name of the theme to load --- if set to "random", it will
-# load a random theme each time oh-my-zsh is loaded, in which case,
-# to know which specific one was loaded, run: echo $RANDOM_THEME
-# See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
-POWERLEVEL10K_MODE='nerdfont-complete'
-ZSH_THEME="powerlevel10k/powerlevel10k"
-DEFAULT_USER="dimi" # this hides the "user@host" in zsh if you are currently logged with that user.
-
-# Path to your oh-my-zsh installation.
-export ZSH="/Users/dimi/.oh-my-zsh"
-
-# Set list of themes to pick from when loading at random
-# Setting this variable when ZSH_THEME=random will cause zsh to load
-# a theme from this variable instead of looking in ~/.oh-my-zsh/themes/
-# If set to an empty array, this variable will have no effect.
-# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
-
-# Uncomment the following line to use case-sensitive completion.
-# CASE_SENSITIVE="true"
-
-# Uncomment the following line to use hyphen-insensitive completion.
-# Case-sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
-
-# Uncomment the following line to disable bi-weekly auto-update checks.
-# DISABLE_AUTO_UPDATE="true"
-
-# Uncomment the following line to change how often to auto-update (in days).
-export UPDATE_ZSH_DAYS=7
-
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
-
-# Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
-
-# Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
-
-# Uncomment the following line to display red dots whilst waiting for completion.
-COMPLETION_WAITING_DOTS="true"
-
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
-
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
-
-# Which plugins would you like to load?
-# Standard plugins can be found in ~/.oh-my-zsh/plugins/*
-# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-
-plugins=(asdf colored-man-pages fd fzf git httpie mix ripgrep rsync rust z)
-
-source $ZSH/oh-my-zsh.sh
-
-# Always put history settings after `oh-my-zsh` initialization because it overrides them otherwise.
-
-#setopt BANG_HIST                 # Treat the '!' character specially during expansion.
-setopt EXTENDED_HISTORY          # Write the history file in the ":start:elapsed;command" format.
-setopt INC_APPEND_HISTORY        # Write to the history file immediately, not when the shell exits.
-setopt SHARE_HISTORY             # Share history between all sessions.
-setopt HIST_EXPIRE_DUPS_FIRST    # Expire duplicate entries first when trimming history.
-setopt HIST_IGNORE_DUPS          # Don't record an entry that was just recorded again.
-setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a duplicate.
-setopt HIST_FIND_NO_DUPS         # Do not display a line previously found.
-setopt HIST_IGNORE_SPACE         # Don't record an entry starting with a space.
-setopt HIST_SAVE_NO_DUPS         # Don't write duplicate entries in the history file.
-setopt HIST_REDUCE_BLANKS        # Remove superfluous blanks before recording entry.
-setopt HIST_VERIFY               # Don't execute immediately upon history expansion.
-#setopt HIST_BEEP                 # Beep when accessing nonexistent history.
-
-# History size location and limits.
-export HISTFILE="$HOME/.zsh_history"
-export HISTSIZE=10000000
-export SAVEHIST=$HISTSIZE
-
-# disable ctrl+s, ctrl+q
-setopt no_flow_control
-
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# You can set one of the optional three formats:
-# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# or set a custom format using the strftime function format specifications,
-# see 'man strftime' for details.
-HIST_STAMPS="yyyy-mm-dd"
-
-# User configuration
-
-# --------------------------------------------------
-# Zplug.
-
-source $(brew --prefix zplug)/init.zsh
-# zplug "aperezdc/zsh-fzy"
-#zplug "Aloxaf/fzf-tab" # Complete files/dirs with a pop-down below the cursor.
-zplug 'wfxr/forgit'
-zplug load
-
-# ALT-C: cd into the selected directory
-# CTRL-T: Place the selected file path in the command line
-# CTRL-R: Place the selected command from history in the command line
-# CTRL-P: Place the selected process ID in the command line
-# bindkey '\ec' fzy-cd-widget
-# bindkey '^T'  fzy-file-widget
-# bindkey '^R'  fzy-history-widget
-# bindkey '^P'  fzy-proc-widget
-
-# zstyle :fzy:tmux    enabled      no
-
-# zstyle :fzy:history show-scores  no
-# zstyle :fzy:history lines        '25'
-# zstyle :fzy:history prompt       ' '
-# zstyle :fzy:history command      fzy-history-default-command
-
-# zstyle :fzy:file    show-scores  no
-# zstyle :fzy:file    lines        '25'
-# zstyle :fzy:file    prompt       '> '
-# #zstyle :fzy:file    command      fzy-file-default-command
-# zstyle :fzy:file    command      fd -t f
-
-# zstyle :fzy:cd      show-scores  no
-# zstyle :fzy:cd      lines        '25'
-# zstyle :fzy:cd      prompt       'cd >> '
-# #zstyle :fzy:cd      command      fzy-cd-default-command
-# zstyle :fzy:cd      command      fd -t d
-
-# zstyle :fzy:proc    show-scores  no
-# zstyle :fzy:proc    lines        '25'
-# zstyle :fzy:proc    prompt       'proc >> '
-# zstyle :fzy:proc    command      fzy-proc-default-command
-# --------------------------------------------------
-
-#source ~/.cargo/registry/src/github.com-1ecc6299db9ec823/rcf-0.1.2/rcf.zsh
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
-# You may need to manually set your language environment
-export LOCALE=en_US.UTF-8
-export LANG=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
-export LC_TIME=en_US.UTF-8
+source ~/.zsh/p10k.zsh
+source ~/.zsh/ohmyzsh.zsh
+source ~/.zsh/zsh.zsh # always put history opts after `oh-my-zsh` init or it will override this file.
+source ~/.zsh/zplug.zsh
+source ~/.zsh/fzy.zsh
 
 # Preferred editor for local and remote sessions
 # if [[ -n $SSH_CONNECTION ]]; then
@@ -165,22 +17,8 @@ export LC_TIME=en_US.UTF-8
 # ssh
 # export SSH_KEY_PATH="~/.ssh/rsa_id"
 
-# auto-completion
-if [ -f /usr/local/etc/profile.d/bash_completion.sh ]; then
-    . /usr/local/etc/profile.d/bash_completion.sh
-fi
-
-# if [ "$(command -v exa)" ]; then
-#     unalias -m 'll'
-#     unalias -m 'l'
-#     unalias -m 'la'
-#     unalias -m 'ls'
-#     alias ls='exa -G --color auto --icons -a -s type'
-#     alias ll='exa -l --color always --icons -a -s type -g --git --time-style full-iso'
-# fi
-
-alias exrebuild='fd -HI -t d "deps|_build" -x rm -rf && mix deps.clean --unlock --unused && mix deps.get && mix compile'
-alias exclean='fd -HI -t d "deps|_build" -x rm -rf'
+source ~/.zsh/autocomplete.zsh
+source ~/.zsh/aliases.zsh
 
 git_default_branch() {
     (git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@') 2>/dev/null
@@ -189,40 +27,6 @@ git_default_branch() {
 git_current_branch() {
     git rev-parse --abbrev-ref HEAD
 }
-
-alias g='git'
-# alias ghfpush='git stash && git hf push && git stash pop'
-# alias ghfpull='git stash && git hf pull && git stash pop'
-# alias ghfupdate='git stash && git hf update && git stash pop'
-alias gtree='git ls-tree -r --name-only HEAD'
-alias gchanged="git status --porcelain | awk '{print \$2}'" # This shows modified and untracked entries
-alias lsgit='git ls-files'
-alias lsgitall='git ls-files --cached --others --exclude-standard'
-alias lsrg="rg --files --no-ignore --hidden --follow --glob '!.git/*'"
-alias fdgit='fd --no-ignore --hidden --exclude .git --type file --type symlink'
-alias fdpid="ps axww -o pid,user,%cpu,%mem,start,time,command | fzf | sed 's/^ *//' | cut -f1 -d' '"
-alias ll='exa -l --color always --icons -a -s type -g --git --time-style full-iso'
-alias vim='/usr/local/bin/vim'
-alias listeners1='netstat -an -ptcp | grep LISTEN'
-alias listeners2='lsof -i -P | grep -i "listen"'
-alias skack='sk --ansi -i -c "ack --color {}"'
-alias skag='sk --ansi -i -c "ag --color {}"'
-alias skgrep='sk --ansi -i -c "grep -rI --color=always --line-number {} ."'
-alias skrg='sk --ansi -i -c "rg --color=always --line-number --ignore-case {}"'
-alias skp='sk --ansi -i -c "rg --color=always --line-number --ignore-case {}" --preview "preview.sh {}"'
-alias ldd='otool -L'
-alias mpvm='mpv --no-audio --loop-playlist=inf'
-alias scim='sc-im'
-alias min='sort -g | head -n1'
-alias max='sort -g -r | head -n1'
-alias python='/usr/local/bin/python3.9'
-alias pip='/usr/local/bin/pip3.9'
-alias upgrade_emacs='emacs -Q --batch -L "$HOME/.emacs.d/lisp/" -l "init-funcs.el" -l "init-package.el" --eval "(update-config-and-packages t)"'
-
-alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
-alias ytdl="yt-dlp --config-location ~/.config/youtube-dl/config.yt-dlp"
-
-alias bri='ddcctl -d 1 -b'
 
 export PATH=/usr/local/opt/openjdk/bin:$PATH # OpenJDK
 export PATH=/usr/local/opt/bison/bin:$PATH # GNU bison
@@ -401,40 +205,6 @@ YTFZF_CACHE=~/.cache/ytfzf
 # YTFZF: Always choose best video and audio qualities.
 export YTFZF_PREF="bestvideo[height<=?1080]+bestaudio/best"
 
-# --------------------------------------------------
-# BEGIN: PostgreSQL helpers.
-export PG_SHOW_BIGGEST_TABLES="SELECT table_name, pg_total_relation_size(quote_ident(table_name)) FROM information_schema.tables WHERE table_schema = 'public' ORDER BY 2 desc;"
-export PG_SHOW_DB_SIZE="SELECT pg_database_size(current_database());"
-export PG_SHOW_DB_SIZE_PRETTY="SELECT pg_size_pretty(pg_database_size(current_database()));"
-
-function _pg_table_sizes() {
-    psql -AqtF"," -U postgres $1 -c $PG_SHOW_BIGGEST_TABLES;
-}
-
-function _pg_db_size() {
-    psql -AqtF"," -U postgres $1 -c $PG_SHOW_DB_SIZE;
-}
-
-function _pg_db_size_pretty() {
-    psql -AqtF"," -U postgres $1 -c $PG_SHOW_DB_SIZE_PRETTY;
-}
-
-alias pg_table_sizes='_pg_table_sizes'
-alias pg_db_size='_pg_db_size'
-alias pg_db_size_pretty='_pg_db_size_pretty'
-# END: PostgreSQL helpers.
-# --------------------------------------------------
-
-function _mix_hex_latest_1() {
-    mix hex.info $1 | grep 'Config:' | sed 's/.*{\(.*\)}[^}]*/{\1},/'
-}
-alias mix_hex_latest1='_mix_hex_latest1'
-
-function _mix_hex_latest_2() {
-    curl --silent https://hex.pm/api/packages/$1 | jq -r '.configs."mix.exs"'
-}
-alias mix_hex_latest2='_mix_hex_latest2'
-
 # Decode JTW tokens on the command line.
 jwtd() {
     if [[ -x $(command -v jq) ]]; then
@@ -442,9 +212,6 @@ jwtd() {
         echo "Signature: $(echo "${1}" | awk -F'.' '{print $3}')"
     fi
 }
-
-# Python helpers.
-alias termgraph='python3 /usr/local/lib/python3.8/site-packages/termgraph/termgraph.py --width 150'
 
 # opam configuration
 test -r /Users/dimi/.opam/opam-init/init.sh && . /Users/dimi/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true
@@ -472,12 +239,6 @@ export PATH="/usr/local/opt/sqlite/bin:$PATH"
 
 source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-
-# Use GNU `ls`.
-alias ls="/usr/local/opt/coreutils/libexec/gnubin/ls"
-
-# Utilities.
-alias histocsv="jp -input csv -xy '[*][0,1]' -type bar -height 53"
 
 # To use all GNU core utilities, uncomment these:
 export PATH="/usr/local/opt/coreutils/libexec/gnubin:${PATH}"
@@ -514,30 +275,12 @@ zstyle ':fzf-tab:*' switch-group ',' '.'
 # END `fzf-tab` settings
 # --------------------------------------------------
 
-# ugrep: Aliases to consider:
-# alias uq     = 'ug -Q'
-# alias ux     = 'ug -UX'
-# alias uz     = 'ug -z'
-# alias grep   = 'ugrep -G'
-# alias egrep  = 'ugrep -E'
-# alias fgrep  = 'ugrep -F'
-# alias pgrep  = 'ugrep -P'
-# alias xgrep  = 'ugrep -UX'
-# alias zgrep  = 'ugrep -zG'
-# alias zegrep = 'ugrep -zE'
-# alias zfgrep = 'ugrep -zF'
-# alias zpgrep = 'ugrep -zP'
-# alias zxgrep = 'ugrep -zUX'
-# alias xdump  = 'ugrep -X ""'
-
 function lll {
   cd "$(llama "$@")"
 }
 
 # Enable Docker BuildKit.
 export DOCKER_BUILDKIT=1
-
-alias tsmicro="ts '[%Y-%m-%d %H:%M:%.S]'"
 
 export NVIM_LSP_LOG=$HOME/.cache/nvim/lsp.log
 export LVIM_LSP_LOG=$HOME/.cache/lvim/lsp.log
