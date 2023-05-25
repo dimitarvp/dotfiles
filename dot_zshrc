@@ -30,6 +30,7 @@ source ~/.zsh/programs/asdf.zsh
 source ~/.zsh/programs/direnv.zsh
 source ~/.zsh/programs/docker.zsh
 source ~/.zsh/programs/emacs.zsh
+source ~/.zsh/programs/emplace.zsh
 source ~/.zsh/programs/git.zsh
 source ~/.zsh/programs/pspg.zsh
 source ~/.zsh/programs/tabulator.zsh
@@ -41,6 +42,3 @@ YTFZF_CACHE=~/.cache/ytfzf
 export YTFZF_PREF="bestvideo[height<=?1080]+bestaudio/best"
 
 ulimit -n 98304
-
-# https://github.com/tversteeg/emplace
-eval "$(emplace init zsh)"
