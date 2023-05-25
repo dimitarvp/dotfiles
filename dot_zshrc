@@ -40,16 +40,8 @@ export YTFZF_PREF="bestvideo[height<=?1080]+bestaudio/best"
 
 ulimit -n 98304
 
-source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-
-fpath+=${ZDOTDIR:-$HOME}/.zsh_functions
-
 # Setup variables and scripts for local backup.
 source $HOME/scripts/dimi_backup_setup
-
-# Uncomment this to enable `fzf` completion when pressing TAB.
-export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
 function lll {
   cd "$(llama "$@")"
