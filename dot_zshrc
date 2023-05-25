@@ -40,14 +40,6 @@ YTFZF_CACHE=~/.cache/ytfzf
 # YTFZF: Always choose best video and audio qualities.
 export YTFZF_PREF="bestvideo[height<=?1080]+bestaudio/best"
 
-# Decode JTW tokens on the command line.
-jwtd() {
-    if [[ -x $(command -v jq) ]]; then
-        jq -R 'split(".") | .[0],.[1] | @base64d | fromjson' <<< "${1}"
-        echo "Signature: $(echo "${1}" | awk -F'.' '{print $3}')"
-    fi
-}
-
 ulimit -n 98304
 
 source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
