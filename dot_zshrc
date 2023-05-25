@@ -26,9 +26,6 @@ source ~/.zsh/fuzzy_finders/skim.zsh
 # PSPG default command line options
 export PSPG="--style 16 --force-uniborder --bold-labels --highlight-odd-rec --border 2 --no-sound"
 
-# V language.
-export PATH="$HOME/bin/v:$PATH"
-
 # Tabulator shell scripts.
 export PATH="$PATH:$HOME/bin/tabulator/bin"
 
