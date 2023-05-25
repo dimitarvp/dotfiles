@@ -40,7 +40,7 @@ alias pip='/usr/local/bin/pip3.9'
 alias upgrade_emacs='emacs -Q --batch -L "$HOME/.emacs.d/lisp/" -l "init-funcs.el" -l "init-package.el" --eval "(update-config-and-packages t)"'
 
 alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
-alias ytdl="yt-dlp --config-location ~/.config/youtube-dl/config.yt-dlp"
+alias ytdl="yt-dlp --config-location $HOME/.config/youtube-dl/config.yt-dlp"
 
 alias bri='ddcctl -d 1 -b'
 
