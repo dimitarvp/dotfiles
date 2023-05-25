@@ -2,7 +2,6 @@ source ~/.zsh/p10k.zsh
 source ~/.zsh/ohmyzsh.zsh
 source ~/.zsh/zsh.zsh # always put history opts after `oh-my-zsh` init or it will override this file.
 source ~/.zsh/zplug.zsh
-source ~/.zsh/fzy.zsh
 source ~/.zsh/autocomplete.zsh
 source ~/.zsh/aliases.zsh
 source ~/.zsh/git.zsh
@@ -24,6 +23,7 @@ source ~/.zsh/fuzzy_finders/fzf.zsh
 source ~/.zsh/fuzzy_finders/fzf_tab.zsh
 source ~/.zsh/fuzzy_finders/peco.zsh
 source ~/.zsh/fuzzy_finders/skim.zsh
+source ~/.zsh/fuzzy_finders/fzy.zsh
 
 # PSPG default command line options
 export PSPG="--style 16 --force-uniborder --bold-labels --highlight-odd-rec --border 2 --no-sound"
