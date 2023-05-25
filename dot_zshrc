@@ -15,10 +15,9 @@ source ~/.zsh/golang.zsh
 source ~/.zsh/rust.zsh
 
 source ~/.zsh/paths.zsh
+source ~/.zsh/package_managers.zsh
 
 export PATH=/usr/local/opt/ruby/bin:$PATH # Ruby
-export PATH=$HOME/.local/bin:$PATH # Programs installed through package managers
-export PATH=/usr/local/sbin:$PATH # where Homebrew puts globally available binaries
 
 # PSPG default command line options
 export PSPG="--style 16 --force-uniborder --bold-labels --highlight-odd-rec --border 2 --no-sound"
@@ -125,12 +124,6 @@ bindkey '^U' peco_find_git_uncommitted
 export SKIM_DEFAULT_COMMAND='fd -t f || git ls-tree -r --name-only HEAD || rg --files || find .'
 # --------------------------------------------------
 
-# curl: prioritise the version installed from `homebrew`.
-export PATH="/usr/local/opt/curl/bin:$PATH"
-
-# mysql client: prioritise the version installed from `homebrew`.
-export PATH="/usr/local/opt/mysql-client/bin:$PATH"
-
 # V language.
 export PATH="$HOME/bin/v:$PATH"
 
@@ -172,8 +165,6 @@ export LDFLAGS="-L/usr/local/opt/python@3.8/lib"
 export PKG_CONFIG_PATH="/usr/local/opt/python@3.8/lib/pkgconfig"
 
 ulimit -n 98304
-
-export PATH="/usr/local/opt/sqlite/bin:$PATH"
 
 source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
@@ -224,8 +215,6 @@ export LIBRARY_PATH=/usr/local/opt/gcc@12/lib/gcc/12:/usr/local/opt/libgccjit/li
 # sudo ln -s -v /usr/local/opt/libgccjit/lib/gcc/current/libgccjit.0.dylib /usr/local/lib/ 
 
 source '/Users/dimi/Library/Application Support/org.dystroy.broot/launcher/bash/br'
-
-export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
