@@ -4,7 +4,6 @@ source ~/.zsh/zsh.zsh # always put history opts after `oh-my-zsh` init or it wil
 source ~/.zsh/zplug.zsh
 source ~/.zsh/autocomplete.zsh
 source ~/.zsh/aliases.zsh
-source ~/.zsh/git.zsh
 source ~/.zsh/gnu.zsh
 
 source ~/.zsh/erlang.zsh
@@ -24,6 +23,9 @@ source ~/.zsh/fuzzy_finders/fzf_tab.zsh
 source ~/.zsh/fuzzy_finders/peco.zsh
 source ~/.zsh/fuzzy_finders/skim.zsh
 source ~/.zsh/fuzzy_finders/fzy.zsh
+
+source ~/.zsh/programs/docker.zsh
+source ~/.zsh/programs/git.zsh
 
 # PSPG default command line options
 export PSPG="--style 16 --force-uniborder --bold-labels --highlight-odd-rec --border 2 --no-sound"
@@ -69,9 +71,6 @@ export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 function lll {
   cd "$(llama "$@")"
 }
-
-# Enable Docker BuildKit.
-export DOCKER_BUILDKIT=1
 
 export NVIM_LSP_LOG=$HOME/.cache/nvim/lsp.log
 export LVIM_LSP_LOG=$HOME/.cache/lvim/lsp.log
