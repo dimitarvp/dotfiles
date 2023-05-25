@@ -19,14 +19,7 @@ source ~/.zsh/fzy.zsh
 
 source ~/.zsh/autocomplete.zsh
 source ~/.zsh/aliases.zsh
-
-git_default_branch() {
-    (git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@') 2>/dev/null
-}
-
-git_current_branch() {
-    git rev-parse --abbrev-ref HEAD
-}
+source ~/.zsh/git.zsh
 
 export PATH=/usr/local/opt/openjdk/bin:$PATH # OpenJDK
 export PATH=/usr/local/opt/bison/bin:$PATH # GNU bison
