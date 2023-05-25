@@ -19,6 +19,7 @@ source ~/.zsh/backups.zsh
 source ~/.zsh/env.zsh
 source ~/.zsh/paths.zsh
 source ~/.zsh/package_managers.zsh
+source ~/.zsh/system.zsh
 
 source ~/.zsh/fuzzy_finders/fzf.zsh
 source ~/.zsh/fuzzy_finders/fzf_tab.zsh
@@ -41,4 +42,3 @@ YTFZF_CACHE=~/.cache/ytfzf
 # YTFZF: Always choose best video and audio qualities.
 export YTFZF_PREF="bestvideo[height<=?1080]+bestaudio/best"
 
-ulimit -n 98304
