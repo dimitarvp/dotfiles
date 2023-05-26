@@ -51,4 +51,7 @@ COMPLETION_WAITING_DOTS="true"
 
 plugins=(asdf colored-man-pages fd fzf git httpie mix ripgrep rsync rust z)
 
+# https://stackoverflow.com/a/71271754/285154
+export ZSH_COMPDUMP=$ZSH/cache/.zcompdump-$HOST
+
 source $ZSH/oh-my-zsh.sh
