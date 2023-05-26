@@ -1,0 +1,99 @@
+[alias]
+  pl = pull
+  pla = pull --all
+  plr = pull --rebase
+  cam = commit -am
+  ca = commit -a
+  cm = commit -m
+  ci = commit
+  co = checkout
+  st = status
+  br = branch -v
+  df = difftool
+  su = stash --include-untracked
+  unstage = reset HEAD --
+  find = !sh -c 'git ls-tree -r --name-only HEAD | grep --color $1' -
+  cleanup = !git branch --merged master | grep -v 'master$' | xargs git branch -d
+  k = !gitk
+  g = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+  h = !git --no-pager log origin/master..HEAD --abbrev-commit --pretty=oneline
+  ph = !git --no-pager log --pretty=oneline $*
+  pom = !sh -c 'git h && echo Ready to push? ENTER && read && git push origin master' -
+  pomt = !sh -c 'git h && echo Ready to push? ENTER && read && git push origin master && git push origin master --tags' -
+  purm = !sh -c 'test "$#" = 1 && git h && git checkout master && git pull && git checkout \"$1\" && git rebase master && exit 0 || echo \"usage: git purm <branch>\" >&2 && exit 1' -
+  rpu = !sh -c 'test "$#" = 1 && git h && git checkout \"$1\" && git rebase master && git push && git checkout master && exit 0 || echo \"usage: git rpu <branch>\" >&2 && exit 1' -
+  mpu = !sh -c 'test "$#" = 1 && git h && git checkout \"$1\" && git merge --no-edit master && git push && git checkout master && exit 0 || echo \"usage: git mpu <branch>\" >&2 && exit 1' -
+  rem = !sh -c 'test "$#" = 1 && git h && git checkout master && git pull && git checkout \"$1\" && git rebase master && git checkout master && git merge \"$1\" && echo Done and ready to do: git pom && exit 0 || echo \"usage: git rem <branch>\" >&2 && exit 1' -
+  rpom = !git pull --rebase && git pom
+  v = !gvim $*
+  lt = !git describe $(git rev-list --tags --max-count=1)
+  mus = !sh -c 'git checkout master && git fetch upstream && git merge upstream/master && git push origin master --tags' -
+	ob = !sh -c 'test "$#" = 2 && git branch -m $2 temp-renamed && git branch -m $1 $2 && git push -f origin $2 && git branch -D temp-renamed' -
+	lc = log -p --follow -1
+	lsb = branch --format '%(refname:short)'
+
+	# Same as above, but with a diff stat instead of just names
+	# (better for interactive use)
+	stat = !git diff --stat $(git merge-base HEAD \"$REVIEW_BASE\")
+[core]
+	filemode = false
+	editor = vim
+	excludesfile = ~/.gitignore
+#	pager = diff-so-fancy | less --tabs=4 -RFX
+	pager = delta
+[difftool]
+	prompt = false
+[mergetool]
+    keepBackup = false
+[user]
+	name = Dimitar Panayotov
+	email = mitko.p@gmail.com
+	signingkey = 7662FC63ECB1C3AF
+[push]
+	default = current
+[checkout]
+	defaultRemote = origin
+[color]
+	ui = true
+[color "diff-highlight"]
+	oldNormal = red bold
+	oldHighlight = red bold 52
+	newNormal = green bold
+	newHighlight = green bold 22
+[color "diff"]
+	meta = 11
+	frag = magenta bold
+	commit = yellow bold
+	old = red bold
+	new = green bold
+	whitespace = red reverse
+[pull]
+	rebase = false
+	default = current
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	plus-color = "#012800"
+	minus-color = "#340001"
+	plus-style = syntax "#003800"
+	minus-style = syntax "#3f0001"
+	syntax-theme = Dracula
+	features = side-by-side line-numbers unobtrusive-line-numbers decorations
+[delta "decorations"]
+	commit-decoration-style = bold yellow box ul
+	file-style = bold yellow ul
+	file-decoration-style = none
+	hunk-header-decoration-style = cyan box ul
+[delta "line-numbers"]
+    line-numbers-left-style = cyan
+    line-numbers-right-style = cyan
+    line-numbers-minus-style = 124
+    line-numbers-plus-style = 28
+[commit]
+	gpgsign = true
+[http]
+	sslcainfo = /usr/local/etc/openssl@1.1/cert.pem
+[init]
+	defaultBranch = main
+[safe]
+	directory = /Users/dimi/kod/gitflow
