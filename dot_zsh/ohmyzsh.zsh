@@ -2,7 +2,7 @@
 DEFAULT_USER="dimi" # this hides the "user@host" in zsh if you are currently logged with that user.
 
 # Path to your oh-my-zsh installation.
-export ZSH="/Users/dimi/.oh-my-zsh"
+export ZSH="$HOME/.oh-my-zsh"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
