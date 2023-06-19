@@ -95,5 +95,3 @@
 	sslcainfo = /usr/local/etc/openssl@1.1/cert.pem
 [init]
 	defaultBranch = main
-[safe]
-	directory = /Users/dimi/kod/gitflow
