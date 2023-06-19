@@ -91,7 +91,5 @@
     line-numbers-plus-style = 28
 [commit]
 	gpgsign = true
-[http]
-	sslcainfo = /usr/local/etc/openssl@1.1/cert.pem
 [init]
 	defaultBranch = main
