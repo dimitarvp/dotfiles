@@ -22,6 +22,7 @@ alias lsrg="rg --files --no-ignore --hidden --follow --glob '!.git/*'"
 alias fdgit='fd --no-ignore --hidden --exclude .git --type file --type symlink'
 alias fdpid="ps axww -o pid,user,%cpu,%mem,start,time,command | fzf | sed 's/^ *//' | cut -f1 -d' '"
 alias ll='exa -l --color always --icons -a -s type -g --git --time-style full-iso'
+alias llt="ll -T --git-ignore -I '.git|.elixir_ls'"
 alias vim='/usr/local/bin/vim'
 alias listeners1='netstat -an -ptcp | grep LISTEN'
 alias listeners2='lsof -i -P | grep -i "listen"'
