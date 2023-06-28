@@ -19,7 +19,8 @@ source $HOME/.zsh/fuzzy_finders/peco.zsh
 source $HOME/.zsh/fuzzy_finders/skim.zsh
 source $HOME/.zsh/fuzzy_finders/fzy.zsh
 
-source $HOME/.zsh/programs/asdf.zsh
+# source $HOME/.zsh/programs/asdf.zsh
+source $HOME/.zsh/programs/rtx.zsh
 source $HOME/.zsh/programs/direnv.zsh
 source $HOME/.zsh/programs/docker.zsh
 source $HOME/.zsh/programs/emacs.zsh
