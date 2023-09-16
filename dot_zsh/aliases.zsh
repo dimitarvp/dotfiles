@@ -72,12 +72,12 @@ alias pg_db_size_pretty='_pg_db_size_pretty'
 function _mix_hex_latest_1() {
     mix hex.info $1 | grep 'Config:' | sed 's/.*{\(.*\)}[^}]*/{\1},/'
 }
-alias mix_hex_latest1='_mix_hex_latest1'
+alias mix_hex_latest1='_mix_hex_latest_1'
 
 function _mix_hex_latest_2() {
     curl --silent https://hex.pm/api/packages/$1 | jq -r '.configs."mix.exs"'
 }
-alias mix_hex_latest2='_mix_hex_latest2'
+alias mix_hex_latest2='_mix_hex_latest_2'
 
 
 alias termgraph='python3 /usr/local/lib/python3.8/site-packages/termgraph/termgraph.py --width 150'
