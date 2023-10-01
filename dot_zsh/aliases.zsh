@@ -1,3 +1,5 @@
+system_type=$(uname -s)
+
 # if [ "$(command -v eza)" ]; then
 #     unalias -m 'll'
 #     unalias -m 'l'
@@ -23,7 +25,6 @@ alias fdgit='fd --no-ignore --hidden --exclude .git --type file --type symlink'
 alias fdpid="ps axww -o pid,user,%cpu,%mem,start,time,command | fzf | sed 's/^ *//' | cut -f1 -d' '"
 alias ll='eza -l --color always --icons -a -s type -g --git --time-style full-iso'
 alias llt="ll -T --git-ignore -I '.git|.elixir_ls'"
-alias vim='/usr/local/bin/vim'
 alias listeners1='netstat -an -ptcp | grep LISTEN'
 alias listeners2='lsof -i -P | grep -i "listen"'
 alias skack='sk --ansi -i -c "ack --color {}"'
@@ -36,14 +37,21 @@ alias mpvm='mpv --no-audio --loop-playlist=inf'
 alias scim='sc-im'
 alias min='sort -g | head -n1'
 alias max='sort -g -r | head -n1'
-alias python='/usr/local/bin/python3.9'
-alias pip='/usr/local/bin/pip3.9'
 alias upgrade_emacs='emacs -Q --batch -L "$HOME/.emacs.d/lisp/" -l "init-funcs.el" -l "init-package.el" --eval "(update-config-and-packages t)"'
 
 alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
 alias ytdl="yt-dlp --config-location $HOME/.config/youtube-dl/config.yt-dlp"
 
 alias bri='ddcctl -d 1 -b'
+
+# macOS-specific aliases.
+if [ "$system_type" = "Darwin" ]; then
+  alias vim='/usr/local/bin/vim'
+  alias python='/usr/local/bin/python3.9'
+  alias pip='/usr/local/bin/pip3.9'
+  alias ls="/usr/local/opt/coreutils/libexec/gnubin/ls"
+  alias termgraph='python3 /usr/local/lib/python3.8/site-packages/termgraph/termgraph.py --width 150'
+fi
 
 # --------------------------------------------------
 # BEGIN: PostgreSQL helpers.
@@ -78,12 +86,6 @@ function _mix_hex_latest_2() {
     curl --silent https://hex.pm/api/packages/$1 | jq -r '.configs."mix.exs"'
 }
 alias mix_hex_latest2='_mix_hex_latest_2'
-
-
-alias termgraph='python3 /usr/local/lib/python3.8/site-packages/termgraph/termgraph.py --width 150'
-
-# Use GNU `ls`.
-alias ls="/usr/local/opt/coreutils/libexec/gnubin/ls"
 
 # Utilities.
 alias histocsv="jp -input csv -xy '[*][0,1]' -type bar -height 53"

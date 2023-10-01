@@ -1,7 +1,7 @@
 system_type=$(uname -s)
 
-# Programs installed through misc. package managers (only LunarVim, it seems) 
-export PATH=$HOME/.local/bin:$PATH 
+# Programs installed through misc. package managers (only LunarVim, it seems)
+export PATH=$HOME/.local/bin:$PATH
 
 if [ "$system_type" = "Darwin" ]; then
   # Homebrew: installed programs.
