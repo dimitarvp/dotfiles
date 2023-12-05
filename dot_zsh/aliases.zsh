@@ -37,7 +37,6 @@ alias mpvm='mpv --no-audio --loop-playlist=inf'
 alias scim='sc-im'
 alias min='sort -g | head -n1'
 alias max='sort -g -r | head -n1'
-alias upgrade_emacs='emacs -Q --batch -L "$HOME/.emacs.d/lisp/" -l "init-funcs.el" -l "init-package.el" --eval "(update-config-and-packages t)"'
 
 alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
 alias ytdl="yt-dlp --config-location $HOME/.config/youtube-dl/config.yt-dlp"
