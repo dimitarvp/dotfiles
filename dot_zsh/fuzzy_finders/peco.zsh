@@ -33,7 +33,8 @@
 
 peco_find_git_uncommitted() {
     local selected_entry
-    selected_entry=$(git status --porcelain=v2 --renames | awk '{print $NF}' | peco --layout bottom-up --prompt 'GIT>' | awk '{print $1}')
+    entries=$(git_changed)
+    selected_entry=$(echo $entries | peco --layout bottom-up --prompt 'GIT>' | awk '{print $1}')
     eval 'LBUFFER="$LBUFFER$selected_entry"'
 }
 zle -N peco_find_git_uncommitted
