@@ -1,4 +1,5 @@
 [alias]
+  root = rev-parse --show-toplevel
   pl = pull
   pla = pull --all
   plr = pull --rebase
