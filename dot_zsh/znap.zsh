@@ -16,6 +16,3 @@ source "$znap_own_dir/znap.zsh"
 
 # Plugins.
 znap install 'bigH/git-fuzzy'
-
-# Update Znap itself and all plugins.
-znap pull
