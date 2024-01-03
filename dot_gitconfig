@@ -38,7 +38,7 @@
 	stat = !git diff --stat $(git merge-base HEAD \"$REVIEW_BASE\")
 [core]
 	filemode = false
-	editor = vim
+	editor = lvim
 	excludesfile = ~/.gitignore
 #	pager = diff-so-fancy | less --tabs=4 -RFX
 	pager = delta
