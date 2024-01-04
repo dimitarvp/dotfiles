@@ -1,4 +1,3 @@
-
 system_type=$(uname -s)
 
 if [ "$system_type" = "Darwin" ]; then
