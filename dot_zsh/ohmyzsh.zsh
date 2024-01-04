@@ -1,4 +1,3 @@
-
 DEFAULT_USER="dimi" # this hides the "user@host" in zsh if you are currently logged with that user.
 
 # Path to your oh-my-zsh installation.
