@@ -48,7 +48,10 @@ COMPLETION_WAITING_DOTS="true"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 
-plugins=(colored-man-pages fd fzf git httpie mix ripgrep rsync rust z)
+plugins=(colored-man-pages colorize fd fzf git httpie mix ripgrep rsync rust z)
+
+# For the `colorize` ohmyzsh plugin.
+ZSH_COLORIZE_TOOL=chroma
 
 # https://stackoverflow.com/a/71271754/285154
 export ZSH_COMPDUMP=$ZSH/cache/.zcompdump-$HOST
