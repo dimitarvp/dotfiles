@@ -1,5 +1,3 @@
-system_type=$(uname -s)
-
 # if [ "$(command -v eza)" ]; then
 #     unalias -m 'll'
 #     unalias -m 'l'
