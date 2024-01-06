@@ -1,5 +1,3 @@
-system_type=$(uname -s)
-
 if [ "$system_type" = "Darwin" ]; then
   export PATH="/usr/local/opt/python@3.9/bin:$PATH"
   export LDFLAGS="-L/usr/local/opt/python@3.9/lib"

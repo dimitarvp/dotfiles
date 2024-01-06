@@ -1,3 +1,5 @@
+system_type=$(uname -s)
+
 source $HOME/.zsh/p10k.zsh
 source $HOME/.zsh/zsh.zsh
 source $HOME/.zsh/zoxide.zsh
