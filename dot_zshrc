@@ -23,14 +23,6 @@ source $HOME/.zsh/fuzzy_finders/peco.zsh
 source $HOME/.zsh/fuzzy_finders/skim.zsh
 source $HOME/.zsh/fuzzy_finders/fzy.zsh
 
-source $HOME/.zsh/programs/direnv.zsh
-source $HOME/.zsh/programs/docker.zsh
-#source $HOME/.zsh/programs/emplace.zsh
-source $HOME/.zsh/programs/git.zsh
-source $HOME/.zsh/programs/pspg.zsh
-source $HOME/.zsh/programs/mise.zsh
-source $HOME/.zsh/programs/tabulator.zsh
-
 source $HOME/.zsh/languages/erlang.zsh
 source $HOME/.zsh/languages/elixir.zsh
 source $HOME/.zsh/languages/java.zsh
@@ -39,4 +31,12 @@ source $HOME/.zsh/languages/rust.zsh
 source $HOME/.zsh/languages/ocaml.zsh
 source $HOME/.zsh/languages/ruby.zsh
 source $HOME/.zsh/languages/python.zsh
+
+source $HOME/.zsh/programs/direnv.zsh
+source $HOME/.zsh/programs/docker.zsh
+#source $HOME/.zsh/programs/emplace.zsh
+source $HOME/.zsh/programs/git.zsh
+source $HOME/.zsh/programs/pspg.zsh
+source $HOME/.zsh/programs/mise.zsh
+source $HOME/.zsh/programs/tabulator.zsh
 
