@@ -1,0 +1,13 @@
+{
+    "Prompt": ">",
+    "MaxScanBufferSize": 8192,
+    "Keymap": {
+        "Pgup": "peco.ScrollPageUp",
+        "Pgdn": "peco.ScrollPageDown"
+    },
+    "Style": {
+        "Selected": ["on_blue", "black"],
+        "Query": ["bold"],
+        "Matched": ["underline", "black", "on_yellow"]
+    }
+}

@@ -1,0 +1,72 @@
+blinking-cursor = false
+disable-renderer-when-unfocused = false
+editor = "lvim"
+ignore_theme_selection_fg_color = false
+option_as_alt = 'both'
+performance = "High"
+padding-x = 0
+
+# Use fork
+#
+# Defaults for POSIX-based systems (Windows is not configurable):
+# MacOS: spawn processes
+# Linux/BSD: fork processes
+use-fork = false
+
+[background]
+# mode = "Image"
+mode = "Color"
+opacity = 1.0
+
+# [background.image]
+# path = "/Users/rapha/Desktop/eastward.jpg"
+# width = 200.0
+# height = 200.0
+# x = 0.0
+# y = 0.0
+
+[bindings]
+keys = [
+
+]
+
+# Colors
+#
+# Colors definition will overwrite any property in theme
+# (considering if theme folder does exists and is being used)
+[colors]
+background = "#212121"
+foreground = "#f8f8f2"
+
+black = "#21222c"
+blue = "#82aaff"
+cyan = "#8be9fd"
+green = "#50fa7b"
+magenta = "#c792ea"
+red = "#ff5555"
+white = "#f8f8f2"
+yellow = "#ffcb6b"
+
+cursor = "#eceff4"
+
+tabs = '#443d40'
+tabs-active = "#f8a145"
+
+[developer]
+log-level = "INFO"
+
+[fonts]
+family = "UbuntuMono Nerd Font Mono"
+size = 22.5
+
+[navigation]
+mode = "TopTab"
+clickable = true
+use-current-path = true
+color-automation = []
+macos-hide-window-buttons = true
+
+[window]
+# width = 2500
+# height = 1420
+mode = "Maximized"
