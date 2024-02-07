@@ -1,0 +1,7 @@
+DEFINE_COLOR "gray" 46 46 46
+color "type=HEADINGS fg=BLACK bg=YELLOW"
+color "type=HEADINGS_ODD fg=BLACK bg=GREEN"
+color "type=GRID_EVEN fg=DEFAULT_COLOR bg=DEFAULT_COLOR"
+color "type=GRID_ODD fg=DEFAULT_COLOR bg=gray"
+color "type=CELL_SELECTION fg=WHITE bg=RED"
+color "type=CELL_NEGATIVE fg=RED bg=DEFAULT_COLOR"
