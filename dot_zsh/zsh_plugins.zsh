@@ -1,4 +1,4 @@
-source $ZSH_CUSTOM/plugins/fzf-tab/fzf-tab.plugin.zsh
+# source $ZSH_CUSTOM/plugins/fzf-tab/fzf-tab.plugin.zsh
 
 if [ "$system_type" = "Darwin" ]; then
   declare +r zsh_plugins="/usr/local/share"
