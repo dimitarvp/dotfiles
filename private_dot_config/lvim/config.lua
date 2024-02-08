@@ -455,11 +455,12 @@ rt.move_item.move_item(true)
 -- rt.join_lines.join_lines()
 
 -- LSP: Elixir
+local homedir = os.getenv("HOME")
 local root_pattern = require("lspconfig").util.root_pattern
 require 'lspconfig'.elixirls.setup {
   filetypes = { "elixir", "eelixir", "heex", "surface" },
   root_dir = root_pattern("mix.exs", ".git") or vim.loop.os_homedir(),
-  cmd = { "/Users/dimi/bin/elixir-ls/release/language_server.sh" },
+  cmd = { homedir .. "/bin/elixir-ls/release/language_server.sh" },
 }
 
 -- (1) add `elixirls` to `skipped_servers` list
