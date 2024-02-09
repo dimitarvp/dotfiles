@@ -1,0 +1,31 @@
+# https://blog.rust-lang.org/2023/03/09/Rust-1.68.0.html
+[registries.crates-io]
+protocol = "sparse"
+
+# Fixes extremely slow `cargo-update` run.
+[net]
+git-fetch-with-cli = true
+
+[build]
+rustflags=["-C", "target-cpu=native"]
+
+[target.'cfg(target_os = "macos")']
+rustflags = [
+  "-C", "link-arg=-undefined",
+  "-C", "link-arg=dynamic_lookup",
+]
+
+[target.'cfg(target_os = "linux")']
+rustflags=["-C", "target-cpu=native", "-C", "link-arg=-fuse-ld=mold"]
+
+[profile.dev]
+split-debuginfo = "unpacked" # macOS-specific debug build acceleration.
+strip = "debuginfo"
+
+[profile.release]
+strip = "symbols" # `debuginfo` only strips debug symbols; `symbols` strips all symbol information.
+lto = true # Turn on link time optimization.
+codegen-units = 1 # Reduce LTO units to 1 for maximum binary size reduction.
+opt-level = 3 # Optimize for speed (not binary size).
+# opt-level = "z"  # Optimize for size (speed does not suffer much but it does somewhat).
+panic = "abort"
