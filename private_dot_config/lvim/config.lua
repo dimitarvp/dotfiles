@@ -8,6 +8,7 @@ vim.opt.tabstop = 2
 vim.opt.relativenumber = false
 vim.wo.wrap = true
 vim.wo.linebreak = true
+vim.opt.termguicolors = true
 -- vim.wo.list = false
 
 -- general
