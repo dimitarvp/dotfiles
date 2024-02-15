@@ -21,3 +21,6 @@ fpath+=${ZDOTDIR:-$HOME}/.zsh_functions
 
 # Uncomment this to enable `fzf` completion when pressing TAB.
 export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+
+# Update oh-my-zsh.
+zstyle ':omz:update' mode auto
