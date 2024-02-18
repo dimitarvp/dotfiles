@@ -48,6 +48,8 @@
   whitespace = -space-before-tab,tab-in-indent
 [difftool]
   prompt = false
+[log]
+  date = iso
 [merge]
   conflictstyle = zdiff3
 [mergetool]
