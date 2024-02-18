@@ -29,55 +29,55 @@
   v = !gvim $*
   lt = !git describe $(git rev-list --tags --max-count=1)
   mus = !sh -c 'git checkout master && git fetch upstream && git merge upstream/master && git push origin master --tags' -
-	ob = !sh -c 'test "$#" = 2 && git branch -m $2 temp-renamed && git branch -m $1 $2 && git push -f origin $2 && git branch -D temp-renamed' -
-	lc = log -p --follow -1
-	lsb = branch --format '%(refname:short)'
+  ob = !sh -c 'test "$#" = 2 && git branch -m $2 temp-renamed && git branch -m $1 $2 && git push -f origin $2 && git branch -D temp-renamed' -
+  lc = log -p --follow -1
+  lsb = branch --format '%(refname:short)'
 
-	# Same as above, but with a diff stat instead of just names
-	# (better for interactive use)
-	stat = !git diff --stat $(git merge-base HEAD \"$REVIEW_BASE\")
+  # Same as above, but with a diff stat instead of just names
+  # (better for interactive use)
+  stat = !git diff --stat $(git merge-base HEAD \"$REVIEW_BASE\")
 [core]
-	filemode = false
-	editor = vim
-	excludesfile = ~/.gitignore
-	pager = delta
+  filemode = false
+  editor = vim
+  excludesfile = ~/.gitignore
+  pager = delta
 [diff]
   algorithm = histogram
   colorMoved = dimmed-zebra # or default
   colorMovedWS = allow-indentation-change
 [difftool]
-	prompt = false
+  prompt = false
 [merge]
   conflictstyle = zdiff3
 [mergetool]
     keepBackup = false
 [user]
-	name = Dimitar Panayotov
-	email = mitko.p@gmail.com
-	signingkey = 7662FC63ECB1C3AF
+  name = Dimitar Panayotov
+  email = mitko.p@gmail.com
+  signingkey = 7662FC63ECB1C3AF
 [push]
-	default = current
+  default = current
 [checkout]
-	defaultRemote = origin
+  defaultRemote = origin
 [color]
-	ui = true
+  ui = true
 [color "diff-highlight"]
-	oldNormal = red bold
-	oldHighlight = red bold 52
-	newNormal = green bold
-	newHighlight = green bold 22
+  oldNormal = red bold
+  oldHighlight = red bold 52
+  newNormal = green bold
+  newHighlight = green bold 22
 [color "diff"]
-	meta = 11
-	frag = magenta bold
-	commit = yellow bold
-	old = red bold
-	new = green bold
-	whitespace = red reverse
+  meta = 11
+  frag = magenta bold
+  commit = yellow bold
+  old = red bold
+  new = green bold
+  whitespace = red reverse
 [pull]
-	rebase = false
-	default = current
+  rebase = false
+  default = current
 [interactive]
-	diffFilter = delta --color-only
+  diffFilter = delta --color-only
 [transfer]
   fsckobjects = true
 [fetch]
@@ -85,25 +85,25 @@
 [receive]
   fsckobjects = true
 [delta]
-	navigate = true
-	light = false
-	plus-color = "#012800"
-	minus-color = "#340001"
-	plus-style = syntax "#003800"
-	minus-style = syntax "#3f0001"
-	syntax-theme = DarkNeon
-	features = side-by-side line-numbers unobtrusive-line-numbers decorations
+  navigate = true
+  light = false
+  plus-color = "#012800"
+  minus-color = "#340001"
+  plus-style = syntax "#003800"
+  minus-style = syntax "#3f0001"
+  syntax-theme = DarkNeon
+  features = side-by-side line-numbers unobtrusive-line-numbers decorations
 [delta "decorations"]
-	commit-decoration-style = bold yellow box ul
-	file-style = bold yellow ul
-	file-decoration-style = none
-	hunk-header-decoration-style = cyan box ul
+  commit-decoration-style = bold yellow box ul
+  file-style = bold yellow ul
+  file-decoration-style = none
+  hunk-header-decoration-style = cyan box ul
 [delta "line-numbers"]
     line-numbers-left-style = cyan
     line-numbers-right-style = cyan
     line-numbers-minus-style = 124
     line-numbers-plus-style = 28
 [commit]
-	gpgsign = true
+  gpgsign = true
 [init]
-	defaultBranch = main
+  defaultBranch = main
