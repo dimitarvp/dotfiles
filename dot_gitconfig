@@ -83,6 +83,8 @@
   fsckobjects = true
 [fetch]
   fsckobjects = true
+  prune = true
+  prunetags = true
 [receive]
   fsckobjects = true
 [delta]
