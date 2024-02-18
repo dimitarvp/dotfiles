@@ -77,6 +77,12 @@
 	default = current
 [interactive]
 	diffFilter = delta --color-only
+[transfer]
+  fsckobjects = true
+[fetch]
+  fsckobjects = true
+[receive]
+  fsckobjects = true
 [delta]
 	plus-color = "#012800"
 	minus-color = "#340001"
