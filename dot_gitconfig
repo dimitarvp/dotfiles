@@ -43,6 +43,7 @@
 	pager = delta
 [diff]
   algorithm = histogram
+  colorMoved = dimmed-zebra # or default
 [difftool]
 	prompt = false
 [merge]
@@ -83,11 +84,13 @@
 [receive]
   fsckobjects = true
 [delta]
+	navigate = true
+	light = false
 	plus-color = "#012800"
 	minus-color = "#340001"
 	plus-style = syntax "#003800"
 	minus-style = syntax "#3f0001"
-	syntax-theme = Dracula
+	syntax-theme = DarkNeon
 	features = side-by-side line-numbers unobtrusive-line-numbers decorations
 [delta "decorations"]
 	commit-decoration-style = bold yellow box ul
