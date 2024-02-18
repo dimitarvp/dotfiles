@@ -45,6 +45,7 @@
   algorithm = histogram
   colorMoved = dimmed-zebra # or default
   colorMovedWS = allow-indentation-change
+  whitespace = -space-before-tab,tab-in-indent
 [difftool]
   prompt = false
 [merge]
