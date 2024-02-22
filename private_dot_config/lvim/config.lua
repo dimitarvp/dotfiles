@@ -47,13 +47,14 @@ lvim.builtin.nvimtree.setup.renderer.icons.show.git = false
 ------------------------------------------------
 lvim.plugins = {
   { "mfussenegger/nvim-lint" },
-  { "dgagn/diagflow.nvim",      event = 'LspAttach',                              opts = {} },
-  { "folke/trouble.nvim",       dependencies = { "nvim-tree/nvim-web-devicons" }, },
-  { "simrat39/rust-tools.nvim", name = "rust-tools" },
-  { "j-hui/fidget.nvim",        version = "v1.0.0",                               name = "fidget" },
+  { "dgagn/diagflow.nvim",         event = 'LspAttach',                              opts = {} },
+  { "folke/trouble.nvim",          dependencies = { "nvim-tree/nvim-web-devicons" }, },
+  { "simrat39/rust-tools.nvim",    name = "rust-tools" },
+  { "j-hui/fidget.nvim",           version = "v1.0.0",                               name = "fidget" },
   { "yuchanns/shfmt.nvim" },
   { "apple/pkl-neovim" },
   { "NoahTheDuke/vim-just" },
+  { "IndianBoy42/tree-sitter-just" },
   -- {
   --   'Wansmer/symbol-usage.nvim',
   --   event = 'BufReadPre', -- need run before LspAttach if you use nvim 0.9. On 0.10 use 'LspAttach'
