@@ -1,0 +1,7 @@
+.DS_Store
+.elixir-ls
+.elixir_ls
+.envrc
+.lexical
+.tool-versions
+node_modules
