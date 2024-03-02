@@ -1,11 +1,6 @@
 [alias]
   root = rev-parse --show-toplevel
   pl = pull
-  pla = pull --all
-  plr = pull --rebase
-  cam = commit -am
-  ca = commit -a
-  cm = commit -m
   ci = commit
   co = checkout
   st = status
@@ -14,28 +9,13 @@
   su = stash --include-untracked
   unstage = reset HEAD --
   find = !sh -c 'git ls-tree -r --name-only HEAD | grep --color $1' -
-  cleanup = !git branch --merged master | grep -v 'master$' | xargs git branch -d
-  k = !gitk
   g = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
   h = !git --no-pager log origin/master..HEAD --abbrev-commit --pretty=oneline
   ph = !git --no-pager log --pretty=oneline $*
-  pom = !sh -c 'git h && echo Ready to push? ENTER && read && git push origin master' -
-  pomt = !sh -c 'git h && echo Ready to push? ENTER && read && git push origin master && git push origin master --tags' -
-  purm = !sh -c 'test "$#" = 1 && git h && git checkout master && git pull && git checkout \"$1\" && git rebase master && exit 0 || echo \"usage: git purm <branch>\" >&2 && exit 1' -
-  rpu = !sh -c 'test "$#" = 1 && git h && git checkout \"$1\" && git rebase master && git push && git checkout master && exit 0 || echo \"usage: git rpu <branch>\" >&2 && exit 1' -
-  mpu = !sh -c 'test "$#" = 1 && git h && git checkout \"$1\" && git merge --no-edit master && git push && git checkout master && exit 0 || echo \"usage: git mpu <branch>\" >&2 && exit 1' -
-  rem = !sh -c 'test "$#" = 1 && git h && git checkout master && git pull && git checkout \"$1\" && git rebase master && git checkout master && git merge \"$1\" && echo Done and ready to do: git pom && exit 0 || echo \"usage: git rem <branch>\" >&2 && exit 1' -
-  rpom = !git pull --rebase && git pom
-  v = !gvim $*
   lt = !git describe $(git rev-list --tags --max-count=1)
-  mus = !sh -c 'git checkout master && git fetch upstream && git merge upstream/master && git push origin master --tags' -
-  ob = !sh -c 'test "$#" = 2 && git branch -m $2 temp-renamed && git branch -m $1 $2 && git push -f origin $2 && git branch -D temp-renamed' -
-  lc = log -p --follow -1
   lsb = branch --format '%(refname:short)'
-
-  # Same as above, but with a diff stat instead of just names
-  # (better for interactive use)
   stat = !git diff --stat $(git merge-base HEAD \"$REVIEW_BASE\")
+  cleanup = reflog expire --expire=now --all && git gc --prune=now --aggressive
 [core]
   filemode = false
   editor = vim
