@@ -38,5 +38,4 @@ source $HOME/.zsh/programs/docker.zsh
 source $HOME/.zsh/programs/git.zsh
 source $HOME/.zsh/programs/pspg.zsh
 source $HOME/.zsh/programs/mise.zsh
-source $HOME/.zsh/programs/tabulator.zsh
 
