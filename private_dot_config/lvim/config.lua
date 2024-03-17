@@ -46,19 +46,6 @@ lvim.builtin.nvimtree.setup.renderer.icons.show.git = false
 -- Plugins and their settings
 ------------------------------------------------
 lvim.plugins = {
-  {
-    "williamboman/mason.nvim",
-    dependencies = { "Zeioth/mason-extra-cmds", opts = {} },
-    cmd = {
-      "Mason",
-      "MasonInstall",
-      "MasonUninstall",
-      "MasonUninstallAll",
-      "MasonLog",
-      "MasonUpdate",
-      "MasonUpdateAll", -- provided by `Zeioth/mason-extra-cmds`
-    }
-  },
   { "mfussenegger/nvim-lint" },
   { "dgagn/diagflow.nvim",         event = 'LspAttach',                              opts = {} },
   { "folke/trouble.nvim",          dependencies = { "nvim-tree/nvim-web-devicons" }, },
