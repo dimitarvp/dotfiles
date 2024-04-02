@@ -1,5 +1,7 @@
 system_type=$(uname -s)
 
+source $HOME/.zsh/secrets.zsh
+
 source $HOME/.zsh/p10k.zsh
 source $HOME/.zsh/zsh.zsh
 source $HOME/.zsh/zoxide.zsh
@@ -39,4 +41,3 @@ source $HOME/.zsh/programs/git.zsh
 source $HOME/.zsh/programs/pspg.zsh
 source $HOME/.zsh/programs/mise.zsh
 
-source $HOME/.zsh/secrets.zsh
