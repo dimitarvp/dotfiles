@@ -374,6 +374,11 @@ lvim.format_on_save = {
 
 require("lvim.lsp").setup()
 
+local lspc = require('lspconfig')
+
+-- LSP: Bash
+lspc.bashls.setup {}
+
 -- LSP: Golang
 -- This is doing extra formatting on save (using `golines` in this case)
 local format_sync_grp = vim.api.nvim_create_augroup("GoImport", {})
@@ -386,7 +391,6 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 })
 
 -- LSP: Rust
-local lspc = require('lspconfig')
 
 -- local on_attach = function(client)
 --   require('completion').on_attach(client)
