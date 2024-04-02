@@ -152,7 +152,8 @@ lvim.plugins = {
     },
     config = function()
       require("go").setup({
-        max_line_len = 100
+        max_line_len = 100,
+        goimports = 'golines',
       })
     end,
     event = { "CmdlineEnter" },
@@ -378,7 +379,9 @@ require("lvim.lsp").setup()
 local format_sync_grp = vim.api.nvim_create_augroup("GoImport", {})
 vim.api.nvim_create_autocmd("BufWritePre", {
   pattern = "*.go",
-  command = 'GoFmt',
+  callback = function()
+    require('go.format').goimport()
+  end,
   group = format_sync_grp,
 })
 
