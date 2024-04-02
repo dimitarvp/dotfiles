@@ -460,6 +460,7 @@ rt.move_item.move_item(true)
 -- LSP: Elixir
 local homedir = os.getenv("HOME")
 local root_pattern = require("lspconfig").util.root_pattern
+
 require 'lspconfig'.elixirls.setup {
   filetypes = { "elixir", "eelixir", "heex", "surface" },
   root_dir = root_pattern("mix.exs", ".git") or vim.loop.os_homedir(),
@@ -467,8 +468,9 @@ require 'lspconfig'.elixirls.setup {
 }
 
 -- (1) add `elixirls` to `skipped_servers` list
--- (2) remove `lexical` from `skipped_servers` list
 -- vim.list_extend(lvim.lsp.automatic_configuration.skipped_servers, { "elixirls" })
+
+-- (2) remove `lexical` from `skipped_servers` list
 -- lvim.lsp.automatic_configuration.skipped_servers = vim.tbl_filter(function(server)
 --   return server ~= "lexical"
 -- end, lvim.lsp.automatic_configuration.skipped_servers)
@@ -502,7 +504,7 @@ require 'lspconfig'.elixirls.setup {
 -- require 'lspconfig'.lexical.setup {
 --   filetypes = { "elixir", "eelixir", "heex" },
 --   root_dir = root_pattern("mix.exs", ".git") or vim.loop.os_homedir(),
---   cmd = { "/Users/dimi/bin/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
+--   cmd = { homedir .. "/bin/lexical/_build/dev/package/lexical/bin/start_lexical.sh" },
 -- }
 
 ------------------------------------------------
