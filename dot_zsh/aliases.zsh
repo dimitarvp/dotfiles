@@ -89,6 +89,12 @@ alias mix_hex_latest2='_mix_hex_latest_2'
 # Utilities.
 alias histocsv="jp -input csv -xy '[*][0,1]' -type bar -height 53"
 
+# Misc.
+
+function curl_github() {
+  curl $CURL_GITHUB_HEADERS $*
+}
+
 # ugrep: Aliases to consider:
 # alias uq     = 'ug -Q'
 # alias ux     = 'ug -UX'
