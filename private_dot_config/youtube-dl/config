@@ -19,7 +19,6 @@
 --console-title
 --no-warnings
 --sponsorblock-remove all
-#--recode mp4
 --compat-options embed-thumbnail-atomicparsley
 -P 'temp:~/temp'
 #--downloader aria2c
