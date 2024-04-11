@@ -1,11 +1,13 @@
 --restrict-filenames
 --output '%(title)s.%(ext)s'
 --ignore-errors
---write-sub
 --embed-subs
 --all-subs
+--sub-langs all,-live_chat
+--compat-options no-live-chat
 --convert-subs srt
---format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+--format 'vcodec=av01/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+--convert-thumbnails jpg
 --embed-thumbnail
 --audio-quality 0
 --add-metadata
@@ -16,6 +18,9 @@
 --no-mark-watched
 --console-title
 --no-warnings
-#--sponsorblock-remove all
+--sponsorblock-remove all
+#--recode mp4
+--compat-options embed-thumbnail-atomicparsley
+-P 'temp:~/temp'
 #--downloader aria2c
 #--downloader-args '-j 16 -s 16 -x 16 -k 1M'
