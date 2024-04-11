@@ -39,7 +39,7 @@ alias min='sort -g | head -n1'
 alias max='sort -g -r | head -n1'
 
 alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
-alias ytdl="yt-dlp --config-location $HOME/.config/youtube-dl/config.yt-dlp"
+alias ytdl="yt-dlp --config-location $HOME/.config/youtube-dl/config"
 
 alias bri='ddcctl -d 1 -b'
 
