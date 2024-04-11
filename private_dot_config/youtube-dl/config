@@ -6,7 +6,8 @@
 --sub-langs all,-live_chat
 --compat-options no-live-chat
 --convert-subs srt
---format 'vcodec=av01/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+--format 'vcodec=av01/bestvideo*+bestaudio/best'
+--format-sort 'quality,res,fps,hdr:12,vcodec:av01,channels,acodec,abr,asr,proto,ext,hasaud,source,id'
 --convert-thumbnails jpg
 --embed-thumbnail
 --audio-quality 0
