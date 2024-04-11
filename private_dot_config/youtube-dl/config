@@ -21,5 +21,3 @@
 --sponsorblock-remove all
 --compat-options embed-thumbnail-atomicparsley
 -P 'temp:~/temp'
-#--downloader aria2c
-#--downloader-args '-j 16 -s 16 -x 16 -k 1M'
