@@ -32,11 +32,14 @@ alias skag='sk --ansi -i -c "ag --color {}"'
 alias skgrep='sk --ansi -i -c "grep -rI --color=always --line-number {} ."'
 alias skrg='sk --ansi -i -c "rg --color=always --line-number --ignore-case {}"'
 alias skp='sk --ansi -i -c "rg --color=always --line-number --ignore-case {}" --preview "preview.sh {}"'
-alias ldd='otool -L'
 alias mpvm='mpv --no-audio --loop-playlist=inf'
 alias scim='sc-im'
 alias min='sort -g | head -n1'
 alias max='sort -g -r | head -n1'
+
+if [ "$system_type" = "Darwin" ]; then
+  alias ldd='otool -L'
+fi
 
 alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
 alias ytdl="yt-dlp --config-location $HOME/.config/youtube-dl/config"
