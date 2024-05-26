@@ -17,7 +17,7 @@
   stat = !git diff --stat $(git merge-base HEAD \"$REVIEW_BASE\")
   cleanup = reflog expire --expire=now --all && git gc --prune=now --aggressive
 [core]
-  filemode = false
+	fileMode = false
   editor = vim
   excludesfile = ~/.gitignore
   pager = delta
