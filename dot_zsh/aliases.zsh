@@ -23,6 +23,7 @@ alias fdgit='fd --no-ignore --hidden --exclude .git --type file --type symlink'
 alias fdpid="ps axww -o pid,user,%cpu,%mem,start,time,command | fzf | sed 's/^ *//' | cut -f1 -d' '"
 alias ll='eza -l --color always --icons -a -s type -g --git --time-style "+%Y-%b-%d %H:%M:%S%.3f"'
 alias llt="ll -T --git-ignore -I '.git|.elixir_ls|.lexical'"
+alias llmax='ll -r -s size --total-size'
 # alias ll='lsd -lgA --group-directories-first --date "+%Y-%b-%d %H:%M:%S%.3f"'
 # alias llt="ll --tree -I '.git' -I '.elixir_ls' -I '_build' -I 'cover' -I 'deps' -I 'doc' -I 'target'"
 alias listeners1='netstat -an -ptcp | grep LISTEN'
