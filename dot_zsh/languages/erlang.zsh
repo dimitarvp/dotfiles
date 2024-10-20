@@ -8,3 +8,7 @@ export KERL_CONFIGURE_OPTIONS='--without-odbc'
 
 # Enable Erlang/Elixir REPL history
 export ERL_AFLAGS="-kernel shell_history enabled"
+
+# Reduces memory usage.
+# https://elixirforum.com/t/elixir-erlang-docker-containers-ram-usage-on-different-oss-kernels/57251/16
+export ERL_MAX_PORTS=1024
