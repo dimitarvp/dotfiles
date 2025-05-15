@@ -1,3 +1,5 @@
 if [ "$system_type" = "Darwin" ]; then
-  source $HOME/scripts/dimi_backup_setup
+  if [ -f "$HOME/scripts/dimi_backup_setup" ]; then
+    source $HOME/scripts/dimi_backup_setup
+  fi
 fi
