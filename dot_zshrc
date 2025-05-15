@@ -4,6 +4,7 @@ source $HOME/.zsh/secrets.zsh
 
 source $HOME/.zsh/p10k.zsh
 source $HOME/.zsh/zsh.zsh
+source $HOME/.zsh/package_managers.zsh
 source $HOME/.zsh/zoxide.zsh
 source $HOME/.zsh/ohmyzsh.zsh
 source $HOME/.zsh/zsh_history.zsh # always put history opts after `oh-my-zsh` init or it will override this file.
@@ -16,7 +17,6 @@ source $HOME/.zsh/gnu.zsh
 source $HOME/.zsh/backups.zsh
 source $HOME/.zsh/env.zsh
 source $HOME/.zsh/paths.zsh
-source $HOME/.zsh/package_managers.zsh
 source $HOME/.zsh/system.zsh
 
 source $HOME/.zsh/fuzzy_finders/fzf.zsh
