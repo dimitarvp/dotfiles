@@ -4,6 +4,7 @@ export PATH=$HOME/.local/bin:$PATH
 if [ "$system_type" = "Darwin" ]; then
   # Homebrew: installed programs.
   export PATH=/usr/local/sbin:$PATH
+  export PATH=/opt/homebrew/bin:$PATH
 
   # Homebrew: `curl`
   export PATH="/usr/local/opt/curl/bin:$PATH"
