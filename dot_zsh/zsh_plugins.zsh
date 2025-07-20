@@ -13,5 +13,5 @@ else
   echo "UNKNOWN SYSTEM: $(uname -a)"
 fi
 
-source $zsh_plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source $zsh_plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+source $zsh_plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
