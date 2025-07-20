@@ -9,7 +9,6 @@ source $HOME/.zsh/zoxide.zsh
 source $HOME/.zsh/ohmyzsh.zsh
 source $HOME/.zsh/zsh_history.zsh # always put history opts after `oh-my-zsh` init or it will override this file.
 source $HOME/.zsh/zsh_plugins.zsh
-source $HOME/.zsh/znap.zsh
 source $HOME/.zsh/autocomplete.zsh
 source $HOME/.zsh/aliases.zsh
 source $HOME/.zsh/gnu.zsh
