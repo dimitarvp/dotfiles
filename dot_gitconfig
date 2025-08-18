@@ -16,7 +16,8 @@
   lsb = branch --format '%(refname:short)'
   stat = !git diff --stat $(git merge-base HEAD \"$REVIEW_BASE\")
   cleanup = reflog expire --expire=now --all && git gc --prune=now --aggressive
-  sync = !git stash --include-untracked && git pull origin $(git rev-parse --abbrev-ref HEAD) --rebase && git push --force-with-lease && git stash pop
+  main = !git log --pretty=format:'%D' HEAD^ | grep 'origin/' | head -n1 | sed 's@origin/@@' | sed 's@,.*@@'
+  sync = !git stash --include-untracked && git pull origin $(git main) --rebase && git push --force-with-lease && git stash pop
 [core]
 	fileMode = false
   editor = vim
