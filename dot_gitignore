@@ -2,6 +2,7 @@
 .elixir-ls
 .elixir_ls
 .envrc
+.jj
 .lexical
 .tool-versions
 node_modules
