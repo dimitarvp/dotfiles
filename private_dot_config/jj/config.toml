@@ -1,0 +1,16 @@
+"$schema" = "https://jj-vcs.github.io/jj/latest/config-schema.json"
+
+[git]
+sign-on-push = true # sign everything on push
+
+[signing]
+backend = "gpg"
+behavior = "drop" # "drop" == "do not try to sign things during every rebase" (as this is slow)
+
+[ui]
+pager = "delta"
+diff-formatter = ":git" # format diffs like Git so delta can parse them
+
+[user]
+name = "Dimitar Panayotov"
+email = "mitko.p@gmail.com"
