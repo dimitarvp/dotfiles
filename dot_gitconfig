@@ -97,3 +97,5 @@
   defaultBranch = main
 [include]
   path = .gitconfig.secret
+[url "git@github.com:"]
+	insteadOf = https://github.com/
