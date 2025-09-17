@@ -63,15 +63,15 @@ export PG_SHOW_DB_SIZE="SELECT pg_database_size(current_database());"
 export PG_SHOW_DB_SIZE_PRETTY="SELECT pg_size_pretty(pg_database_size(current_database()));"
 
 function _pg_table_sizes() {
-    psql -AqtF"," -U postgres $1 -c $PG_SHOW_BIGGEST_TABLES;
+  psql -AqtF"," -U postgres $1 -c $PG_SHOW_BIGGEST_TABLES
 }
 
 function _pg_db_size() {
-    psql -AqtF"," -U postgres $1 -c $PG_SHOW_DB_SIZE;
+  psql -AqtF"," -U postgres $1 -c $PG_SHOW_DB_SIZE
 }
 
 function _pg_db_size_pretty() {
-    psql -AqtF"," -U postgres $1 -c $PG_SHOW_DB_SIZE_PRETTY;
+  psql -AqtF"," -U postgres $1 -c $PG_SHOW_DB_SIZE_PRETTY
 }
 
 alias pg_table_sizes='_pg_table_sizes'
@@ -81,12 +81,12 @@ alias pg_db_size_pretty='_pg_db_size_pretty'
 # --------------------------------------------------
 
 function _mix_hex_latest_1() {
-    mix hex.info $1 | grep 'Config:' | sed 's/.*{\(.*\)}[^}]*/{\1},/'
+  mix hex.info $1 | grep 'Config:' | sed 's/.*{\(.*\)}[^}]*/{\1},/'
 }
 alias mix_hex_latest1='_mix_hex_latest_1'
 
 function _mix_hex_latest_2() {
-    curl --silent https://hex.pm/api/packages/$1 | jq -r '.configs."mix.exs"'
+  curl --silent https://hex.pm/api/packages/$1 | jq -r '.configs."mix.exs"'
 }
 alias mix_hex_latest2='_mix_hex_latest_2'
 
