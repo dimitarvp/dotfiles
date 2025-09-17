@@ -43,7 +43,7 @@ if [ "$system_type" = "Darwin" ]; then
 fi
 
 alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
-alias ytdl="yt-dlp --config-location $HOME/.config/youtube-dl/config"
+alias ytdl="yt-dlp"
 
 alias bri='ddcctl -d 1 -b'
 
