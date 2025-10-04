@@ -37,6 +37,8 @@ alias mpvm='mpv --no-audio --loop-playlist=inf'
 alias scim='sc-im'
 alias min='sort -g | head -n1'
 alias max='sort -g -r | head -n1'
+alias rmf='rm -rf'
+alias rmfv='rm -rfv'
 
 if [ "$system_type" = "Darwin" ]; then
   alias ldd='otool -L'
