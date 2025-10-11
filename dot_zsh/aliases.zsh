@@ -53,6 +53,7 @@ alias bri='ddcctl -d 1 -b'
 if [ "$system_type" = "Darwin" ]; then
   alias vim='/usr/local/bin/vim'
   alias python='/usr/local/bin/python3.12'
+  alias python3='/usr/local/bin/python3.12'
   alias pip='/usr/local/bin/pip3.12'
   alias ls="/usr/local/opt/coreutils/libexec/gnubin/ls"
 fi
