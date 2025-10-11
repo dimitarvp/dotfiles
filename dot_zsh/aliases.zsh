@@ -52,10 +52,9 @@ alias bri='ddcctl -d 1 -b'
 # macOS-specific aliases.
 if [ "$system_type" = "Darwin" ]; then
   alias vim='/usr/local/bin/vim'
-  alias python='/usr/local/bin/python3.9'
-  alias pip='/usr/local/bin/pip3.9'
+  alias python='/usr/local/bin/python3.12'
+  alias pip='/usr/local/bin/pip3.12'
   alias ls="/usr/local/opt/coreutils/libexec/gnubin/ls"
-  alias termgraph='python3 /usr/local/lib/python3.8/site-packages/termgraph/termgraph.py --width 150'
 fi
 
 # --------------------------------------------------
