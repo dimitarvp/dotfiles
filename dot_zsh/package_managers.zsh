@@ -16,7 +16,7 @@ if [ "$system_type" = "Darwin" ]; then
   export PATH="/usr/local/opt/sqlite/bin:$PATH"
 
   # Homebrew: `postgresql`
-  export PATH="/usr/local/opt/postgresql@16/bin:$PATH"
+  export PATH="/usr/local/opt/postgresql@18/bin:$PATH"
 
   # Homebrew: OpenSSL
   export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
