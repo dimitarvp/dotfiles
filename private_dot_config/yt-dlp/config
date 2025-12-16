@@ -1,5 +1,5 @@
 --restrict-filenames
---output '%(title)s.%(ext)s'
+--output '%(channel)s__%(title)s__%(id)s.%(ext)s'
 --ignore-errors
 --embed-subs
 --all-subs
