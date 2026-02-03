@@ -1,11 +1,12 @@
 # Font configuration
-# ghostty_font_size can be set in ~/.config/chezmoi/chezmoi.toml under [data]
+# ghostty_font_size and ghostty_adjust_cell_height can be set in ~/.config/chezmoi/chezmoi.toml under [data]
 font-family = UbuntuMono Nerd Font Mono
 font-style = Regular
 font-style-bold = Bold
 font-style-italic = Italic
 font-style-bold-italic = Bold Italic
 font-size = {{ index . "ghostty_font_size" | default 18 }}
+adjust-cell-height = {{ index . "ghostty_adjust_cell_height" | default 0 }}
 
 # Window configuration
 macos-titlebar-style = tabs

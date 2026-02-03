@@ -8,11 +8,15 @@ Some settings can be customized per-machine by creating `~/.config/chezmoi/chezm
 
 ```toml
 [data]
-    font_size = 22.5
+    alacritty_font_size = 22.5
+    ghostty_font_size = 22
+    ghostty_adjust_cell_height = 1
 ```
 
 ### Available variables
 
 | Variable | Default | Used in |
 |----------|---------|---------|
-| `font_size` | 18 | Alacritty, Ghostty |
+| `alacritty_font_size` | 18 | Alacritty |
+| `ghostty_font_size` | 18 | Ghostty |
+| `ghostty_adjust_cell_height` | 0 | Ghostty |
