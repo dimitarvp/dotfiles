@@ -16,8 +16,7 @@ export LC_TIME=en_US.UTF-8
 
 setopt rm_star_silent
 
-autoload -Uz compinit
-compinit
+# NOTE: compinit is handled by Oh-My-Zsh - don't call it here (causes double init, adds 100-300ms)
 
 fpath+=${ZDOTDIR:-$HOME}/.zsh_functions
 
