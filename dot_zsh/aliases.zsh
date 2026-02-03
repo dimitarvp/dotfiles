@@ -1,19 +1,7 @@
-# if [ "$(command -v eza)" ]; then
-#     unalias -m 'll'
-#     unalias -m 'l'
-#     unalias -m 'la'
-#     unalias -m 'ls'
-#     alias ls='eza -G --color auto --icons -a -s type'
-#     alias ll='eza -l --color always --icons -a -s type -g --git --time-style full-iso'
-# fi
-
 alias exrebuild='fd -HI -t d "deps|_build" -x rm -rf && mix deps.clean --unlock --unused && mix deps.get && mix compile'
 alias exclean='fd -HI -t d "deps|_build" -x rm -rf'
 
 alias g='git'
-# alias ghfpush='git stash && git hf push && git stash pop'
-# alias ghfpull='git stash && git hf pull && git stash pop'
-# alias ghfupdate='git stash && git hf update && git stash pop'
 alias gtree='git ls-tree -r --name-only HEAD'
 alias gchanged="git status --porcelain | awk '{print \$2}'" # This shows modified and untracked entries
 alias lsgit='git ls-files'
@@ -24,8 +12,6 @@ alias fdpid="ps axww -o pid,user,%cpu,%mem,start,time,command | fzf | sed 's/^ *
 alias ll='eza -l --color always --icons -a -s type -g --git --time-style "+%Y-%b-%d %H:%M:%S%.3f"'
 alias llt="ll -T --git-ignore -I '.git|.elixir_ls|.lexical'"
 alias llmax='ll -r -s size --total-size'
-# alias ll='lsd -lgA --group-directories-first --date "+%Y-%b-%d %H:%M:%S%.3f"'
-# alias llt="ll --tree -I '.git' -I '.elixir_ls' -I '_build' -I 'cover' -I 'deps' -I 'doc' -I 'target'"
 alias listeners1='netstat -an -ptcp | grep LISTEN'
 alias listeners2='lsof -i -P | grep -i "listen"'
 alias skack='sk --ansi -i -c "ack --color {}"'
@@ -100,21 +86,5 @@ alias histocsv="jp -input csv -xy '[*][0,1]' -type bar -height 53"
 function curl_github() {
   curl $CURL_GITHUB_HEADERS $*
 }
-
-# ugrep: Aliases to consider:
-# alias uq     = 'ug -Q'
-# alias ux     = 'ug -UX'
-# alias uz     = 'ug -z'
-# alias grep   = 'ugrep -G'
-# alias egrep  = 'ugrep -E'
-# alias fgrep  = 'ugrep -F'
-# alias pgrep  = 'ugrep -P'
-# alias xgrep  = 'ugrep -UX'
-# alias zgrep  = 'ugrep -zG'
-# alias zegrep = 'ugrep -zE'
-# alias zfgrep = 'ugrep -zF'
-# alias zpgrep = 'ugrep -zP'
-# alias zxgrep = 'ugrep -zUX'
-# alias xdump  = 'ugrep -X ""'
 
 alias tsmicro="ts '[%Y-%m-%d %H:%M:%.S]'"
