@@ -51,8 +51,8 @@ palette = 13=#ff92df
 palette = 14=#a4ffff
 palette = 15=#f8f8f2
 
-# Scrollback
-scrollback-limit = 100000
+# Scrollback (10 million lines - clear manually with Super+K)
+scrollback-limit = 10000000
 
 # Copy on select
 copy-on-select = clipboard
@@ -65,3 +65,10 @@ keybind = super+n=new_window
 keybind = ctrl+space=text:\x00
 keybind = shift+page_up=scroll_page_up
 keybind = shift+page_down=scroll_page_down
+
+# Tab navigation (Super = Cmd on Mac, Win on Linux)
+keybind = super+left=previous_tab
+keybind = super+right=next_tab
+
+# Clear scrollback (Super+K)
+keybind = super+k=clear_screen
