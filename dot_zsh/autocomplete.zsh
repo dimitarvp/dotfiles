@@ -1,3 +1,1 @@
-if [ -f /usr/local/etc/profile.d/bash_completion.sh ]; then
-    . /usr/local/etc/profile.d/bash_completion.sh
-fi
+# Bash completion removed - zsh has its own completion system via compinit/Oh-My-Zsh
