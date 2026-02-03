@@ -5,4 +5,4 @@ rebar = "latest"
 
 [tasks.converge]
 description = "Install, upgrade, and prune tools"
-run = "mise install && mise upgrade && mise prune"
+run = "mise install && mise upgrade && mise prune -y"
