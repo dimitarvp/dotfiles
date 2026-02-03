@@ -1,15 +1,31 @@
-if [ "$system_type" = "Darwin" ]; then
-  export PATH=/usr/local/opt/bison/bin:$PATH # GNU bison
-  export PATH=/usr/local/opt/texinfo/bin:$PATH # GNU texinfo
-  export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH # GNU tar
+# =============================================================================
+# GNU Tools (macOS)
+# =============================================================================
+# Replace BSD utilities with GNU versions on macOS.
+# Requires: os.zsh must be sourced first.
 
-  export LDFLAGS="-L/usr/local/opt/bison/lib"
+if is_macos && [[ -n "$HOMEBREW_PREFIX" ]]; then
+  # GNU coreutils (ls, cat, cp, mv, etc.)
+  if [[ -d "$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin" ]]; then
+    export PATH="$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin:$PATH"
+    export MANPATH="$HOMEBREW_PREFIX/opt/coreutils/libexec/gnuman:${MANPATH}"
+  fi
 
-  # To use all GNU core utilities, uncomment these:
-  export PATH="/usr/local/opt/coreutils/libexec/gnubin:${PATH}"
-  export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:${MANPATH}"
+  # GNU grep
+  [[ -d "$HOMEBREW_PREFIX/opt/grep/libexec/gnubin" ]] && \
+    export PATH="$HOMEBREW_PREFIX/opt/grep/libexec/gnubin:$PATH"
 
-  # GNU grep.
-  export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"
+  # GNU tar
+  [[ -d "$HOMEBREW_PREFIX/opt/gnu-tar/libexec/gnubin" ]] && \
+    export PATH="$HOMEBREW_PREFIX/opt/gnu-tar/libexec/gnubin:$PATH"
+
+  # GNU texinfo
+  [[ -d "$HOMEBREW_PREFIX/opt/texinfo/bin" ]] && \
+    export PATH="$HOMEBREW_PREFIX/opt/texinfo/bin:$PATH"
+
+  # Bison (if installed)
+  if [[ -d "$HOMEBREW_PREFIX/opt/bison/bin" ]]; then
+    export PATH="$HOMEBREW_PREFIX/opt/bison/bin:$PATH"
+    export LDFLAGS="-L$HOMEBREW_PREFIX/opt/bison/lib"
+  fi
 fi
-

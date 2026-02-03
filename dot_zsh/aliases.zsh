@@ -26,23 +26,21 @@ alias max='sort -g -r | head -n1'
 alias rmf='rm -rf'
 alias rmv='rm -rfv'
 
-if [ "$system_type" = "Darwin" ]; then
+# macOS-specific aliases
+if is_macos; then
   alias ldd='otool -L'
+  alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
+  alias bri='ddcctl -d 1 -b'  # monitor brightness via ddcctl
+
+  # Prefer Homebrew versions
+  [[ -x "$HOMEBREW_PREFIX/bin/vim" ]] && alias vim="$HOMEBREW_PREFIX/bin/vim"
+  [[ -x "$HOMEBREW_PREFIX/bin/python3.12" ]] && alias python="$HOMEBREW_PREFIX/bin/python3.12"
+  [[ -x "$HOMEBREW_PREFIX/bin/python3.12" ]] && alias python3="$HOMEBREW_PREFIX/bin/python3.12"
+  [[ -x "$HOMEBREW_PREFIX/bin/pip3.12" ]] && alias pip="$HOMEBREW_PREFIX/bin/pip3.12"
+  # Note: ls uses GNU coreutils via PATH (see gnu.zsh)
 fi
 
-alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
 alias ytdl="yt-dlp"
-
-alias bri='ddcctl -d 1 -b'
-
-# macOS-specific aliases.
-if [ "$system_type" = "Darwin" ]; then
-  alias vim='/usr/local/bin/vim'
-  alias python='/usr/local/bin/python3.12'
-  alias python3='/usr/local/bin/python3.12'
-  alias pip='/usr/local/bin/pip3.12'
-  alias ls="/usr/local/opt/coreutils/libexec/gnubin/ls"
-fi
 
 # --------------------------------------------------
 # BEGIN: PostgreSQL helpers.
