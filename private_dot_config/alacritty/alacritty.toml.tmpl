@@ -51,8 +51,8 @@ vi_mode_style = "None"
 
 [font]
 builtin_box_drawing = true
-# font_size can be set in ~/.config/chezmoi/chezmoi.toml under [data]
-size = {{ index . "font_size" | default 18 }}
+# alacritty_font_size can be set in ~/.config/chezmoi/chezmoi.toml under [data]
+size = {{ index . "alacritty_font_size" | default 18 }}
 
 [font.bold]
 family = "UbuntuMono Nerd Font Mono"
