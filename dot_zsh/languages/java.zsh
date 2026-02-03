@@ -1,4 +1,4 @@
-if [ "$system_type" = "Darwin" ]; then
-  export PATH=/usr/local/opt/openjdk/bin:$PATH # OpenJDK
+# OpenJDK via Homebrew
+if is_macos && [[ -d "$HOMEBREW_PREFIX/opt/openjdk/bin" ]]; then
+  export PATH="$HOMEBREW_PREFIX/opt/openjdk/bin:$PATH"
 fi
-

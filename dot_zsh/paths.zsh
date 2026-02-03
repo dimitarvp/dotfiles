@@ -1,2 +1,6 @@
-export PATH=$PATH:$HOME/bin # Programs installed outside package managers
-export PATH=$PATH:$HOME/scripts # Local scripts
+# =============================================================================
+# User Paths
+# =============================================================================
+# Note: Main PATH configuration is in package_managers.zsh
+# This file is kept for any additional user-specific path needs.
+# Currently empty - user paths are consolidated in package_managers.zsh
