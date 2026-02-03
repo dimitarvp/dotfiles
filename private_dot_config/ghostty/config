@@ -23,7 +23,7 @@ cursor-color = eceff4
 cursor-text = 282828
 cursor-style = block
 cursor-style-blink = false
-shell-integration-features = no-cursor
+shell-integration-features = no-cursor,ssh-terminfo,ssh-env
 
 # Selection
 selection-background = f8f8f2
