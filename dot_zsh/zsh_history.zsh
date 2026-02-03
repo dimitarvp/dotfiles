@@ -16,5 +16,5 @@ export HISTIGNORE='*sudo -S*'    # Never record `sudo -S` commands in history.
 
 # History size location and limits.
 export HISTFILE="$HOME/.zsh_history"
-export HISTSIZE=10000000
+export HISTSIZE=1000000
 export SAVEHIST=$HISTSIZE
