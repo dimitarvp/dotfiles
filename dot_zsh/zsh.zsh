@@ -26,3 +26,14 @@ export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
 # Update oh-my-zsh.
 zstyle ':omz:update' mode auto
+
+# Word navigation keybindings (cross-terminal: Alacritty, Ghostty, iTerm2)
+# Alt+Arrow for word navigation - bind multiple escape sequences for compatibility
+bindkey '^[[1;3D' backward-word      # Alt+Left (xterm-style, most terminals)
+bindkey '^[[1;3C' forward-word       # Alt+Right (xterm-style, most terminals)
+bindkey '^[^[[D' backward-word       # ESC+Left (fallback)
+bindkey '^[^[[C' forward-word        # ESC+Right (fallback)
+
+# Word deletion
+bindkey '^[^?' backward-kill-word    # Alt+Backspace
+bindkey '^[[3;5~' kill-word          # Ctrl+Delete
