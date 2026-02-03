@@ -19,7 +19,7 @@
   main = !git log --pretty=format:'%D' HEAD^ | grep 'origin/' | head -n1 | sed 's@origin/@@' | sed 's@,.*@@'
   sync = !git stash --include-untracked && git pull origin $(git main) --rebase && git push --force-with-lease && git stash pop
 [core]
-	fileMode = false
+  fileMode = false
   editor = vim
   excludesfile = ~/.gitignore
   pager = delta
@@ -42,7 +42,7 @@
   signingkey = 7662FC63ECB1C3AF
 [push]
   default = current
-	autoSetupRemote = true
+  autoSetupRemote = true
 [checkout]
   defaultRemote = origin
 [color]
