@@ -51,7 +51,7 @@ vi_mode_style = "None"
 
 [font]
 builtin_box_drawing = true
-size = {{ .font_size }}
+size = {{ .font_size | default 18 }}
 
 [font.bold]
 family = "UbuntuMono Nerd Font Mono"
