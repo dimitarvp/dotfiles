@@ -1,1 +1,1 @@
-eval "$(direnv hook zsh)"
+_cache_eval direnv direnv hook zsh
