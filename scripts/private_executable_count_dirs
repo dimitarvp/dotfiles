@@ -1,0 +1,2 @@
+#!/bin/sh
+fd -HI -t d . $1 | wc -l

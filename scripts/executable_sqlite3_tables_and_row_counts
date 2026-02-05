@@ -1,0 +1,3 @@
+#! /bin/sh
+
+sqlite3 -csv "$1" 'select * from sqlite_stat1 where idx like "%autoindex%"' | xsv select '1,3' | xsv table | sed -E 's/([^0-9]+)([0-9]+).*/\1 \2/g' | sort
