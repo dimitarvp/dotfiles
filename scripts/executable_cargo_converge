@@ -1,0 +1,153 @@
+#!/bin/bash
+#
+# cargo_converge - Converge cargo-installed crates to match the config
+#
+# 1. Install missing crates from config (using binstall for speed)
+# 2. Update all installed crates to latest
+# 3. Prune crates not in config
+#
+# The source of truth is always ~/.config/cargo-crates/crates.conf (managed by chezmoi)
+#
+# Failures are collected and reported at the end; one failing crate won't stop the rest.
+
+set -uo pipefail
+
+CONFIG_FILE="${HOME}/.config/cargo-crates/crates.conf"
+
+# Use binstall if available, fall back to cargo install
+if command -v cargo-binstall &> /dev/null; then
+    INSTALL_CMD="cargo binstall -y"
+else
+    INSTALL_CMD="cargo install"
+    echo "NOTE: cargo-binstall not found, using cargo install (slower, may fail to compile)"
+    echo ""
+fi
+
+# Track failures
+declare -a install_failures=()
+declare -a prune_failures=()
+update_failed=false
+
+echo "=== cargo_converge ==="
+echo "Config: $CONFIG_FILE"
+echo "Install command: $INSTALL_CMD"
+echo ""
+
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "ERROR: Config file not found: $CONFIG_FILE"
+    echo "Run 'chezmoi apply' first to create it, or 'cargo_export' to generate from current state."
+    exit 1
+fi
+
+# Get sorted list of configured crate names
+configured=$(sort "$CONFIG_FILE")
+configured_count=$(echo "$configured" | grep -c . || echo 0)
+echo "Configured crates: $configured_count"
+
+# Get sorted list of installed crate names
+# Parse 'cargo install --list' - extract crate names (lines starting with alphanumeric, ending with version:)
+installed=$(cargo install --list | awk '/^[a-zA-Z]/ {gsub(/ .*/, ""); print}' | sort)
+installed_count=$(echo "$installed" | grep -c . || echo 0)
+echo "Currently installed: $installed_count"
+echo ""
+
+# 1. Find and install missing crates
+echo ">>> Phase 1: Installing missing crates..."
+to_install=$(comm -23 <(echo "$configured") <(echo "$installed"))
+
+if [[ -z "$to_install" ]]; then
+    echo "Nothing to install. All configured crates are present."
+else
+    echo "Crates to install:"
+    echo "$to_install" | sed 's/^/  - /'
+    echo ""
+
+    # Install each missing crate
+    while IFS= read -r crate; do
+        echo "[INSTALL] $crate"
+        if $INSTALL_CMD "$crate"; then
+            echo "[OK] $crate installed successfully"
+        else
+            echo "[FAILED] $crate failed to install"
+            install_failures+=("$crate")
+        fi
+        echo ""
+    done <<< "$to_install"
+fi
+echo ""
+
+# 2. Update all installed crates
+echo ">>> Phase 2: Updating all crates to latest..."
+if command -v cargo-install-update &> /dev/null; then
+    if cargo install-update -a; then
+        echo "[OK] Update completed"
+    else
+        echo "[FAILED] Update had errors"
+        update_failed=true
+    fi
+else
+    echo "WARNING: cargo-install-update not found. Skipping updates."
+    echo "Install with: cargo install cargo-update"
+fi
+echo ""
+
+# 3. Prune: remove crates not in config
+echo ">>> Phase 3: Checking for crates to prune..."
+
+# Re-fetch installed list after potential installs/updates
+installed=$(cargo install --list | awk '/^[a-zA-Z]/ {gsub(/ .*/, ""); print}' | sort)
+
+to_prune=$(comm -23 <(echo "$installed") <(echo "$configured"))
+
+if [[ -z "$to_prune" ]]; then
+    echo "Nothing to prune. All installed crates are in config."
+else
+    echo "Crates to prune (not in config):"
+    echo "$to_prune" | sed 's/^/  - /'
+    echo ""
+
+    # Uninstall each extra crate
+    while IFS= read -r crate; do
+        echo "[PRUNE] $crate"
+        if cargo uninstall "$crate"; then
+            echo "[OK] $crate removed"
+        else
+            echo "[FAILED] $crate failed to remove"
+            prune_failures+=("$crate")
+        fi
+        echo ""
+    done <<< "$to_prune"
+fi
+
+echo ""
+echo "=== cargo_converge complete ==="
+
+# Final summary
+final_installed=$(cargo install --list | awk '/^[a-zA-Z]/ {gsub(/ .*/, ""); print}' | sort)
+final_count=$(echo "$final_installed" | grep -c . || echo 0)
+echo "Final state: $final_count crates installed"
+
+# Report any failures
+if [[ ${#install_failures[@]} -gt 0 ]] || [[ ${#prune_failures[@]} -gt 0 ]] || [[ "$update_failed" == "true" ]]; then
+    echo ""
+    echo "=== FAILURES ==="
+
+    if [[ ${#install_failures[@]} -gt 0 ]]; then
+        echo "Failed to install (${#install_failures[@]}):"
+        printf '  - %s\n' "${install_failures[@]}"
+    fi
+
+    if [[ "$update_failed" == "true" ]]; then
+        echo "Update phase had errors"
+    fi
+
+    if [[ ${#prune_failures[@]} -gt 0 ]]; then
+        echo "Failed to prune (${#prune_failures[@]}):"
+        printf '  - %s\n' "${prune_failures[@]}"
+    fi
+
+    exit 1
+fi
+
+echo ""
+echo "All operations completed successfully."
