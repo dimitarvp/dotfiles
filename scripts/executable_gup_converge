@@ -1,0 +1,55 @@
+#!/bin/bash
+#
+# gup_converge - Converge gup-managed Go tools to match the config
+#
+# 1. Install missing tools from config
+# 2. Update all installed tools to latest
+# 3. Prune tools not in config
+#
+# The source of truth is always ~/.config/gup/gup.conf (managed by chezmoi)
+
+set -euo pipefail
+
+CONFIG_FILE="${HOME}/.config/gup/gup.conf"
+
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "ERROR: Config file not found: $CONFIG_FILE"
+    echo "Run 'chezmoi apply' first to create it."
+    exit 1
+fi
+
+echo "Config: $CONFIG_FILE"
+echo ""
+
+# 1. Install missing tools from config
+echo ">>> Installing missing tools..."
+gup import -i "$CONFIG_FILE"
+echo ""
+
+# 2. Update all installed tools
+echo ">>> Updating all tools to latest..."
+gup update
+echo ""
+
+# 3. Prune: remove tools not in config
+echo ">>> Checking for tools to prune..."
+
+# Get sorted list of installed tool names
+installed=$(gup list 2>/dev/null | awk -F: '{gsub(/^[ \t]+|[ \t]+$/, "", $1); print $1}' | sort)
+
+# Get sorted list of tool names from config
+configured=$(awk -F= '{gsub(/^[ \t]+|[ \t]+$/, "", $1); print $1}' "$CONFIG_FILE" | sort)
+
+# Find tools installed but not in config
+to_prune=$(comm -23 <(echo "$installed") <(echo "$configured"))
+
+if [[ -z "$to_prune" ]]; then
+    echo "Nothing to prune."
+else
+    echo "Pruning:"
+    echo "$to_prune"
+    echo ""
+    echo "$to_prune" | xargs gup remove -f
+fi
+
+echo ""
