@@ -15,10 +15,7 @@ git_current_dir() {
 }
 
 git_changed() {
-  git status --porcelain=v2 --renames | awk '{print $NF}'
-}
-
-git_choose_change() {
-  git status --porcelain=v2 --renames | awk '{print $NF}' | fzf --color header:italic --header 'GIT changes' --preview "git diff $@ --color=always -- {-1}"
+  git diff --name-only
+  git ls-files --others --exclude-standard
 }
 
