@@ -1,0 +1,108 @@
+local wezterm = require 'wezterm'
+local config = wezterm.config_builder()
+
+-- Font
+config.font = wezterm.font('UbuntuMono Nerd Font Mono')
+-- wezterm_font_size can be set in ~/.config/chezmoi/chezmoi.toml under [data]
+config.font_size = {{ index . "wezterm_font_size" | default 22 }}
+
+-- Terminal
+config.term = 'xterm-256color'
+
+-- Colors
+config.colors = {
+  foreground = '#f8f8f2',
+  background = '#0f0f0f',
+  cursor_bg = '#eceff4',
+  cursor_fg = '#282828',
+  selection_bg = '#f8f8f2',
+  selection_fg = '#545454',
+  ansi = {
+    '#21222c', -- black
+    '#ff5555', -- red
+    '#50fa7b', -- green
+    '#ffcb6b', -- yellow
+    '#82aaff', -- blue
+    '#c792ea', -- magenta
+    '#8be9fd', -- cyan
+    '#f8f8f2', -- white
+  },
+  brights = {
+    '#545454', -- black
+    '#ff6e6e', -- red
+    '#69ff94', -- green
+    '#ffcb6b', -- yellow
+    '#d6acff', -- blue
+    '#ff92df', -- magenta
+    '#a4ffff', -- cyan
+    '#f8f8f2', -- white
+  },
+}
+
+-- Cursor
+config.default_cursor_style = 'SteadyBlock'
+
+-- Window
+config.window_decorations = 'RESIZE'
+config.window_padding = { left = 0, right = 0, top = 0, bottom = 0 }
+
+-- Tabs
+config.enable_tab_bar = true
+config.hide_tab_bar_if_only_one_tab = true
+
+-- Bell
+config.audible_bell = 'Disabled'
+
+-- Scrollback
+config.scrollback_lines = 10000000
+
+-- Bold text uses bright colors
+config.bold_brightens_ansi_colors = true
+
+-- macOS: Option key sends Alt/Meta sequences; IME stays active for emoji input
+config.send_composed_key_when_left_alt_is_pressed = false
+config.send_composed_key_when_right_alt_is_pressed = false
+
+-- Key bindings
+config.keys = {
+  { key = 'n', mods = 'CMD', action = wezterm.action.SpawnWindow },
+  { key = 'k', mods = 'CMD', action = wezterm.action.ClearScrollback 'ScrollbackAndViewport' },
+  { key = 'LeftArrow', mods = 'CMD', action = wezterm.action.ActivateTabRelative(-1) },
+  { key = 'RightArrow', mods = 'CMD', action = wezterm.action.ActivateTabRelative(1) },
+  { key = 'LeftArrow', mods = 'CMD|SHIFT', action = wezterm.action.MoveTabRelative(-1) },
+  { key = 'RightArrow', mods = 'CMD|SHIFT', action = wezterm.action.MoveTabRelative(1) },
+}
+
+-- Mouse bindings
+config.mouse_bindings = {
+  -- Copy on select (all streak levels)
+  {
+    event = { Up = { streak = 1, button = 'Left' } },
+    mods = 'NONE',
+    action = wezterm.action.CompleteSelection 'ClipboardAndPrimarySelection',
+  },
+  {
+    event = { Up = { streak = 2, button = 'Left' } },
+    mods = 'NONE',
+    action = wezterm.action.CompleteSelection 'ClipboardAndPrimarySelection',
+  },
+  {
+    event = { Up = { streak = 3, button = 'Left' } },
+    mods = 'NONE',
+    action = wezterm.action.CompleteSelection 'ClipboardAndPrimarySelection',
+  },
+  -- Middle-click paste
+  {
+    event = { Up = { streak = 1, button = 'Middle' } },
+    mods = 'NONE',
+    action = wezterm.action.PasteFrom 'PrimarySelection',
+  },
+}
+
+-- Start maximized
+wezterm.on('gui-startup', function(cmd)
+  local _, _, window = wezterm.mux.spawn_window(cmd or {})
+  window:gui_window():maximize()
+end)
+
+return config
