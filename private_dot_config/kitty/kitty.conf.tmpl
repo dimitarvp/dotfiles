@@ -1,0 +1,81 @@
+# Font
+font_family      UbuntuMono Nerd Font Mono
+bold_font        auto
+italic_font      auto
+bold_italic_font auto
+# kitty_font_size can be set in ~/.config/chezmoi/chezmoi.toml under [data]
+font_size {{ index . "kitty_font_size" | default 22 }}
+
+# Terminal
+term xterm-256color
+
+# Colors
+foreground            #f8f8f2
+background            #0f0f0f
+cursor                #eceff4
+cursor_text_color     #282828
+selection_foreground  #545454
+selection_background  #f8f8f2
+
+# Normal colors (0-7)
+color0  #21222c
+color1  #ff5555
+color2  #50fa7b
+color3  #ffcb6b
+color4  #82aaff
+color5  #c792ea
+color6  #8be9fd
+color7  #f8f8f2
+
+# Bright colors (8-15)
+color8  #545454
+color9  #ff6e6e
+color10 #69ff94
+color11 #ffcb6b
+color12 #d6acff
+color13 #ff92df
+color14 #a4ffff
+color15 #f8f8f2
+
+# Cursor
+cursor_shape          block
+cursor_blink_interval 0
+shell_integration     enabled no-cursor
+
+# Window
+hide_window_decorations titlebar-only
+window_padding_width    0
+remember_window_size    no
+initial_window_width    2000c
+initial_window_height   2000c
+macos_quit_when_last_window_closed yes
+
+# Tabs (tab bar hidden when only one tab)
+tab_bar_edge     top
+tab_bar_min_tabs 2
+
+# Bell
+enable_audio_bell no
+
+# Scrollback
+scrollback_lines 10000000
+
+# macOS: Option key sends Alt/Meta sequences
+macos_option_as_alt both
+
+# Copy on select
+copy_on_select clipboard
+
+# Middle-click paste
+mouse_map middle release ungrabbed paste_from_selection
+
+# Key bindings (super = Cmd on macOS, Super/Win on Linux)
+map super+n           new_os_window
+map super+k           clear_terminal scrollback active
+map super+left        previous_tab
+map super+right       next_tab
+map super+shift+left  move_tab_backward
+map super+shift+right move_tab_forward
+map super+f           show_scrollback
+map super+shift+s     save_as_session --use-foreground-process --relocatable
+map super+shift+r     goto_session ~/.local/share/kitty/sessions
