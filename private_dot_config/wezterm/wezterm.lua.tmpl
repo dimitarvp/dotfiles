@@ -71,6 +71,7 @@ config.keys = {
   { key = 'RightArrow', mods = 'CMD', action = wezterm.action.ActivateTabRelative(1) },
   { key = 'LeftArrow', mods = 'CMD|SHIFT', action = wezterm.action.MoveTabRelative(-1) },
   { key = 'RightArrow', mods = 'CMD|SHIFT', action = wezterm.action.MoveTabRelative(1) },
+  { key = 'f', mods = 'CMD', action = wezterm.action.Search { CaseInSensitiveString = '' } },
 }
 
 -- Mouse bindings
@@ -96,6 +97,26 @@ config.mouse_bindings = {
     event = { Up = { streak = 1, button = 'Middle' } },
     mods = 'NONE',
     action = wezterm.action.PasteFrom 'PrimarySelection',
+  },
+}
+
+-- Search mode: ESC clears pattern before closing (replaces defaults, so all bindings listed)
+config.key_tables = {
+  search_mode = {
+    { key = 'Escape', mods = 'NONE', action = wezterm.action.Multiple {
+      wezterm.action.CopyMode 'ClearPattern',
+      wezterm.action.CopyMode 'Close',
+    }},
+    { key = 'Enter', mods = 'NONE', action = wezterm.action.CopyMode 'NextMatch' },
+    { key = 'Enter', mods = 'SHIFT', action = wezterm.action.CopyMode 'PriorMatch' },
+    { key = 'r', mods = 'CTRL', action = wezterm.action.CopyMode 'CycleMatchType' },
+    { key = 'u', mods = 'CTRL', action = wezterm.action.CopyMode 'ClearPattern' },
+    { key = 'n', mods = 'CTRL', action = wezterm.action.CopyMode 'NextMatch' },
+    { key = 'p', mods = 'CTRL', action = wezterm.action.CopyMode 'PriorMatch' },
+    { key = 'PageUp', mods = 'NONE', action = wezterm.action.CopyMode 'PriorMatchPage' },
+    { key = 'PageDown', mods = 'NONE', action = wezterm.action.CopyMode 'NextMatchPage' },
+    { key = 'UpArrow', mods = 'NONE', action = wezterm.action.CopyMode 'PriorMatch' },
+    { key = 'DownArrow', mods = 'NONE', action = wezterm.action.CopyMode 'NextMatch' },
   },
 }
 
