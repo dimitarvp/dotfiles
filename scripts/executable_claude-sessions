@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Fuzzy-search Claude Code sessions and resume the selected one.
+# Requires: fd, jq, fzf
+
+set -euo pipefail
+
+PROJECTS="${HOME}/.claude/projects"
+[[ -d "$PROJECTS" ]] || { echo "No sessions found at $PROJECTS" >&2; exit 1; }
+
+lines=$(
+  fd -t f -e jsonl -d 2 . "$PROJECTS" --exclude subagents |
+  while read -r f; do
+    sid=$(basename "$f" .jsonl)
+    jq -r --arg sid "$sid" '
+      select(.type == "user") |
+      {
+        sid: $sid,
+        cwd: .cwd,
+        ts: ((.timestamp // "")[0:19]),
+        text: (
+          if (.message.content | type) == "array" then
+            [.message.content[] | select(.type == "text") | .text][0] // ""
+          else
+            (.message.content // "")
+          end
+        )
+      } |
+      select(.text | startswith("<") | not) |
+      select(.text | length > 0) |
+      "\(.sid)\t\(.cwd // "?")\t\(.ts)\t\(.text | gsub("\n"; " ") | if length > 80 then .[0:80] + "…" else . end)"
+    ' "$f" 2>/dev/null | head -1
+  done | sort -t$'\t' -k3 -r
+)
+
+[[ -n "$lines" ]] || { echo "No sessions found" >&2; exit 1; }
+
+selected=$(echo "$lines" |
+  fzf --delimiter='\t' \
+      --with-nth=3,2,4 \
+      --no-sort \
+      --prompt="claude session> ") || exit 0
+
+sid=$(echo "$selected" | cut -f1)
+cwd=$(echo "$selected" | cut -f2)
+
+cd "$cwd" && exec claude --resume "$sid"
