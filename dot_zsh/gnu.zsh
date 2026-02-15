@@ -22,10 +22,4 @@ if is_macos && [[ -n "$HOMEBREW_PREFIX" ]]; then
   # GNU texinfo
   [[ -d "$HOMEBREW_PREFIX/opt/texinfo/bin" ]] && \
     export PATH="$HOMEBREW_PREFIX/opt/texinfo/bin:$PATH"
-
-  # Bison (if installed)
-  if [[ -d "$HOMEBREW_PREFIX/opt/bison/bin" ]]; then
-    export PATH="$HOMEBREW_PREFIX/opt/bison/bin:$PATH"
-    export LDFLAGS="-L$HOMEBREW_PREFIX/opt/bison/lib"
-  fi
 fi
