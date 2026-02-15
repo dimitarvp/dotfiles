@@ -10,12 +10,12 @@
   unstage = reset HEAD --
   find = !sh -c 'git ls-tree -r --name-only HEAD | grep --color $1' -
   g = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
-  h = !git --no-pager log origin/master..HEAD --abbrev-commit --pretty=oneline
+  h = !git --no-pager log origin/$(git main)..HEAD --abbrev-commit --pretty=oneline
   ph = !git --no-pager log --pretty=oneline $*
   lt = !git describe $(git rev-list --tags --max-count=1)
   lsb = branch --format '%(refname:short)'
-  stat = !git diff --stat $(git merge-base HEAD \"$REVIEW_BASE\")
-  main = !git log --pretty=format:'%D' HEAD^ | grep 'origin/' | head -n1 | sed 's@origin/@@' | sed 's@,.*@@'
+  stat = !git diff --stat $(git merge-base HEAD origin/$(git main))
+  main = !git-main
   sync = !git stash --include-untracked && git pull origin $(git main) --rebase && git push --force-with-lease && git stash pop
 [core]
   fileMode = false
