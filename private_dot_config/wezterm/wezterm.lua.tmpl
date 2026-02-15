@@ -95,9 +95,9 @@ config.mouse_bindings = {
     mods = 'NONE',
     action = wezterm.action.CompleteSelection 'ClipboardAndPrimarySelection',
   },
-  -- Middle-click paste
+  -- Middle-click paste (must be Down to override WezTerm's default Down binding)
   {
-    event = { Up = { streak = 1, button = 'Middle' } },
+    event = { Down = { streak = 1, button = 'Middle' } },
     mods = 'NONE',
     action = wezterm.action.PasteFrom 'PrimarySelection',
   },
