@@ -26,8 +26,13 @@ if is_macos && [[ -n "$HOMEBREW_PREFIX" ]]; then
     export PATH="$HOMEBREW_PREFIX/opt/mysql-client/bin:$PATH"
   [[ -d "$HOMEBREW_PREFIX/opt/sqlite/bin" ]] && \
     export PATH="$HOMEBREW_PREFIX/opt/sqlite/bin:$PATH"
-  [[ -d "$HOMEBREW_PREFIX/opt/postgresql@18/bin" ]] && \
-    export PATH="$HOMEBREW_PREFIX/opt/postgresql@18/bin:$PATH"
+  local _pg_dir
+  _pg_dir=$(ls -d "$HOMEBREW_PREFIX"/opt/postgresql@*/bin 2>/dev/null | sort -t@ -k2 -rn | head -1)
+  if [[ -n "$_pg_dir" ]]; then
+    export PATH="$_pg_dir:$PATH"
+  elif command -v psql &>/dev/null; then
+    echo "⚠️  Homebrew PostgreSQL not found but psql is in PATH — check package_managers.zsh" >&2
+  fi
 
   # curl (prefer Homebrew's newer version)
   [[ -d "$HOMEBREW_PREFIX/opt/curl/bin" ]] && \
