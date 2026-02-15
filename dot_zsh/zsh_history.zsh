@@ -12,7 +12,7 @@ setopt HIST_REDUCE_BLANKS        # Remove superfluous blanks before recording en
 setopt HIST_VERIFY               # Don't execute immediately upon history expansion.
 #setopt HIST_BEEP                 # Beep when accessing nonexistent history.
 
-export HISTIGNORE='*sudo -S*'    # Never record `sudo -S` commands in history.
+export HISTORY_IGNORE='(*sudo -S*)'  # Never record `sudo -S` commands in history.
 
 # History size location and limits.
 export HISTFILE="$HOME/.zsh_history"
