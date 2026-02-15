@@ -1,0 +1,125 @@
+# Starship prompt — replicates p10k rainbow powerline style.
+# Two-line prompt, round separators, nerd fonts.
+#
+# Left:  os_icon → directory → git branch/status
+# Right: cmd_duration, jobs, direnv, language versions, kubernetes, hostname, time
+# Line 2: ❯ prompt character (green success, red error)
+
+command_timeout = 1000
+add_newline = false
+
+format = """
+[\uE0B6](fg:white)\
+$os\
+[\uE0B4](fg:white bg:blue)\
+$directory\
+[\uE0B4](fg:blue bg:green)\
+$git_branch\
+[\uE0B4](fg:green)\
+$git_status\
+$fill\
+$cmd_duration\
+$jobs\
+$direnv\
+$golang\
+$rust\
+$java\
+$elixir\
+$erlang\
+$kotlin\
+$kubernetes\
+$hostname\
+[\uE0B6](fg:white)\
+$time\
+[\uE0B4](fg:white)\
+$line_break\
+$character"""
+
+# ── Left-side segments ────────────────────────────────────────────
+
+[os]
+format = "[ $symbol ](bg:white fg:black)"
+disabled = false
+
+[os.symbols]
+Macos = "\uF179"
+Linux = "\uF17C"
+
+[directory]
+format = "[ $path ](bg:blue fg:white)"
+truncation_length = 100
+truncate_to_repo = false
+
+[git_branch]
+format = "[ $symbol$branch ](bg:green fg:black)"
+symbol = "\uF126 "
+
+[git_status]
+format = "([\uE0B6](fg:yellow)[$all_status$ahead_behind](bg:yellow fg:black)[\uE0B4](fg:yellow))"
+staged = "+$count "
+modified = "!$count "
+untracked = "?$count "
+ahead = "\u21E1$count "
+behind = "\u21E3$count "
+stashed = "*$count "
+diverged = "\u21D5$count "
+
+# ── Gap filler ────────────────────────────────────────────────────
+
+[fill]
+symbol = "\u2500"
+style = "fg:#585858"
+
+# ── Right-side segments (self-contained pills) ───────────────────
+
+[cmd_duration]
+format = "[\uE0B6](fg:yellow)[ $duration ](bg:yellow fg:black)[\uE0B4](fg:yellow)"
+min_time = 3_000
+
+[jobs]
+format = "[\uE0B6](fg:black)[ \u2726 $number ](bg:black fg:cyan)[\uE0B4](fg:black)"
+
+[direnv]
+format = "[\uE0B6](fg:yellow)[ direnv ](bg:yellow fg:black)[\uE0B4](fg:yellow)"
+
+[golang]
+format = "[\uE0B6](fg:cyan)[ Go $version ](bg:cyan fg:black)[\uE0B4](fg:cyan)"
+
+[rust]
+format = "[\uE0B6](fg:#b7410e)[ Rs $version ](bg:#b7410e fg:white)[\uE0B4](fg:#b7410e)"
+
+[java]
+format = "[\uE0B6](fg:#cc3e44)[ Java $version ](bg:#cc3e44 fg:white)[\uE0B4](fg:#cc3e44)"
+
+[elixir]
+format = "[\uE0B6](fg:purple)[ Ex $version ](bg:purple fg:white)[\uE0B4](fg:purple)"
+
+[erlang]
+format = "[\uE0B6](fg:red)[ Erl $version ](bg:red fg:white)[\uE0B4](fg:red)"
+
+[kotlin]
+format = "[\uE0B6](fg:#7f52ff)[ Kt $version ](bg:#7f52ff fg:white)[\uE0B4](fg:#7f52ff)"
+
+[kubernetes]
+format = "[\uE0B6](fg:blue)[ \u2638 $context ](bg:blue fg:white)[\uE0B4](fg:blue)"
+disabled = false
+
+[hostname]
+ssh_only = true
+format = "[\uE0B6](fg:#585858)[ $hostname ](bg:#585858 fg:white)[\uE0B4](fg:#585858)"
+
+[username]
+show_always = false
+
+# ── Always-visible right segment ─────────────────────────────────
+
+[time]
+format = "[ $time ](bg:white fg:black)"
+disabled = false
+time_format = "%H:%M:%S"
+
+# ── Line 2 ───────────────────────────────────────────────────────
+
+[character]
+success_symbol = "[\u276F](fg:#5fd700)"
+error_symbol = "[\u276F](fg:red)"

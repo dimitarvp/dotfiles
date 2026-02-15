@@ -2,14 +2,13 @@ available_cpu_cores=$(getconf _NPROCESSORS_ONLN)
 
 source $HOME/.zsh/secrets.zsh
 
-source $HOME/.zsh/p10k.zsh
 source $HOME/.zsh/os.zsh  # OS detection helpers (is_macos, is_linux, HOMEBREW_PREFIX)
 source $HOME/.zsh/zsh.zsh
 source $HOME/.zsh/package_managers.zsh
 source $HOME/.zsh/cache.zsh
 source $HOME/.zsh/zoxide.zsh
-source $HOME/.zsh/ohmyzsh.zsh
-source $HOME/.zsh/zsh_history.zsh # always put history opts after `oh-my-zsh` init or it will override this file.
+source $HOME/.zsh/compinit.zsh
+source $HOME/.zsh/zsh_history.zsh
 source $HOME/.zsh/zsh_plugins.zsh
 source $HOME/.zsh/aliases.zsh
 source $HOME/.zsh/gnu.zsh
@@ -34,4 +33,6 @@ source $HOME/.zsh/programs/docker.zsh
 source $HOME/.zsh/programs/git.zsh
 source $HOME/.zsh/programs/pspg.zsh
 source $HOME/.zsh/programs/mise.zsh
+
+_cache_eval starship starship init zsh
 
