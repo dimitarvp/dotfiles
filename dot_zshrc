@@ -35,4 +35,5 @@ source $HOME/.zsh/programs/pspg.zsh
 source $HOME/.zsh/programs/mise.zsh
 
 _cache_eval starship starship init zsh
+RPROMPT=''  # starship init sets RPROMPT but we use $fill instead; skip the 12ms fork
 
