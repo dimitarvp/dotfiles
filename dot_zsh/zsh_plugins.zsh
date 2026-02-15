@@ -1,5 +1,4 @@
-# fzf-tab: disabled for now - broke tab behavior, needs proper evaluation
-# source $ZSH_CUSTOM/plugins/fzf-tab/fzf-tab.plugin.zsh
+source $ZSH_CUSTOM/plugins/fzf-tab/fzf-tab.plugin.zsh
 
 if is_macos; then
   zsh_plugins="$ZSH_CUSTOM/plugins"
