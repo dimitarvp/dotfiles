@@ -48,4 +48,12 @@ _fzf_comprun() {
   esac
 }
 
+fzf_find_git_uncommitted() {
+    local selected_entry
+    selected_entry=$(git_changed | fzf --select-1 --layout reverse --prompt 'GIT> ' --height 40% --highlight-line) || return
+    LBUFFER="${LBUFFER}${selected_entry}"
+}
+zle -N fzf_find_git_uncommitted
+bindkey '^U' fzf_find_git_uncommitted
+
 [ -f $HOME/.fzf.zsh ] && source $HOME/.fzf.zsh

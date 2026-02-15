@@ -31,11 +31,3 @@
 # zle -N peco_find_history
 # bindkey '^R' peco_find_history
 
-peco_find_git_uncommitted() {
-    local selected_entry
-    entries=$(git_changed)
-    selected_entry=$(echo $entries | peco --select-1 --layout bottom-up --prompt 'GIT>' | awk '{print $1}')
-    eval 'LBUFFER="$LBUFFER$selected_entry"'
-}
-zle -N peco_find_git_uncommitted
-bindkey '^U' peco_find_git_uncommitted
