@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ -z "${1:-}" ]]; then
+    echo "Usage: git forget <path> [<path>...]"
+    echo "  e.g. git forget data/huge-dump.sql"
+    echo ""
+    echo "Removes paths from all git history."
+    echo "Only works on files that no longer exist at HEAD."
+    echo "WARNING: rewrites history, requires force push afterward."
+    exit 1
+fi
+
+if ! command -v git-filter-repo &>/dev/null; then
+    echo "git-filter-repo is not installed."
+    echo "  pip install git-filter-repo"
+    exit 1
+fi
+
+for path in "$@"; do
+    if git cat-file -e "HEAD:$path" 2>/dev/null; then
+        echo "Error: '$path' still exists at HEAD."
+        echo "  Use 'git rm $path' first, then run git forget."
+        exit 1
+    fi
+    if [[ $(git rev-list --all --count -- "$path") -eq 0 ]]; then
+        echo "Error: '$path' not found anywhere in history."
+        exit 1
+    fi
+done
+
+echo "Will remove from all history:"
+for path in "$@"; do
+    echo "  $path"
+done
+echo "A force push will be required afterward."
+read -rp "Continue? [y/N] " confirm
+if [[ "$confirm" != [yY] ]]; then
+    echo "Aborted."
+    exit 0
+fi
+
+# Save remotes before filter-repo removes them
+remotes=$(git remote -v | awk '/(fetch)/ { print $1, $2 }')
+
+report_dir=$(mktemp -d "${TMPDIR:-/tmp}/git-forget-XXXXXX")
+trap 'rm -rf "$report_dir"' EXIT
+
+args=()
+for path in "$@"; do
+    args+=(--path "$path")
+done
+
+git filter-repo "${args[@]}" --invert-paths --force --report-dir "$report_dir"
+
+# Restore remotes
+while read -r name url; do
+    [[ -z "$name" ]] && continue
+    git remote add "$name" "$url" 2>/dev/null || true
+done <<< "$remotes"
+
+echo "Remote(s) restored."
+
+read -rp "Force push now? [y/N] " push_confirm
+if [[ "$push_confirm" == [yY] ]]; then
+    git push --force-with-lease
+    git push --tags --force
+    echo "Pushed."
+fi

@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+threshold=0
+
+if [[ -n "${1:-}" ]]; then
+    case "$1" in
+        *[Gg]) threshold=$(( ${1%[Gg]} * 1073741824 )) ;;
+        *[Mm]) threshold=$(( ${1%[Mm]} * 1048576 )) ;;
+        *[Kk]) threshold=$(( ${1%[Kk]} * 1024 )) ;;
+        *[0-9]) threshold=$1 ;;
+        *)
+            echo "Usage: git largest-orphaned [threshold] [rev-list args...]"
+            echo "  e.g. git largest-orphaned 10M"
+            echo ""
+            echo "Like 'git largest' but only files no longer at HEAD."
+            exit 1
+            ;;
+    esac
+    shift
+fi
+
+git rev-list --objects --all "$@" \
+    | git cat-file --batch-check='%(objectsize) %(objecttype) %(objectname) %(rest)' \
+    | awk -v t="$threshold" '
+        NR == FNR { head[$0] = 1; next }
+        $2 == "blob" && $1+0 >= t && !($4 in head) { print $1, $4 }
+    ' <(git ls-tree -r --name-only HEAD) - \
+    | sort -rn \
+    | head -40 \
+    | awk '{
+        b = $1+0
+        if (b >= 1073741824)    s = sprintf("%.1fG", b/1073741824)
+        else if (b >= 1048576)  s = sprintf("%.1fM", b/1048576)
+        else if (b >= 1024)     s = sprintf("%.1fK", b/1024)
+        else                    s = b "B"
+        printf "%8s  %s\n", s, $2
+    }'
