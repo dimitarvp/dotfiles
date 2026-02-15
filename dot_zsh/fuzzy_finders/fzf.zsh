@@ -65,8 +65,13 @@ fzf_find_git_uncommitted() {
 zle -N fzf_find_git_uncommitted
 bindkey '^U' fzf_find_git_uncommitted
 
-if [[ -f $HOME/.fzf.zsh ]]; then
-  source $HOME/.fzf.zsh
+# fzf keybindings + completions — source from platform-specific paths.
+# macOS (brew): /usr/local/opt/fzf/shell/ or /opt/homebrew/opt/fzf/shell/
+# Linux (pacman): /usr/share/fzf/
+local _fzf_shell="${HOMEBREW_PREFIX}/opt/fzf/shell"
+if [[ -d $_fzf_shell ]]; then
+  source "$_fzf_shell/key-bindings.zsh"
+  source "$_fzf_shell/completion.zsh"
 elif [[ -f /usr/share/fzf/key-bindings.zsh ]]; then
   source /usr/share/fzf/key-bindings.zsh
   source /usr/share/fzf/completion.zsh
