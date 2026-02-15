@@ -16,7 +16,6 @@ export FZF_CTRL_R_OPTS="
   --color header:italic
   --header 'Press CTRL-Y to copy command into clipboard'"
 
-# NOTE: on macOS this is actually ESC-c and not ALT-c
 export FZF_ALT_C_COMMAND='fd -t d'
 export FZF_ALT_C_OPTS="--preview 'tree -C {}'"
 
@@ -57,3 +56,8 @@ zle -N fzf_find_git_uncommitted
 bindkey '^U' fzf_find_git_uncommitted
 
 [ -f $HOME/.fzf.zsh ] && source $HOME/.fzf.zsh
+
+# Unbind Esc-c (fzf default for Alt-C) — collides with Esc to dismiss fzf
+# Rebind directory picker to Ctrl-O
+bindkey -r '\ec'
+bindkey '^O' fzf-cd-widget
