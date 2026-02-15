@@ -19,7 +19,7 @@ setopt rm_star_silent
 
 fpath+=${ZDOTDIR:-$HOME}/.zsh_functions
 
-# Uncomment this to enable `fzf` completion when pressing TAB.
+# Suggest from history first, then from completion engine.
 export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
 # Update oh-my-zsh.
