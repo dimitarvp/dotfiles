@@ -9,7 +9,6 @@ setopt no_flow_control
 # see 'man strftime' for details.
 HIST_STAMPS="yyyy-mm-dd"
 
-export LOCALE=en_US.UTF-8
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export LC_TIME=en_US.UTF-8

@@ -86,7 +86,7 @@ alias histocsv="jp -input csv -xy '[*][0,1]' -type bar -height 53"
 # Misc.
 
 function curl_github() {
-  curl $CURL_GITHUB_HEADERS $*
+  curl $CURL_GITHUB_HEADERS "$@"
 }
 
 alias tsmicro="ts '[%Y-%m-%d %H:%M:%.S]'"
