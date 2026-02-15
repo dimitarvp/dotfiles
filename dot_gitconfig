@@ -19,7 +19,7 @@
   sync = !git stash --include-untracked && git pull origin $(git main) --rebase && git push --force-with-lease && git stash pop
 [core]
   fileMode = false
-  editor = vim
+  editor = nvim
   excludesfile = ~/.gitignore
   pager = delta
 [diff]
