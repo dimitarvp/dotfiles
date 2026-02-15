@@ -9,6 +9,7 @@ fpath+=$HOME/.oh-my-zsh/plugins/httpie
 local _rustup="$HOME/.cargo/bin/rustup"
 if [[ -x "$_rustup" ]]; then
   local _fn_dir="${ZDOTDIR:-$HOME}/.zsh_functions"
+  mkdir -p "$_fn_dir"
   if [[ ! -f "$_fn_dir/_cargo" || "$_rustup" -nt "$_fn_dir/_cargo" ]]; then
     "$_rustup" completions zsh cargo > "$_fn_dir/_cargo" 2>/dev/null
     "$_rustup" completions zsh > "$_fn_dir/_rustup" 2>/dev/null
