@@ -6,5 +6,8 @@ encryption = "age"
     recipient = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICU84dYXeadnr71SmwhvwDQ5uEX3eNW2ulNzU83ZyD7+ dotfiles"
 
 [data]
-    alacritty_font_size = 22.5
-    ghostty_font_size = 22
+    alacritty_font_size = {{ index . "alacritty_font_size" | default 18 }}
+    ghostty_font_size = {{ index . "ghostty_font_size" | default 18 }}
+    ghostty_adjust_cell_height = {{ index . "ghostty_adjust_cell_height" | default 0 }}
+    kitty_font_size = {{ index . "kitty_font_size" | default 22 }}
+    wezterm_font_size = {{ index . "wezterm_font_size" | default 22 }}
