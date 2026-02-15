@@ -72,6 +72,9 @@ config.keys = {
   { key = 'LeftArrow', mods = 'CMD|SHIFT', action = wezterm.action.MoveTabRelative(-1) },
   { key = 'RightArrow', mods = 'CMD|SHIFT', action = wezterm.action.MoveTabRelative(1) },
   { key = 'f', mods = 'CMD', action = wezterm.action.Search { CaseInSensitiveString = '' } },
+  -- Alt+Arrow word navigation (send xterm-style CSI sequences for zsh bindkey)
+  { key = 'LeftArrow', mods = 'ALT', action = wezterm.action.SendString '\x1b[1;3D' },
+  { key = 'RightArrow', mods = 'ALT', action = wezterm.action.SendString '\x1b[1;3C' },
 }
 
 -- Mouse bindings
