@@ -4,7 +4,7 @@ local config = wezterm.config_builder()
 -- Font
 config.font = wezterm.font('UbuntuMono Nerd Font Mono')
 -- wezterm_font_size can be set in ~/.config/chezmoi/chezmoi.toml under [data]
-config.font_size = {{ index . "wezterm_font_size" | default 22 }}
+config.font_size = {{ index . "wezterm_font_size" | default 18 }}
 
 -- Terminal
 config.term = 'xterm-256color'
