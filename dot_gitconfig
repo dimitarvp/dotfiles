@@ -34,7 +34,7 @@
 [merge]
   conflictstyle = zdiff3
 [mergetool]
-    keepBackup = false
+  keepBackup = false
 [user]
   name = Dimitar Panayotov
   email = mitko.p@gmail.com
@@ -86,10 +86,10 @@
   file-decoration-style = none
   hunk-header-decoration-style = cyan box ul
 [delta "line-numbers"]
-    line-numbers-left-style = cyan
-    line-numbers-right-style = cyan
-    line-numbers-minus-style = 124
-    line-numbers-plus-style = 28
+  line-numbers-left-style = cyan
+  line-numbers-right-style = cyan
+  line-numbers-minus-style = 124
+  line-numbers-plus-style = 28
 [commit]
   gpgsign = true
 [init]
@@ -97,4 +97,4 @@
 [include]
   path = .gitconfig.secret
 [url "git@github.com:"]
-	insteadOf = https://github.com/
+  insteadOf = https://github.com/
