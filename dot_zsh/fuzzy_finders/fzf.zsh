@@ -1,4 +1,4 @@
-export FZF_DEFAULT_OPTS='--inline-info'
+export FZF_DEFAULT_OPTS='--inline-info --bind ctrl-f:preview-page-down,ctrl-b:preview-page-up'
 
 export FZF_DEFAULT_COMMAND='fd -t f --strip-cwd-prefix'
 
