@@ -20,3 +20,5 @@ Some settings can be customized per-machine by creating `~/.config/chezmoi/chezm
 | `alacritty_font_size` | 18 | Alacritty |
 | `ghostty_font_size` | 18 | Ghostty |
 | `ghostty_adjust_cell_height` | 0 | Ghostty |
+| `kitty_font_size` | 18 | Kitty |
+| `wezterm_font_size` | 18 | WezTerm |
