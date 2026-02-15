@@ -1,7 +1,7 @@
-source $ZSH_CUSTOM/plugins/fzf-tab/fzf-tab.plugin.zsh
+source $HOME/.oh-my-zsh/custom/plugins/fzf-tab/fzf-tab.plugin.zsh
 
 if is_macos; then
-  zsh_plugins="$ZSH_CUSTOM/plugins"
+  zsh_plugins="$HOME/.oh-my-zsh/custom/plugins"
 elif is_linux; then
   zsh_plugins="/usr/share/zsh/plugins"
 else
