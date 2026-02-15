@@ -2,7 +2,6 @@ DEFAULT_USER="dimi" # hides "user@host" when logged in as this user
 
 export ZSH="$HOME/.oh-my-zsh"
 
-DISABLE_AUTO_UPDATE="true"
 COMPLETION_WAITING_DOTS="true"
 
 plugins=(colored-man-pages colorize fzf httpie mix rsync rust)
