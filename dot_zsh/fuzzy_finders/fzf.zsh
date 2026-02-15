@@ -48,9 +48,13 @@ _fzf_comprun() {
 }
 
 fzf_find_git_uncommitted() {
+    git rev-parse --is-inside-work-tree &>/dev/null || { zle redisplay; return; }
     local selected_entry
-    selected_entry=$(git_changed | fzf --select-1 --layout reverse --prompt 'GIT> ' --height 40% --highlight-line) || return
-    LBUFFER="${LBUFFER}${selected_entry}"
+    selected_entry=$(git_changed | fzf --select-1 --layout reverse --prompt 'GIT> ' --height 40% --highlight-line)
+    if [[ -n "$selected_entry" ]]; then
+        LBUFFER="${LBUFFER}${selected_entry}"
+    fi
+    zle reset-prompt
 }
 zle -N fzf_find_git_uncommitted
 bindkey '^U' fzf_find_git_uncommitted
