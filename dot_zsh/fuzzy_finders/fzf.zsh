@@ -65,7 +65,12 @@ fzf_find_git_uncommitted() {
 zle -N fzf_find_git_uncommitted
 bindkey '^U' fzf_find_git_uncommitted
 
-[ -f $HOME/.fzf.zsh ] && source $HOME/.fzf.zsh
+if [[ -f $HOME/.fzf.zsh ]]; then
+  source $HOME/.fzf.zsh
+elif [[ -f /usr/share/fzf/key-bindings.zsh ]]; then
+  source /usr/share/fzf/key-bindings.zsh
+  source /usr/share/fzf/completion.zsh
+fi
 
 # Unbind Esc-c (fzf default for Alt-C) — collides with Esc to dismiss fzf
 # Rebind directory picker to Ctrl-O
