@@ -10,6 +10,7 @@ fi
 
 export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE='32'
 export ZSH_AUTOSUGGEST_USE_ASYNC=1
+ZSH_AUTOSUGGEST_MANUAL_REBIND=1
 
 source $zsh_plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $zsh_plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
