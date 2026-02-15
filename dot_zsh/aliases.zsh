@@ -14,11 +14,15 @@ alias llt="ll -T --git-ignore -I '.git|.elixir_ls|.lexical'"
 alias llmax='ll -r -s size --total-size'
 alias listeners1='netstat -an -ptcp | grep LISTEN'
 alias listeners2='lsof -i -P | grep -i "listen"'
-alias skack='sk --ansi -i -c "ack --color {}"'
-alias skag='sk --ansi -i -c "ag --color {}"'
-alias skgrep='sk --ansi -i -c "grep -rI --color=always --line-number {} ."'
-alias skrg='sk --ansi -i -c "rg --color=always --line-number --ignore-case {}"'
-alias skp='sk --ansi -i -c "rg --color=always --line-number --ignore-case {}" --preview "preview.sh {}"'
+explore() {
+    fzf --ansi --disabled \
+        --bind "start:reload:rg --color=always --line-number --ignore-case {q} || true" \
+        --bind "change:reload:rg --color=always --line-number --ignore-case {q} || true" \
+        --delimiter : \
+        --preview 'bat --color=always --style=numbers --highlight-line {2} {1}' \
+        --preview-window '+{2}-/2' \
+        --query "${1:-}"
+}
 alias mpvm='mpv --no-audio --loop-playlist=inf'
 alias scim='sc-im'
 alias min='sort -g | head -n1'
