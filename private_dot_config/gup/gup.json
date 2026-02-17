@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "packages": [
+    {
+      "name": "callgraph",
+      "import_path": "golang.org/x/tools/cmd/callgraph",
+      "version": "v0.42.0",
+      "channel": "latest"
+    },
+    {
+      "name": "dasel",
+      "import_path": "github.com/tomwright/dasel/v2/cmd/dasel",
+      "version": "v2.8.1",
+      "channel": "latest"
+    },
+    {
+      "name": "digraph",
+      "import_path": "golang.org/x/tools/cmd/digraph",
+      "version": "v0.42.0",
+      "channel": "latest"
+    },
+    {
+      "name": "doggo",
+      "import_path": "github.com/mr-karan/doggo/cmd/doggo",
+      "version": "v1.1.4",
+      "channel": "latest"
+    },
+    {
+      "name": "errcheck",
+      "import_path": "github.com/kisielk/errcheck",
+      "version": "v1.9.0",
+      "channel": "latest"
+    },
+    {
+      "name": "ets",
+      "import_path": "github.com/zmwangx/ets",
+      "version": "v0.2.2",
+      "channel": "latest"
+    },
+    {
+      "name": "ghorg",
+      "import_path": "github.com/gabrie30/ghorg",
+      "version": "v1.11.9",
+      "channel": "latest"
+    },
+    {
+      "name": "ginkgo",
+      "import_path": "github.com/onsi/ginkgo/v2/ginkgo",
+      "version": "v2.28.1",
+      "channel": "latest"
+    },
+    {
+      "name": "go-mod-upgrade",
+      "import_path": "github.com/oligot/go-mod-upgrade",
+      "version": "v0.12.0",
+      "channel": "latest"
+    },
+    {
+      "name": "gofumpt",
+      "import_path": "mvdan.cc/gofumpt",
+      "version": "v0.9.2",
+      "channel": "latest"
+    },
+    {
+      "name": "goimports",
+      "import_path": "golang.org/x/tools/cmd/goimports",
+      "version": "v0.42.0",
+      "channel": "latest"
+    },
+    {
+      "name": "golines",
+      "import_path": "github.com/segmentio/golines",
+      "version": "v0.13.0",
+      "channel": "latest"
+    },
+    {
+      "name": "gomodifytags",
+      "import_path": "github.com/fatih/gomodifytags",
+      "version": "v1.17.0",
+      "channel": "latest"
+    },
+    {
+      "name": "gomvp",
+      "import_path": "github.com/abenz1267/gomvp",
+      "version": "v0.0.4",
+      "channel": "latest"
+    },
+    {
+      "name": "gotests",
+      "import_path": "github.com/cweill/gotests/gotests",
+      "version": "v1.9.0",
+      "channel": "latest"
+    },
+    {
+      "name": "gotestsum",
+      "import_path": "gotest.tools/gotestsum",
+      "version": "v1.13.0",
+      "channel": "latest"
+    },
+    {
+      "name": "govulncheck",
+      "import_path": "golang.org/x/vuln/cmd/govulncheck",
+      "version": "v1.1.4",
+      "channel": "latest"
+    },
+    {
+      "name": "gup",
+      "import_path": "github.com/nao1215/gup",
+      "version": "v1.1.0",
+      "channel": "latest"
+    },
+    {
+      "name": "guru",
+      "import_path": "golang.org/x/tools/cmd/guru",
+      "version": "v0.1.1-deprecated",
+      "channel": "latest"
+    },
+    {
+      "name": "ijq",
+      "import_path": "codeberg.org/gpanders/ijq",
+      "version": "v1.2.0",
+      "channel": "latest"
+    },
+    {
+      "name": "impl",
+      "import_path": "github.com/josharian/impl",
+      "version": "v1.5.0",
+      "channel": "latest"
+    },
+    {
+      "name": "jjui",
+      "import_path": "github.com/idursun/jjui/cmd/jjui",
+      "version": "v0.9.11",
+      "channel": "latest"
+    },
+    {
+      "name": "jp",
+      "import_path": "github.com/sgreben/jp/cmd/jp",
+      "version": "v0.0.0-20190324121206-5e551d10fba9",
+      "channel": "latest"
+    },
+    {
+      "name": "kaf",
+      "import_path": "github.com/birdayz/kaf/cmd/kaf",
+      "version": "v0.2.13",
+      "channel": "latest"
+    },
+    {
+      "name": "knoxite",
+      "import_path": "github.com/knoxite/knoxite/cmd/knoxite",
+      "version": "v0.0.0-20230324192332-f81bbf2d2e00",
+      "channel": "latest"
+    },
+    {
+      "name": "lux",
+      "import_path": "github.com/iawia002/lux",
+      "version": "v0.24.1",
+      "channel": "latest"
+    },
+    {
+      "name": "rush",
+      "import_path": "github.com/shenwei356/rush",
+      "version": "v0.8.0",
+      "channel": "latest"
+    },
+    {
+      "name": "staticcheck",
+      "import_path": "honnef.co/go/tools/cmd/staticcheck",
+      "version": "v0.7.0",
+      "channel": "latest"
+    },
+    {
+      "name": "structlayout",
+      "import_path": "honnef.co/go/tools/cmd/structlayout",
+      "version": "v0.7.0",
+      "channel": "latest"
+    },
+    {
+      "name": "structlayout-pretty",
+      "import_path": "honnef.co/go/tools/cmd/structlayout-pretty",
+      "version": "v0.7.0",
+      "channel": "latest"
+    },
+    {
+      "name": "tailscale",
+      "import_path": "tailscale.com/cmd/tailscale",
+      "version": "v1.94.2",
+      "channel": "latest"
+    },
+    {
+      "name": "termdbms",
+      "import_path": "github.com/mathaou/termdbms",
+      "version": "v0.0.0-20220611161529-be6f39719607",
+      "channel": "latest"
+    }
+  ]
+}
