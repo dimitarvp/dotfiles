@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# cargo_export - Export cargo-installed crates to the chezmoi-managed config
+# cargo_export - Export cargo-installed crates and sync to chezmoi repo
 #
-# Always writes to ~/.config/cargo-crates/crates.conf (the chezmoi source of truth)
+# Exports installed crates to crates.conf, adds to chezmoi, commits, and pushes.
 # Format: one crate name per line (without version, to always get latest on converge)
 
 set -euo pipefail
@@ -10,27 +10,24 @@ set -euo pipefail
 CONFIG_FILE="${HOME}/.config/cargo-crates/crates.conf"
 CONFIG_DIR="$(dirname "$CONFIG_FILE")"
 
-# Ensure directory exists
 mkdir -p "$CONFIG_DIR"
 
 echo "=== cargo_export ==="
 echo "Exporting installed crates to: $CONFIG_FILE"
 echo ""
 
-# Parse 'cargo install --list' output
-# Format is:
-#   cratename vX.Y.Z:
-#       binary1
-#       binary2
-# We extract just the crate names (lines that end with ':')
-
 cargo install --list | awk '/^[a-zA-Z]/ {gsub(/ .*/, ""); print}' | sort > "$CONFIG_FILE"
 
 count=$(wc -l < "$CONFIG_FILE" | tr -d ' ')
 echo "Done. $count crates exported."
 echo ""
-echo "Exported crates:"
-cat "$CONFIG_FILE"
-echo ""
-echo "Don't forget to commit this in chezmoi if you want to sync across machines:"
-echo "  chezmoi add ~/.config/cargo-crates/crates.conf"
+
+chezmoi add "$CONFIG_FILE"
+
+if chezmoi git -- diff --quiet --staged; then
+    echo "No changes to commit."
+else
+    chezmoi git -- commit -m "update crates.conf ($count cargo crates)"
+    chezmoi git -- push
+    echo "Committed and pushed."
+fi

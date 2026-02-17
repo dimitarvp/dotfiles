@@ -106,7 +106,7 @@
     {
       "name": "gup",
       "import_path": "github.com/nao1215/gup",
-      "version": "v1.1.0",
+      "version": "v1.1.1",
       "channel": "latest"
     },
     {
@@ -130,7 +130,7 @@
     {
       "name": "jjui",
       "import_path": "github.com/idursun/jjui/cmd/jjui",
-      "version": "v0.9.11",
+      "version": "v0.9.12",
       "channel": "latest"
     },
     {
