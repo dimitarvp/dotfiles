@@ -1,21 +1,28 @@
 #!/bin/bash
 #
-# gup_export - Export gup tools to the chezmoi-managed config
+# gup_export - Export gup tools and sync to chezmoi repo
 #
-# Always writes to ~/.config/gup/gup.conf (the chezmoi source of truth)
-# instead of the platform-specific default location.
+# Exports installed Go tools to gup.json, adds to chezmoi, commits, and pushes.
 
 set -euo pipefail
 
-CONFIG_FILE="${HOME}/.config/gup/gup.conf"
-CONFIG_DIR="$(dirname "$CONFIG_FILE")"
+CONFIG_FILE="${HOME}/.config/gup/gup.json"
 
-# Ensure directory exists
-mkdir -p "$CONFIG_DIR"
-
+echo "=== gup_export ==="
 echo "Exporting installed tools to: $CONFIG_FILE"
-gup export -o > "$CONFIG_FILE"
 
-echo "Done. $(wc -l < "$CONFIG_FILE" | tr -d ' ') tools exported."
+gup export -f "$CONFIG_FILE"
+
+count=$(grep -c '"name"' "$CONFIG_FILE")
+echo "Done. $count tools exported."
 echo ""
-echo "Don't forget to commit this in chezmoi if you want to sync across machines."
+
+chezmoi add "$CONFIG_FILE"
+
+if chezmoi git -- diff --quiet --staged; then
+    echo "No changes to commit."
+else
+    chezmoi git -- commit -m "update gup.json ($count go tools)"
+    chezmoi git -- push
+    echo "Committed and pushed."
+fi
