@@ -6,11 +6,11 @@
 # 2. Update all installed tools to latest
 # 3. Prune tools not in config
 #
-# The source of truth is always ~/.config/gup/gup.conf (managed by chezmoi)
+# The source of truth is always ~/.config/gup/gup.json (managed by chezmoi)
 
 set -euo pipefail
 
-CONFIG_FILE="${HOME}/.config/gup/gup.conf"
+CONFIG_FILE="${HOME}/.config/gup/gup.json"
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
     echo "ERROR: Config file not found: $CONFIG_FILE"
@@ -23,7 +23,7 @@ echo ""
 
 # 1. Install missing tools from config
 echo ">>> Installing missing tools..."
-gup import -i "$CONFIG_FILE"
+gup import -f "$CONFIG_FILE"
 echo ""
 
 # 2. Update all installed tools
@@ -37,8 +37,8 @@ echo ">>> Checking for tools to prune..."
 # Get sorted list of installed tool names
 installed=$(gup list 2>/dev/null | awk -F: '{gsub(/^[ \t]+|[ \t]+$/, "", $1); print $1}' | sort)
 
-# Get sorted list of tool names from config
-configured=$(awk -F= '{gsub(/^[ \t]+|[ \t]+$/, "", $1); print $1}' "$CONFIG_FILE" | sort)
+# Get sorted list of tool names from config (extract "name" values from JSON)
+configured=$(grep '"name"' "$CONFIG_FILE" | sed 's/.*"name": *"//;s/".*//' | sort)
 
 # Find tools installed but not in config
 to_prune=$(comm -23 <(echo "$installed") <(echo "$configured"))
