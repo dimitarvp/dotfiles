@@ -5,6 +5,8 @@
   co = checkout
   st = status
   br = branch -v
+  dd = diff
+  dt = !cd "${GIT_PREFIX:-.}" && GIT_EXTERNAL_DIFF=difft git diff
   df = difftool
   su = stash --include-untracked
   unstage = reset HEAD --
