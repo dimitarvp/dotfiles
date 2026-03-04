@@ -11,7 +11,7 @@ git_current_dir() {
 }
 
 git_changed() {
-  git diff --name-only
-  git ls-files --others --exclude-standard
+  git diff --name-only --relative
+  git ls-files --others --exclude-standard .
 }
 
