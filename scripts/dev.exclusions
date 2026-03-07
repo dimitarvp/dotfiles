@@ -1,0 +1,65 @@
+# Exclusions for rsync between dev workstations.
+# Include .git (need full history), PDFs, PNGs, HTMLs.
+# Exclude only build artifacts and regenerable content.
+
+# OS junk
+.DS_Store
+.Spotlight-V100
+.fseventsd
+Thumbs.db
+
+# Elixir/Erlang build artifacts
+_build/
+deps/
+cover/
+doc/
+.elixir_ls/
+.expert/
+.lexical/
+.fetch/
+.sobelow/
+erl_crash.dump
+Mnesia.*
+*.plt
+*.ez
+*.beam
+*.ets
+*.dump
+
+# Erlang/OTP release artifacts
+_deploy/
+
+# Rust build artifacts
+target/
+
+# Node/JS build artifacts
+node_modules/
+dist/
+build/
+*.bundle.js
+*.min.js
+*.min.css
+*.js.map
+*.css.map
+*.min.css.map
+package-lock.json
+yarn.lock
+composer.lock
+poetry.lock
+
+# Go build artifacts (binaries have no extension — delete manually)
+
+# Compiled objects
+*.o
+*.a
+*.so
+*.dll
+*.zwc
+
+# Editor / IDE
+.vscode/
+
+# Caches
+.cache/
+tmp/
+*.log
