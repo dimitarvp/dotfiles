@@ -1,0 +1,2 @@
+{{- range (include "scripts/backup.exclusions" | splitList "\n") }}{{ if . }}!{{ . }}
+{{ end }}{{ end -}}
