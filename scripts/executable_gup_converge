@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-eval "$(mise activate zsh)"
+eval "$(mise activate zsh --shims)"
 
 CONFIG_FILE="${HOME}/.config/gup/gup.json"
 
