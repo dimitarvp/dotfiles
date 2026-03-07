@@ -1,0 +1,4 @@
+#! /bin/bash
+
+latest=$(borg list --short "$BORG_REPO" --last 1)
+. inspect_borg_snapshot $latest
