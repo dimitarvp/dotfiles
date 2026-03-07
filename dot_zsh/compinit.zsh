@@ -1,9 +1,7 @@
 # Completion setup — replaces Oh-My-Zsh framework.
 
-# Completions from oh-my-zsh plugins (loaded without the framework).
-fpath+=$HOME/.oh-my-zsh/plugins/rust
-fpath+=$HOME/.oh-my-zsh/plugins/mix
-fpath+=$HOME/.oh-my-zsh/plugins/httpie
+# Vendored completions (mix).
+fpath+=$HOME/.zsh/vendor/completions
 
 # Cargo/rustup completions (regenerates when rustup updates).
 local _rustup="$HOME/.cargo/bin/rustup"
