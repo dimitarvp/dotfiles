@@ -39,9 +39,3 @@ if is_macos && [[ -n "$HOMEBREW_PREFIX" ]]; then
     export PATH="$HOMEBREW_PREFIX/opt/curl/bin:$PATH"
 fi
 
-# -----------------------------------------------------------------------------
-# User's personal binaries (highest priority - added last)
-# -----------------------------------------------------------------------------
-export PATH="$HOME/.local/bin:$PATH"
-export PATH="$HOME/bin:$PATH"
-export PATH="$HOME/scripts:$PATH"

@@ -1,5 +1,3 @@
-export PATH="$HOME/.cargo/bin:$PATH"
-
 # Accelerate Rust's autocomplete daemon by pointing it at Rust's sources.
 # Caches the sysroot path — auto-regenerates when rustc binary updates.
 _rustc_cache="$HOME/.cache/zsh/rustc_sysroot"
