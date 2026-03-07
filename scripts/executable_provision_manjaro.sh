@@ -86,8 +86,7 @@ cargo binstall -y bat eza fd-find git-delta mise ripgrep sccache zoxide
 # ==== Phase 5: Go (managed by mise, not pacman) ====
 
 mise install go@latest
-export GOPATH="$HOME/.go"
-export PATH="$PATH:$(mise where go)/bin:$HOME/go/bin"
+export PATH="$PATH:$HOME/go/bin"
 go install github.com/nao1215/gup@latest
 
 # ==== Phase 6: Dotfiles ====
