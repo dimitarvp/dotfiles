@@ -12,6 +12,7 @@
 set -euo pipefail
 
 eval "$(mise activate zsh --shims)"
+export GOBIN="$HOME/go/bin"
 
 CONFIG_FILE="${HOME}/.config/gup/gup.json"
 
