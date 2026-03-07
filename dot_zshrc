@@ -18,6 +18,7 @@ source $HOME/.zsh/system.zsh
 
 source $HOME/.zsh/fuzzy_finders/fzf.zsh
 source $HOME/.zsh/fuzzy_finders/fzf_tab.zsh
+source $HOME/.zsh/programs/atuin.zsh
 
 source $HOME/.zsh/languages/erlang.zsh
 source $HOME/.zsh/languages/elixir.zsh
