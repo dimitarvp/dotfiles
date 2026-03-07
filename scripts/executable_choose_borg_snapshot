@@ -1,0 +1,3 @@
+#! /bin/bash
+
+. inspect_borg_snapshot "$(list_borg_snapshots | peco)"
