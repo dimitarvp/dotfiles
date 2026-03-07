@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 #
 # cargo_converge - Converge cargo-installed crates to match the config
 #
