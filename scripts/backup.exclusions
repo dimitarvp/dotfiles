@@ -11,6 +11,7 @@
 **/.fetch
 **/.fseventsd
 **/.lexical
+**/.local/bin
 **/.local/share
 **/.local/state/**/log
 **/.local/state/lvim
@@ -64,6 +65,7 @@
 **/build/*.js
 **/composer.lock
 **/data/openobserve
+**/twisp-mcp
 **/dist
 **/ib_insync/docs
 **/node_modules

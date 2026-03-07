@@ -1,0 +1,3 @@
+#! /bin/bash
+
+rustic ls -r "$RUSTIC_REPOSITORY" --long "$1" | awk '{gsub(/"/,"",$8); print $4,$8}' | sort -n -r | column -t | peco

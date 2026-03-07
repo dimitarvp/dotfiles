@@ -1,0 +1,3 @@
+#! /bin/bash
+
+borg list "$BORG_REPO::$1" --format '{size}{SPACE}{path}{NL}' | awk '{gsub("Users/dimi/","",$2); print $1,$2}' | sort -n -r | column -t | peco

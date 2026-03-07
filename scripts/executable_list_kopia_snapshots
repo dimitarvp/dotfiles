@@ -1,0 +1,3 @@
+#! /bin/bash
+
+kopia snapshot list --json | jq -r '.[].id'
