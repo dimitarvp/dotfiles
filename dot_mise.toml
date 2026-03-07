@@ -1,6 +1,7 @@
 [tools]
 erlang = ["28", "27"]
 elixir = ["1.19", "1.18"]
+go = "latest"
 rebar = "latest"
 
 [tasks.converge]
