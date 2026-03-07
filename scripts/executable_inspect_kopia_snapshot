@@ -1,0 +1,3 @@
+#! /bin/bash
+
+kopia ls -lr "$1" | awk '{print $2,$7}' | sort -n -r | column -t | grep -v '/$' | peco

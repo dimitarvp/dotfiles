@@ -1,0 +1,3 @@
+#! /bin/bash
+
+borg list --json | jq -r '.archives[].name'
