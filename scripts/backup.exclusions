@@ -2,6 +2,7 @@
 **/.cache
 **/.config/cheat
 **/.config/colima
+**/.config/gcloud/virtenv
 **/.config/lnav
 **/.config/pgcli/log
 **/.config/yarn
@@ -65,6 +66,7 @@
 **/build/*.js
 **/composer.lock
 **/data/openobserve
+**/rhelico/**/mcp*
 **/twisp-mcp
 **/dist
 **/ib_insync/docs
