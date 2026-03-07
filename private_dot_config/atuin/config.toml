@@ -1,0 +1,6 @@
+filter_mode = "host"
+filter_mode_shell_up_key_binding = "host"
+search_mode = "fuzzy"
+style = "compact"
+inline_height = 30
+show_preview = true
