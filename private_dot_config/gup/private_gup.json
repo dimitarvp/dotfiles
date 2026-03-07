@@ -116,6 +116,12 @@
       "channel": "latest"
     },
     {
+      "name": "httpstat",
+      "import_path": "github.com/davecheney/httpstat",
+      "version": "v1.0.0",
+      "channel": "latest"
+    },
+    {
       "name": "ijq",
       "import_path": "codeberg.org/gpanders/ijq",
       "version": "v1.2.0",
@@ -191,6 +197,18 @@
       "name": "termdbms",
       "import_path": "github.com/mathaou/termdbms",
       "version": "v0.0.0-20220611161529-be6f39719607",
+      "channel": "latest"
+    },
+    {
+      "name": "usql",
+      "import_path": "github.com/xo/usql",
+      "version": "v0.19.12",
+      "channel": "latest"
+    },
+    {
+      "name": "xq",
+      "import_path": "github.com/sibprogrammer/xq",
+      "version": "v1.2.5",
       "channel": "latest"
     }
   ]
