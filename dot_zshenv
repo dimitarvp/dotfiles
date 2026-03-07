@@ -1,0 +1,12 @@
+# Sourced for ALL zsh sessions (interactive, non-interactive, login, script).
+# Keep this minimal — only universal PATH entries that must be available everywhere
+# (e.g. non-interactive SSH commands, chezmoi apply, cron jobs).
+
+path=(
+  $HOME/.cargo/bin
+  $HOME/.go/bin
+  $HOME/.local/bin
+  $HOME/bin
+  $HOME/scripts
+  $path
+)
