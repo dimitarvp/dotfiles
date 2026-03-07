@@ -15,12 +15,8 @@ alias llmax='ll -r -s size --total-size'
 alias listeners1='netstat -an -ptcp | grep LISTEN'
 alias listeners2='lsof -i -P | grep -i "listen"'
 explore() {
-    fzf --ansi --disabled \
-        --bind "start:reload:rg --color=always --line-number --ignore-case {q} || true" \
-        --bind "change:reload:rg --color=always --line-number --ignore-case {q} || true" \
-        --delimiter : \
-        --preview 'bat --color=always --style=numbers --highlight-line {2} {1}' \
-        --preview-window '+{2}-/2' \
+    fd -t f | fzf --ansi \
+        --preview 'bat --color=always --style=numbers {}' \
         --query "${1:-}"
 }
 alias mpvm='mpv --no-audio --loop-playlist=inf'
