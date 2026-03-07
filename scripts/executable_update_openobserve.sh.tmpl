@@ -1,0 +1,36 @@
+#! /bin/bash
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+platform="darwin-amd64"
+{{ else -}}
+platform="linux-amd64"
+{{ end -}}
+
+echo "Updating OpenObserve: fetching latest version..."
+# 1. Get all release tag_names.
+# 2. Filter out any tags containing a hyphen (e.g., -rc1, -beta).
+# 3. Version-sort the remaining stable tags and get the latest one.
+new_version=$(curl "$CURL_GITHUB_HEADERS" -s "https://api.github.com/repos/openobserve/openobserve/releases" |
+	jq -r '.[].tag_name' |
+	grep -v '-' |
+	sort -V |
+	tail -n 1)
+
+current_version=$( (openobserve --version || echo "v0.0.0") | cut -d' ' -f2)
+
+if semverator lt "$current_version" "$new_version"; then
+	file="openobserve-$new_version-$platform.tar.gz"
+	url="https://downloads.openobserve.ai/releases/openobserve/$new_version/openobserve-$new_version-$platform.tar.gz"
+
+	echo "Updating OpenObserve: downloading..."
+	curl -L -o "$file" "$url"
+
+	echo "Updating OpenObserve: unpacking..."
+	tar -xf "$file" -C ~/bin
+
+	echo "Updated OpenObserve to $new_version"
+else
+	echo "OpenObserve is already up to date: $current_version"
+fi
