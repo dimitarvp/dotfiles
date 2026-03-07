@@ -199,8 +199,11 @@ _prompt_precmd() {
     unset _prompt_cmd_start
   fi
 
-  # Kick off async git query
-  async_flush_jobs _prompt_worker
+  # Kick off async git query (restart worker if it died)
+  if ! async_flush_jobs _prompt_worker 2>/dev/null; then
+    async_start_worker _prompt_worker -n
+    async_register_callback _prompt_worker _prompt_git_callback
+  fi
   async_job _prompt_worker _prompt_git_query "$PWD"
 
   # Render immediately with cached git state
