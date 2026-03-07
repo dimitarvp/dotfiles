@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 #
 # gup_converge - Converge gup-managed Go tools to match the config
 #
@@ -10,6 +10,8 @@
 # The source of truth is always ~/.config/gup/gup.json (managed by chezmoi)
 
 set -euo pipefail
+
+eval "$(mise activate zsh)"
 
 CONFIG_FILE="${HOME}/.config/gup/gup.json"
 
