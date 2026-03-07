@@ -1,1 +1,1 @@
-export GOPATH="$HOME/.go"
+# Go is managed by mise; GOPATH defaults to ~/go
