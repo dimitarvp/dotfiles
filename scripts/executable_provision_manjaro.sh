@@ -118,7 +118,7 @@ mise install -y
 $INSTALL \
     ack aria2 asciidoc atomicparsley aws-cli-v2 \
     bfg bloaty bmon borg btop cmatrix csvkit ctop curlie \
-    darkhttpd dbmate diff-so-fancy diffoscope difftastic dive \
+    darkhttpd dbmate diff-so-fancy difftastic dive \
     docker docker-buildx docker-compose dool duckdb duf \
     esbuild ffmpeg fio fx gallery-dl gdu \
     git-filter-repo git-lfs glances glow gnuplot graphviz gron \

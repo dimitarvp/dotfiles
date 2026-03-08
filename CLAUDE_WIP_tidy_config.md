@@ -19,6 +19,7 @@
 | ~~N6~~ | ~~Manage exclusion files via chezmoi~~ | — | done: backup + dev as source of truth, rustic auto-generated via template |
 | N7 | Try yazi file manager | — | Rust, rich previews (images/PDFs in WezTerm/Kitty/Ghostty, NOT Alacritty). `cargo binstall yazi-fm yazi-cli` |
 | N8 | Try gh-dash extension | — | `gh extension install dlvhdr/gh-dash`. TUI dashboard for PRs/issues across repos. One-off install, not a dotfile. |
+| N9 | SSH key migration: RSA → Ed25519 | `~/.ssh/*`, SSH configs | 4 keys: master (all machines, full mesh), github, gitlab, srht. GPG signing key Dyad UID already revoked. Classic keys remain as LAN fallback after planned Headscale overlay. Detailed plan in memory/n9_ssh_migration.md |
 | R15 | Migrate Python to `uv` | `python.zsh`, `aliases.zsh:41,43` | deferred; plan below |
 | R21 | Research fastest CLI backup tool | — | low-prio; borg/rustic/restic compression is bottleneck |
 
@@ -180,8 +181,6 @@ or similar.
 | Script | Relationship |
 |--------|-------------|
 | `dimi_backup_setup` | **root cause** — contains all backup passwords and rclone remotes |
-| `backup_media.sh` | sources dimi_backup_setup |
-| `backup_profile.sh` | sources dimi_backup_setup |
 | `borg_clean_cache.sh` | sources dimi_backup_setup |
 | `borg_reset_profile.sh` | sources dimi_backup_setup |
 | `borg2kopia.sh` | sources dimi_backup_setup |
@@ -211,6 +210,8 @@ or similar.
 |--------|-----|
 | `restic_backup.sh` | replaced by rustic |
 | `restic_reset` | replaced by rustic |
+| `backup_profile.sh` | superseded by capture_profile.sh + upload_profile.sh |
+| `backup_media.sh` | deleted by user (hardcoded password, rezerva3 collision) |
 
 #### Done (N5 scripts added to chezmoi across sessions)
 
@@ -304,3 +305,8 @@ deleted (replaced by rustic). `mlr_*`, `tv_*`, `xsv_*` tabular wrappers deleted
 | README rewrite | Comprehensive dev reference; audited against repo, fixed 4 false claims |
 | Remove youtube-dl | Empty directory removed from chezmoi source and deployed config |
 | N2: Linux benchmarks | robotko: 31ms cmd lag, 138ms first prompt; 2x faster than macOS |
+| Backup sources audit | Removed 7 stale BACKUP_SOURCES (OMZ, p10k, httpie, influx, mysql, profile, utop) |
+| Backup scripts cleanup | Removed bupstash/knoxite/pcloud, fixed kopia_reset KOPIA_REPOSITORY→KOPIA_REPO bug |
+| Backup sourcing normalize | All scripts use `. "$(command -v dimi_backup_setup)"` (POSIX portable) |
+| kopia_upload multitail | Switched from GNU parallel to multitail (matches upload_profile.sh) |
+| lvim exclusion removed | Stale entry from backup.exclusions; rustic copy auto-synced via chezmoi template |

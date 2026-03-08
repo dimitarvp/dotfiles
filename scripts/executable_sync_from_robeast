@@ -1,0 +1,73 @@
+#!/bin/bash
+set -euo pipefail
+
+# ─────────────────────────────────────────────────────────────────
+# sync_from_robeast — pull directories FROM robeast TO this machine
+#
+# Direction:  robeast  ───>  here
+# Safety:     --update means newer local files are NEVER overwritten
+# Default:    DRY RUN (shows what would happen, changes nothing)
+# Usage:      sync_from_robeast [dir...] [--go]
+#   sync_from_robeast              — dry run all (w, kod, ow)
+#   sync_from_robeast w kod        — dry run w and kod only
+#   sync_from_robeast w --go       — live sync w only
+#   sync_from_robeast --go         — live sync all
+# ─────────────────────────────────────────────────────────────────
+
+REMOTE="robeast"
+ALL_DIRS=(w kod ow)
+EXCLUSIONS="$HOME/scripts/dev.exclusions"
+
+if [[ ! -f "$EXCLUSIONS" ]]; then
+  echo "ERROR: exclusions file not found: $EXCLUSIONS"
+  exit 1
+fi
+
+# Parse arguments
+DRY_RUN="--dry-run"
+DIRS=()
+for arg in "$@"; do
+  if [[ "$arg" == "--go" ]]; then
+    DRY_RUN=""
+  else
+    DIRS+=("$arg")
+  fi
+done
+[[ ${#DIRS[@]} -eq 0 ]] && DIRS=("${ALL_DIRS[@]}")
+
+if [[ -z "$DRY_RUN" ]]; then
+  echo "╔══════════════════════════════════════════════════════════╗"
+  echo "║  LIVE SYNC: robeast ──> here                           ║"
+  echo "║  Dirs: $(printf '%s ' "${DIRS[@]}")"
+  echo "║  Newer local files will NOT be overwritten (--update)   ║"
+  echo "╚══════════════════════════════════════════════════════════╝"
+  echo
+  read -rp "Proceed? [y/N] " confirm
+  if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+    echo "Aborted."
+    exit 0
+  fi
+else
+  echo "╔══════════════════════════════════════════════════════════╗"
+  echo "║  DRY RUN: robeast ──> here                             ║"
+  echo "║  Dirs: $(printf '%s ' "${DIRS[@]}")"
+  echo "║  Nothing will be changed. Use --go to execute.          ║"
+  echo "╚══════════════════════════════════════════════════════════╝"
+  echo
+fi
+
+for dir in "${DIRS[@]}"; do
+  echo "── syncing ~/$dir/ ──"
+  mkdir -p "$HOME/$dir/"
+  rsync -avz --progress --update \
+    --exclude-from="$EXCLUSIONS" \
+    $DRY_RUN \
+    "${REMOTE}:~/${dir}/" "$HOME/$dir/"
+  echo
+done
+
+if [[ -n "$DRY_RUN" ]]; then
+  echo "Dry run complete. To apply, run: sync_from_robeast ${DIRS[*]} --go"
+else
+  echo "Sync complete: robeast ──> here (${DIRS[*]})"
+fi
