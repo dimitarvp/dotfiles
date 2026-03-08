@@ -34,7 +34,7 @@ $INSTALL \
     pkg-config libssl-dev libclang-dev libwxgtk3.2-dev libwebkit2gtk-4.1-dev \
     libncurses-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev \
     libxml2-utils unixodbc-dev autoconf m4 xsltproc fop default-jdk \
-    mold libjemalloc-dev unzip xclip jq \
+    mold libjemalloc-dev unzip xclip jq rsync \
     bind9-dnsutils inotify-tools python3-pynvim
 
 # ==== Phase 3: SSH ====
