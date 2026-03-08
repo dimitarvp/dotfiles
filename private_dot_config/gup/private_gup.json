@@ -152,12 +152,6 @@
       "channel": "latest"
     },
     {
-      "name": "knoxite",
-      "import_path": "github.com/knoxite/knoxite/cmd/knoxite",
-      "version": "v0.0.0-20230324192332-f81bbf2d2e00",
-      "channel": "latest"
-    },
-    {
       "name": "lux",
       "import_path": "github.com/iawia002/lux",
       "version": "v0.24.1",
