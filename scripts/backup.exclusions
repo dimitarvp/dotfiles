@@ -15,7 +15,6 @@
 **/.local/bin
 **/.local/share
 **/.local/state/**/log
-**/.local/state/lvim
 **/.local/state/nvim
 **/.Spotlight-V100
 **/_build
