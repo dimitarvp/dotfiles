@@ -7,11 +7,11 @@ set -euo pipefail
 # Direction:  robeast  ───>  here
 # Safety:     --update means newer local files are NEVER overwritten
 # Default:    DRY RUN (shows what would happen, changes nothing)
-# Usage:      sync_from_robeast [dir...] [--go]
-#   sync_from_robeast              — dry run all (w, kod, ow)
-#   sync_from_robeast w kod        — dry run w and kod only
-#   sync_from_robeast w --go       — live sync w only
-#   sync_from_robeast --go         — live sync all
+# Usage:      sync_from_robeast [path...] [--go]
+#   sync_from_robeast                    — dry run all (~/w, ~/kod, ~/ow)
+#   sync_from_robeast ~/w ~/kod          — dry run w and kod only
+#   sync_from_robeast ~/w/pesto --go     — live sync ~/w/pesto only
+#   sync_from_robeast --go               — live sync all
 # ─────────────────────────────────────────────────────────────────
 
 REMOTE="robeast"
@@ -23,6 +23,15 @@ if [[ ! -f "$EXCLUSIONS" ]]; then
   exit 1
 fi
 
+# Normalize a path to be relative to $HOME
+normalize() {
+  local p="$1"
+  p="${p/#\~\//$HOME/}"   # expand ~/
+  p="${p/#$HOME\//}"      # strip $HOME/
+  p="${p%/}"              # strip trailing slash
+  echo "$p"
+}
+
 # Parse arguments
 DRY_RUN="--dry-run"
 DIRS=()
@@ -30,7 +39,7 @@ for arg in "$@"; do
   if [[ "$arg" == "--go" ]]; then
     DRY_RUN=""
   else
-    DIRS+=("$arg")
+    DIRS+=("$(normalize "$arg")")
   fi
 done
 [[ ${#DIRS[@]} -eq 0 ]] && DIRS=("${ALL_DIRS[@]}")
