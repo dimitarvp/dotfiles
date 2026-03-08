@@ -16,9 +16,9 @@ CONFIG_FILE="${HOME}/.config/cargo-crates/crates.conf"
 
 # Use binstall if available, fall back to cargo install
 if command -v cargo-binstall &> /dev/null; then
-    INSTALL_CMD="cargo binstall -y"
+    INSTALL_CMD=(cargo binstall -y)
 else
-    INSTALL_CMD="cargo install"
+    INSTALL_CMD=(cargo install)
     echo "NOTE: cargo-binstall not found, using cargo install (slower, may fail to compile)"
     echo ""
 fi
@@ -30,7 +30,7 @@ update_failed=false
 
 echo "=== cargo_converge ==="
 echo "Config: $CONFIG_FILE"
-echo "Install command: $INSTALL_CMD"
+echo "Install command: ${INSTALL_CMD[*]}"
 echo ""
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
@@ -65,7 +65,7 @@ else
     # Install each missing crate
     while IFS= read -r crate; do
         echo "[INSTALL] $crate"
-        if $INSTALL_CMD "$crate"; then
+        if "${INSTALL_CMD[@]}" "$crate"; then
             echo "[OK] $crate installed successfully"
         else
             echo "[FAILED] $crate failed to install"
