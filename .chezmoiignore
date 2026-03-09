@@ -1,6 +1,4 @@
 README.md
-CLAUDE_WIP_tidy_config.md
-WSL2_SETUP_GUIDE.md
 
 {{ if ne .chezmoi.os "darwin" }}
 scripts/extract_safari_bookmarks
