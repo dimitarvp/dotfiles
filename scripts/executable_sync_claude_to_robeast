@@ -6,8 +6,6 @@ set -euo pipefail
 #
 # Direction:  here  ───>  robeast
 # Safety:     SOURCE WINS — remote files are overwritten
-# Default:    DRY RUN (shows what would happen, changes nothing)
-# Usage:      sync_claude_to_robeast [--go]
 # ─────────────────────────────────────────────────────────────────
 
 REMOTE="robeast"
@@ -18,38 +16,7 @@ if [[ ! -d "$HOME/$DIR" ]]; then
   exit 1
 fi
 
-DRY_RUN="--dry-run"
-if [[ "${1:-}" == "--go" ]]; then
-  DRY_RUN=""
-fi
-
-if [[ -z "$DRY_RUN" ]]; then
-  echo "╔══════════════════════════════════════════════════════════╗"
-  echo "║  LIVE SYNC: ~/.claude ──> robeast:~/.claude             ║"
-  echo "║  WARNING: remote files WILL be overwritten              ║"
-  echo "╚══════════════════════════════════════════════════════════╝"
-  echo
-  read -rp "Proceed? [y/N] " confirm
-  if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-    echo "Aborted."
-    exit 0
-  fi
-else
-  echo "╔══════════════════════════════════════════════════════════╗"
-  echo "║  DRY RUN: ~/.claude ──> robeast:~/.claude               ║"
-  echo "║  Nothing will be changed. Use --go to execute.          ║"
-  echo "╚══════════════════════════════════════════════════════════╝"
-  echo
-fi
-
+echo "syncing ~/.claude ──> robeast:~/.claude"
 rsync -avz --progress --delete \
-  $DRY_RUN \
   "$HOME/$DIR/" "${REMOTE}:~/${DIR}/"
-
-if [[ -n "$DRY_RUN" ]]; then
-  echo
-  echo "Dry run complete. To apply, run: sync_claude_to_robeast --go"
-else
-  echo
-  echo "Sync complete: ~/.claude ──> robeast:~/.claude"
-fi
+echo "done."
