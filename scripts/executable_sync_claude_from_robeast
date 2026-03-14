@@ -13,6 +13,6 @@ DIR=".claude"
 
 echo "syncing robeast:~/.claude ──> ~/.claude"
 mkdir -p "$HOME/$DIR/"
-rsync -avz --progress --delete \
+rsync -az --info=name --delete \
   "${REMOTE}:~/${DIR}/" "$HOME/$DIR/"
 echo "done."

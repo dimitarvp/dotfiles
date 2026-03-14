@@ -17,6 +17,6 @@ if [[ ! -d "$HOME/$DIR" ]]; then
 fi
 
 echo "syncing ~/.claude ──> robeast:~/.claude"
-rsync -avz --progress --delete \
+rsync -az --info=name --delete \
   "$HOME/$DIR/" "${REMOTE}:~/${DIR}/"
 echo "done."
