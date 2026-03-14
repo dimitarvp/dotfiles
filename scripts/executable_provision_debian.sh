@@ -33,7 +33,7 @@ $INSTALL \
     direnv fzf gh \
     pkg-config libssl-dev libclang-dev libwxgtk3.2-dev libwebkit2gtk-4.1-dev \
     libncurses-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev \
-    libxml2-utils unixodbc-dev autoconf m4 xsltproc fop default-jdk \
+    libxml2-dev libxml2-utils unixodbc-dev autoconf m4 xsltproc fop default-jdk \
     mold libjemalloc-dev unzip xclip jq rsync npm \
     bind9-dnsutils inotify-tools python3-pynvim
 
