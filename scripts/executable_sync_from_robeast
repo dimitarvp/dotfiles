@@ -48,7 +48,11 @@ done
 [[ ${#DIRS[@]} -eq 0 ]] && DIRS=("${ALL_DIRS[@]}")
 
 UPDATE_FLAG="--update"
-[[ -n "$FORCE" ]] && UPDATE_FLAG=""
+DELETE_FLAG=""
+if [[ -n "$FORCE" ]]; then
+  UPDATE_FLAG=""
+  DELETE_FLAG="--delete"
+fi
 
 if [[ -z "$DRY_RUN" ]]; then
   if [[ -n "$FORCE" ]]; then
@@ -82,7 +86,7 @@ fi
 for dir in "${DIRS[@]}"; do
   echo "── syncing ~/$dir/ ──"
   mkdir -p "$HOME/$dir/"
-  rsync -az --out-format='%n' --stats $UPDATE_FLAG \
+  rsync -az --out-format='%n' --stats $UPDATE_FLAG $DELETE_FLAG \
     --exclude-from="$EXCLUSIONS" \
     $DRY_RUN \
     "${REMOTE}:~/${dir}/" "$HOME/$dir/"
