@@ -10,6 +10,9 @@ set -euo pipefail
 # Syncs: ~/.claude/       (memories, projects, plugins, skills, settings, history)
 #        ~/.claude-code/  (Claude Code app settings)
 #        ~/.claude.json   (auth token)
+#
+# After sync, creates symlinks so project dirs are resolvable
+# on machines where $HOME differs (e.g. /Users/x vs /home/x).
 # ─────────────────────────────────────────────────────────────────
 
 REMOTE="robeast"
@@ -26,5 +29,24 @@ rsync -az --out-format='%n' --stats --delete \
 
 rsync -az --out-format='%n' --stats \
   "${REMOTE}:~/.claude.json" "$HOME/.claude.json"
+
+# Remap project dirs for cross-platform $HOME differences.
+# robeast uses /Users/dimi → dirs are prefixed -Users-dimi-
+# linux uses /home/dimi  → dirs should be prefixed -home-dimi-
+LOCAL_PREFIX="$(echo "$HOME" | sed 's|^/||; s|/|-|g')"
+PROJECTS="$HOME/.claude/projects"
+
+for dir in "$PROJECTS"/*; do
+  [[ -d "$dir" ]] || continue
+  [[ -L "$dir" ]] && continue  # skip existing symlinks
+  base="$(basename "$dir")"
+  # extract the encoded home prefix from the dir name (everything up to 2nd component)
+  # e.g. -Users-dimi-foo → Users-dimi, -home-dimi-foo → home-dimi
+  remapped="${base/#-Users-dimi/-$LOCAL_PREFIX}"
+  if [[ "$remapped" != "$base" && ! -e "$PROJECTS/$remapped" ]]; then
+    ln -sfn "$dir" "$PROJECTS/$remapped"
+    echo "symlink: $remapped -> $base"
+  fi
+done
 
 echo "done."
