@@ -151,6 +151,11 @@ unzip -qo /tmp/awscliv2.zip -d /tmp
 sudo /tmp/aws/install
 rm -rf /tmp/awscliv2.zip /tmp/aws
 
+# AWS Session Manager Plugin (not in Debian repos)
+curl -sf "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o /tmp/session-manager-plugin.deb
+sudo dpkg -i /tmp/session-manager-plugin.deb
+rm -f /tmp/session-manager-plugin.deb
+
 # ==== Phase 11: Databases ====
 
 $INSTALL postgresql redis

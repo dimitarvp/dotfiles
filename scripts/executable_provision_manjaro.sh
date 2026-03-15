@@ -116,7 +116,7 @@ mise install -y
 # ==== Phase 10: System CLI tools (non-Rust, non-Go — those are handled above) ====
 
 $INSTALL \
-    ack aria2 asciidoc atomicparsley aws-cli-v2 \
+    ack aria2 asciidoc atomicparsley aws-cli-v2 aws-session-manager-plugin \
     bfg bloaty bmon borg btop cmatrix csvkit ctop curlie \
     darkhttpd dbmate diff-so-fancy difftastic dive \
     docker docker-buildx docker-compose dool duckdb duf \
