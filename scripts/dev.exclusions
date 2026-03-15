@@ -42,7 +42,6 @@ build/
 *.js.map
 *.css.map
 *.min.css.map
-package-lock.json
 yarn.lock
 composer.lock
 poetry.lock
