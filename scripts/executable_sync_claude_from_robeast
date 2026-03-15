@@ -18,13 +18,13 @@ echo "syncing Claude data from robeast..."
 
 mkdir -p "$HOME/.claude/" "$HOME/.claude-code/"
 
-rsync -az --info=name --stats --delete \
+rsync -az --out-format='%n' --stats --delete \
   "${REMOTE}:~/.claude/" "$HOME/.claude/"
 
-rsync -az --info=name --stats --delete \
+rsync -az --out-format='%n' --stats --delete \
   "${REMOTE}:~/.claude-code/" "$HOME/.claude-code/"
 
-rsync -az --info=name --stats \
+rsync -az --out-format='%n' --stats \
   "${REMOTE}:~/.claude.json" "$HOME/.claude.json"
 
 echo "done."

@@ -76,7 +76,7 @@ fi
 
 for dir in "${DIRS[@]}"; do
   echo "── syncing ~/$dir/ ──"
-  rsync -az --info=name --stats --update \
+  rsync -az --out-format='%n' --stats --update \
     --exclude-from="$EXCLUSIONS" \
     $DRY_RUN \
     "$HOME/$dir/" "${REMOTE}:~/${dir}/"

@@ -68,7 +68,7 @@ fi
 for dir in "${DIRS[@]}"; do
   echo "── syncing ~/$dir/ ──"
   mkdir -p "$HOME/$dir/"
-  rsync -az --info=name --stats --update \
+  rsync -az --out-format='%n' --stats --update \
     --exclude-from="$EXCLUSIONS" \
     $DRY_RUN \
     "${REMOTE}:~/${dir}/" "$HOME/$dir/"

@@ -21,13 +21,13 @@ fi
 
 echo "syncing Claude data to robeast..."
 
-rsync -az --info=name --stats --delete \
+rsync -az --out-format='%n' --stats --delete \
   "$HOME/.claude/" "${REMOTE}:~/.claude/"
 
-rsync -az --info=name --stats --delete \
+rsync -az --out-format='%n' --stats --delete \
   "$HOME/.claude-code/" "${REMOTE}:~/.claude-code/"
 
-rsync -az --info=name --stats \
+rsync -az --out-format='%n' --stats \
   "$HOME/.claude.json" "${REMOTE}:~/.claude.json"
 
 echo "done."
