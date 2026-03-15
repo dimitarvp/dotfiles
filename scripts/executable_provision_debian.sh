@@ -99,7 +99,7 @@ go install github.com/nao1215/gup@latest
 
 # ==== Phase 6: Dotfiles ====
 
-sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/go/bin
+sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
 chezmoi init dimitarvp --apply
 # Deploys: crates.conf, gup.json, .zshrc, all configs, scripts
 
