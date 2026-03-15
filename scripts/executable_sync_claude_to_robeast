@@ -2,21 +2,32 @@
 set -euo pipefail
 
 # ─────────────────────────────────────────────────────────────────
-# sync_claude_to_robeast — push ~/.claude FROM here TO robeast
+# sync_claude_to_robeast — push all Claude data TO robeast
 #
 # Direction:  here  ───>  robeast
 # Safety:     SOURCE WINS — remote files are overwritten
+#
+# Syncs: ~/.claude/       (memories, projects, plugins, skills, settings, history)
+#        ~/.claude-code/  (Claude Code app settings)
+#        ~/.claude.json   (auth token)
 # ─────────────────────────────────────────────────────────────────
 
 REMOTE="robeast"
-DIR=".claude"
 
-if [[ ! -d "$HOME/$DIR" ]]; then
+if [[ ! -d "$HOME/.claude" ]]; then
   echo "ERROR: ~/.claude not found. Nothing to push."
   exit 1
 fi
 
-echo "syncing ~/.claude ──> robeast:~/.claude"
-rsync -az --info=name --delete \
-  "$HOME/$DIR/" "${REMOTE}:~/${DIR}/"
+echo "syncing Claude data to robeast..."
+
+rsync -az --info=name --stats --delete \
+  "$HOME/.claude/" "${REMOTE}:~/.claude/"
+
+rsync -az --info=name --stats --delete \
+  "$HOME/.claude-code/" "${REMOTE}:~/.claude-code/"
+
+rsync -az --info=name --stats \
+  "$HOME/.claude.json" "${REMOTE}:~/.claude.json"
+
 echo "done."

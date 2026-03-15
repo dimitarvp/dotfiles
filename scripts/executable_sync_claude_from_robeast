@@ -2,17 +2,29 @@
 set -euo pipefail
 
 # ─────────────────────────────────────────────────────────────────
-# sync_claude_from_robeast — pull ~/.claude FROM robeast TO here
+# sync_claude_from_robeast — pull all Claude data FROM robeast
 #
 # Direction:  robeast  ───>  here
 # Safety:     SOURCE WINS — local files are overwritten
+#
+# Syncs: ~/.claude/       (memories, projects, plugins, skills, settings, history)
+#        ~/.claude-code/  (Claude Code app settings)
+#        ~/.claude.json   (auth token)
 # ─────────────────────────────────────────────────────────────────
 
 REMOTE="robeast"
-DIR=".claude"
 
-echo "syncing robeast:~/.claude ──> ~/.claude"
-mkdir -p "$HOME/$DIR/"
-rsync -az --info=name --delete \
-  "${REMOTE}:~/${DIR}/" "$HOME/$DIR/"
+echo "syncing Claude data from robeast..."
+
+mkdir -p "$HOME/.claude/" "$HOME/.claude-code/"
+
+rsync -az --info=name --stats --delete \
+  "${REMOTE}:~/.claude/" "$HOME/.claude/"
+
+rsync -az --info=name --stats --delete \
+  "${REMOTE}:~/.claude-code/" "$HOME/.claude-code/"
+
+rsync -az --info=name --stats \
+  "${REMOTE}:~/.claude.json" "$HOME/.claude.json"
+
 echo "done."
