@@ -21,10 +21,10 @@ fi
 
 echo "syncing Claude data to robeast..."
 
-rsync -az --out-format='%n' --stats \
+rsync -az --out-format='%n' --stats --delete \
   "$HOME/.claude/" "${REMOTE}:~/.claude/"
 
-rsync -az --out-format='%n' --stats \
+rsync -az --out-format='%n' --stats --delete \
   "$HOME/.claude-code/" "${REMOTE}:~/.claude-code/"
 
 # Merge ~/.claude.json: push local keys to robeast except auth keys,

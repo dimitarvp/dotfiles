@@ -21,10 +21,10 @@ echo "syncing Claude data from robeast..."
 
 mkdir -p "$HOME/.claude/" "$HOME/.claude-code/"
 
-rsync -az --out-format='%n' --stats \
+rsync -az --out-format='%n' --stats --delete \
   "${REMOTE}:~/.claude/" "$HOME/.claude/"
 
-rsync -az --out-format='%n' --stats \
+rsync -az --out-format='%n' --stats --delete \
   "${REMOTE}:~/.claude-code/" "$HOME/.claude-code/"
 
 # Merge ~/.claude.json: take everything from robeast except auth keys,
