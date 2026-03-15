@@ -9,7 +9,7 @@ set -euo pipefail
 #
 # Syncs: ~/.claude/       (memories, projects, plugins, skills, settings, history)
 #        ~/.claude-code/  (Claude Code app settings)
-#        ~/.claude.json   (auth token)
+#        ~/.claude.json   (non-auth keys merged; local auth preserved)
 #
 # After sync, creates symlinks so project dirs are resolvable
 # on machines where $HOME differs (e.g. /Users/x vs /home/x).
@@ -27,8 +27,21 @@ rsync -az --out-format='%n' --stats --delete \
 rsync -az --out-format='%n' --stats --delete \
   "${REMOTE}:~/.claude-code/" "$HOME/.claude-code/"
 
-rsync -az --out-format='%n' --stats \
-  "${REMOTE}:~/.claude.json" "$HOME/.claude.json"
+# Merge ~/.claude.json: take everything from robeast except auth keys,
+# which are preserved from the local copy.
+REMOTE_JSON=$(ssh "$REMOTE" 'cat ~/.claude.json')
+LOCAL_FILE="$HOME/.claude.json"
+
+if [[ -f "$LOCAL_FILE" ]]; then
+  # Extract local auth keys, merge remote on top, restore local auth
+  LOCAL_AUTH=$(jq '{oauthAccount, anonymousId, userID}' "$LOCAL_FILE")
+  echo "$REMOTE_JSON" | jq --argjson auth "$LOCAL_AUTH" '. * $auth' > "${LOCAL_FILE}.tmp"
+  mv "${LOCAL_FILE}.tmp" "$LOCAL_FILE"
+  echo "merged ~/.claude.json (local auth preserved)"
+else
+  echo "$REMOTE_JSON" > "$LOCAL_FILE"
+  echo "created ~/.claude.json (no local auth to preserve — run 'claude' to log in)"
+fi
 
 # Remap project dirs for cross-platform $HOME differences.
 # robeast uses /Users/dimi → dirs are prefixed -Users-dimi-
@@ -40,8 +53,6 @@ for dir in "$PROJECTS"/*; do
   [[ -d "$dir" ]] || continue
   [[ -L "$dir" ]] && continue  # skip existing symlinks
   base="$(basename "$dir")"
-  # extract the encoded home prefix from the dir name (everything up to 2nd component)
-  # e.g. -Users-dimi-foo → Users-dimi, -home-dimi-foo → home-dimi
   remapped="${base/#-Users-dimi/-$LOCAL_PREFIX}"
   if [[ "$remapped" != "$base" && ! -e "$PROJECTS/$remapped" ]]; then
     ln -sfn "$dir" "$PROJECTS/$remapped"

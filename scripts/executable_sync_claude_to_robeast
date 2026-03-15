@@ -9,7 +9,7 @@ set -euo pipefail
 #
 # Syncs: ~/.claude/       (memories, projects, plugins, skills, settings, history)
 #        ~/.claude-code/  (Claude Code app settings)
-#        ~/.claude.json   (auth token)
+#        ~/.claude.json   (non-auth keys merged; remote auth preserved)
 # ─────────────────────────────────────────────────────────────────
 
 REMOTE="robeast"
@@ -27,7 +27,12 @@ rsync -az --out-format='%n' --stats --delete \
 rsync -az --out-format='%n' --stats --delete \
   "$HOME/.claude-code/" "${REMOTE}:~/.claude-code/"
 
-rsync -az --out-format='%n' --stats \
-  "$HOME/.claude.json" "${REMOTE}:~/.claude.json"
+# Merge ~/.claude.json: push local keys to robeast except auth keys,
+# which are preserved from robeast's copy.
+LOCAL_JSON=$(cat "$HOME/.claude.json")
+REMOTE_AUTH=$(ssh "$REMOTE" 'jq "{oauthAccount, anonymousId, userID}" ~/.claude.json 2>/dev/null || echo "{}"')
+echo "$LOCAL_JSON" | jq --argjson auth "$REMOTE_AUTH" '. * $auth' | \
+  ssh "$REMOTE" 'cat > ~/.claude.json'
+echo "merged remote ~/.claude.json (remote auth preserved)"
 
 echo "done."
