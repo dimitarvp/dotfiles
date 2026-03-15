@@ -44,38 +44,33 @@ ssh-keygen -q -t ed25519 -N '' -f ~/.ssh/id_ed25519 <<<y >/dev/null 2>&1
 touch ~/.ssh/config
 chmod 600 ~/.ssh/config
 
-for host in github.com gitlab.com git.sr.ht; do
+for entry in github.com:dimi_github gitlab.com:dimi_gitlab git.sr.ht:dimi_srht; do
+    host="${entry%%:*}"
+    key="${entry##*:}"
     if ! grep -qF "Host $host" ~/.ssh/config; then
         cat <<SSHC >>~/.ssh/config
 
 Host $host
     HostName $host
-    IdentityFile ~/.ssh/dimi_master
+    IdentityFile ~/.ssh/$key
 SSHC
     fi
 done
 
-if ! grep -qF "Host s1" ~/.ssh/config; then
-    cat <<SSHC >>~/.ssh/config
+for entry in s1:s1 robotko:robotko robeast:robeast; do
+    host="${entry%%:*}"
+    hostname="${entry##*:}"
+    if ! grep -qF "Host $host" ~/.ssh/config; then
+        cat <<SSHC >>~/.ssh/config
 
-Host s1
-    HostName s1
+Host $host
+    HostName $hostname
     User $USER
     Port 22
     IdentityFile ~/.ssh/dimi_master
 SSHC
-fi
-
-if ! grep -qF "Host robotko" ~/.ssh/config; then
-    cat <<SSHC >>~/.ssh/config
-
-Host robotko
-    HostName robotko
-    User $USER
-    Port 22
-    IdentityFile ~/.ssh/dimi_master
-SSHC
-fi
+    fi
+done
 
 # ==== Phase 4: Rust toolchain ====
 
