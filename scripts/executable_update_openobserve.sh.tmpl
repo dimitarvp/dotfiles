@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/zsh
 
 set -euo pipefail
 
@@ -12,7 +12,7 @@ echo "Updating OpenObserve: fetching latest version..."
 # 1. Get all release tag_names.
 # 2. Filter out any tags containing a hyphen (e.g., -rc1, -beta).
 # 3. Version-sort the remaining stable tags and get the latest one.
-new_version=$(curl "$CURL_GITHUB_HEADERS" -s "https://api.github.com/repos/openobserve/openobserve/releases" |
+new_version=$(curl ${=CURL_GITHUB_HEADERS} -s "https://api.github.com/repos/openobserve/openobserve/releases" |
 	jq -r '.[].tag_name' |
 	grep -v '-' |
 	sort -V |
