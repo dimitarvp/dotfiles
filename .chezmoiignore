@@ -3,3 +3,9 @@ README.md
 {{ if ne .chezmoi.os "darwin" }}
 scripts/extract_safari_bookmarks
 {{ end }}
+
+{{ if eq .role "server" }}
+.aws
+.gnupg
+.ssh/pesto-aws-proxy.pem
+{{ end }}
