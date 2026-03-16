@@ -181,4 +181,5 @@ cat <<'NOTES'
 4. Add SSH public key to GitHub/GitLab/Sourcehut
 5. Authenticate: gh auth login
 6. Adjust power settings / screen timeout
+7. Rebuild zsh completions: rm ~/.cache/zsh/.zcompdump-* && exec zsh
 NOTES

@@ -173,4 +173,5 @@ cat <<'NOTES'
 3. Add SSH public key to GitHub/GitLab/Sourcehut
 4. Authenticate: gh auth login
 5. Verify: chezmoi apply works, cargo_converge and gup_converge completed
+6. Rebuild zsh completions: rm ~/.cache/zsh/.zcompdump-* && exec zsh
 NOTES
