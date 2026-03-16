@@ -10,8 +10,8 @@ set -euo pipefail
 # Usage:      sync_from_robeast [path...] [--go] [--force]
 #   sync_from_robeast                         — dry run all (~/w, ~/kod, ~/ow)
 #   sync_from_robeast ~/w ~/kod               — dry run w and kod only
-#   sync_from_robeast ~/w/pesto --go          — live sync, preserve newer local
-#   sync_from_robeast ~/w/pesto --go --force  — live sync, source wins (clobber)
+#   sync_from_robeast ~/w/myproject --go          — live sync, preserve newer local
+#   sync_from_robeast ~/w/myproject --go --force  — live sync, source wins (clobber)
 # ─────────────────────────────────────────────────────────────────
 
 REMOTE="robeast"
