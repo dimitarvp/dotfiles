@@ -6,6 +6,5 @@ scripts/extract_safari_bookmarks
 
 {{ if eq .role "server" }}
 .aws
-.gnupg
 .ssh/pesto-aws-proxy.pem
 {{ end }}
