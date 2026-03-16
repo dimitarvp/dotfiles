@@ -8,9 +8,9 @@ encryption = "age"
 [data]
     role = {{ index . "role" | default "workstation" | quote }}
     distro = {{ index . "distro" | default "macos" | quote }}
-    has_gui = {{ index . "has_gui" | default true }}
-    is_wsl = {{ index . "is_wsl" | default false }}
-    is_primary = {{ index . "is_primary" | default false }}
+    has_gui = {{ if hasKey . "has_gui" }}{{ .has_gui }}{{ else }}true{{ end }}
+    is_wsl = {{ if hasKey . "is_wsl" }}{{ .is_wsl }}{{ else }}false{{ end }}
+    is_primary = {{ if hasKey . "is_primary" }}{{ .is_primary }}{{ else }}false{{ end }}
     alacritty_font_size = {{ index . "alacritty_font_size" | default 18 }}
     ghostty_font_size = {{ index . "ghostty_font_size" | default 18 }}
     ghostty_adjust_cell_height = {{ index . "ghostty_adjust_cell_height" | default 0 }}
