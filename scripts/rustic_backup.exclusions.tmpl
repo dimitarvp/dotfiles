@@ -1,2 +1,2 @@
-{{- range (include "scripts/backup.exclusions" | splitList "\n") }}{{ if . }}!{{ . }}
+{{- range (decrypt (include "scripts/encrypted_backup.exclusions.age") | splitList "\n") }}{{ if . }}!{{ . }}
 {{ end }}{{ end -}}
