@@ -6,6 +6,11 @@ encryption = "age"
     recipient = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICU84dYXeadnr71SmwhvwDQ5uEX3eNW2ulNzU83ZyD7+ dotfiles"
 
 [data]
+    role = {{ index . "role" | default "workstation" | quote }}
+    distro = {{ index . "distro" | default "macos" | quote }}
+    has_gui = {{ index . "has_gui" | default true }}
+    is_wsl = {{ index . "is_wsl" | default false }}
+    is_primary = {{ index . "is_primary" | default false }}
     alacritty_font_size = {{ index . "alacritty_font_size" | default 18 }}
     ghostty_font_size = {{ index . "ghostty_font_size" | default 18 }}
     ghostty_adjust_cell_height = {{ index . "ghostty_adjust_cell_height" | default 0 }}
