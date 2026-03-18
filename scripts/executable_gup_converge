@@ -5,7 +5,7 @@
 # 1. Install only missing tools (compare gup list vs gup.json)
 # 2. Update all installed tools to latest
 # 3. Prune tools not in config
-# 4. Re-export so gup.json reflects current versions
+# 4. (removed: auto-export was dangerous — use gup_export manually)
 #
 # The source of truth is always ~/.config/gup/gup.json (managed by chezmoi)
 
@@ -70,7 +70,6 @@ else
 fi
 echo ""
 
-# 4. Re-export so gup.json stays in sync with actual installed versions
-echo ">>> Phase 4: Re-exporting gup.json..."
-gup export -f "$CONFIG_FILE"
-echo "Done."
+# NOTE: do NOT auto-export here. If gup update fails, the config would be
+# overwritten with only surviving tools. Run gup_export manually instead.
+echo "Done. Run gup_export manually if you added new tools."

@@ -2,6 +2,12 @@
   "schema_version": 1,
   "packages": [
     {
+      "name": "glow",
+      "import_path": "github.com/charmbracelet/glow/v2",
+      "version": "v2.1.1",
+      "channel": "latest"
+    },
+    {
       "name": "callgraph",
       "import_path": "golang.org/x/tools/cmd/callgraph",
       "version": "v0.42.0",
