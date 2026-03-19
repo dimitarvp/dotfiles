@@ -18,6 +18,7 @@ echo "Done. $count tools exported."
 echo ""
 
 chezmoi add "$CONFIG_FILE"
+chezmoi git -- add private_dot_config/gup/private_gup.json
 
 if chezmoi git -- diff --quiet --staged; then
     echo "No changes to commit."

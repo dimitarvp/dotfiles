@@ -23,6 +23,7 @@ echo "Done. $count crates exported."
 echo ""
 
 chezmoi add "$CONFIG_FILE"
+chezmoi git -- add private_dot_config/cargo-crates/crates.conf
 
 if chezmoi git -- diff --quiet --staged; then
     echo "No changes to commit."
