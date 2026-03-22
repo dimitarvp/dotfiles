@@ -15,12 +15,12 @@ set -uo pipefail
 CONFIG_FILE="${HOME}/.config/cargo-crates/crates.conf"
 
 # Use binstall if available, fall back to cargo install
-if command -v cargo-binstall &> /dev/null; then
-    INSTALL_CMD=(cargo binstall -y)
+if command -v cargo-binstall &>/dev/null; then
+	INSTALL_CMD=(cargo binstall -y)
 else
-    INSTALL_CMD=(cargo install)
-    echo "NOTE: cargo-binstall not found, using cargo install (slower, may fail to compile)"
-    echo ""
+	INSTALL_CMD=(cargo install)
+	echo "NOTE: cargo-binstall not found, using cargo install (slower, may fail to compile)"
+	echo ""
 fi
 
 # Track failures
@@ -34,9 +34,9 @@ echo "Install command: ${INSTALL_CMD[*]}"
 echo ""
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
-    echo "ERROR: Config file not found: $CONFIG_FILE"
-    echo "Run 'chezmoi apply' first to create it, or 'cargo_export' to generate from current state."
-    exit 1
+	echo "ERROR: Config file not found: $CONFIG_FILE"
+	echo "Run 'chezmoi apply' first to create it, or 'cargo_export' to generate from current state."
+	exit 1
 fi
 
 # Get sorted list of configured crate names
@@ -56,38 +56,38 @@ echo ">>> Phase 1: Installing missing crates..."
 to_install=$(comm -23 <(echo "$configured") <(echo "$installed"))
 
 if [[ -z "$to_install" ]]; then
-    echo "Nothing to install. All configured crates are present."
+	echo "Nothing to install. All configured crates are present."
 else
-    echo "Crates to install:"
-    echo "$to_install" | sed 's/^/  - /'
-    echo ""
+	echo "Crates to install:"
+	echo "$to_install" | sed 's/^/  - /'
+	echo ""
 
-    # Install each missing crate
-    while IFS= read -r crate; do
-        echo "[INSTALL] $crate"
-        if "${INSTALL_CMD[@]}" "$crate"; then
-            echo "[OK] $crate installed successfully"
-        else
-            echo "[FAILED] $crate failed to install"
-            install_failures+=("$crate")
-        fi
-        echo ""
-    done <<< "$to_install"
+	# Install each missing crate
+	while IFS= read -r crate; do
+		echo "[INSTALL] $crate"
+		if "${INSTALL_CMD[@]}" "$crate"; then
+			echo "[OK] $crate installed successfully"
+		else
+			echo "[FAILED] $crate failed to install"
+			install_failures+=("$crate")
+		fi
+		echo ""
+	done <<<"$to_install"
 fi
 echo ""
 
 # 2. Update all installed crates
 echo ">>> Phase 2: Updating all crates to latest..."
-if command -v cargo-install-update &> /dev/null; then
-    if cargo install-update -a; then
-        echo "[OK] Update completed"
-    else
-        echo "[FAILED] Update had errors"
-        update_failed=true
-    fi
+if command -v cargo-install-update &>/dev/null; then
+	if cargo install-update -a; then
+		echo "[OK] Update completed"
+	else
+		echo "[FAILED] Update had errors"
+		update_failed=true
+	fi
 else
-    echo "WARNING: cargo-install-update not found. Skipping updates."
-    echo "Install with: cargo install cargo-update"
+	echo "WARNING: cargo-install-update not found. Skipping updates."
+	echo "Install with: cargo install cargo-update"
 fi
 echo ""
 
@@ -100,23 +100,23 @@ installed=$(cargo install --list | awk '/^[a-zA-Z]/ {gsub(/ .*/, ""); print}' | 
 to_prune=$(comm -23 <(echo "$installed") <(echo "$configured"))
 
 if [[ -z "$to_prune" ]]; then
-    echo "Nothing to prune. All installed crates are in config."
+	echo "Nothing to prune. All installed crates are in config."
 else
-    echo "Crates to prune (not in config):"
-    echo "$to_prune" | sed 's/^/  - /'
-    echo ""
+	echo "Crates to prune (not in config):"
+	echo "$to_prune" | sed 's/^/  - /'
+	echo ""
 
-    # Uninstall each extra crate
-    while IFS= read -r crate; do
-        echo "[PRUNE] $crate"
-        if cargo uninstall "$crate"; then
-            echo "[OK] $crate removed"
-        else
-            echo "[FAILED] $crate failed to remove"
-            prune_failures+=("$crate")
-        fi
-        echo ""
-    done <<< "$to_prune"
+	# Uninstall each extra crate
+	while IFS= read -r crate; do
+		echo "[PRUNE] $crate"
+		if cargo uninstall "$crate"; then
+			echo "[OK] $crate removed"
+		else
+			echo "[FAILED] $crate failed to remove"
+			prune_failures+=("$crate")
+		fi
+		echo ""
+	done <<<"$to_prune"
 fi
 
 echo ""
@@ -129,24 +129,24 @@ echo "Final state: $final_count crates installed"
 
 # Report any failures
 if [[ ${#install_failures[@]} -gt 0 ]] || [[ ${#prune_failures[@]} -gt 0 ]] || [[ "$update_failed" == "true" ]]; then
-    echo ""
-    echo "=== FAILURES ==="
+	echo ""
+	echo "=== FAILURES ==="
 
-    if [[ ${#install_failures[@]} -gt 0 ]]; then
-        echo "Failed to install (${#install_failures[@]}):"
-        printf '  - %s\n' "${install_failures[@]}"
-    fi
+	if [[ ${#install_failures[@]} -gt 0 ]]; then
+		echo "Failed to install (${#install_failures[@]}):"
+		printf '  - %s\n' "${install_failures[@]}"
+	fi
 
-    if [[ "$update_failed" == "true" ]]; then
-        echo "Update phase had errors"
-    fi
+	if [[ "$update_failed" == "true" ]]; then
+		echo "Update phase had errors"
+	fi
 
-    if [[ ${#prune_failures[@]} -gt 0 ]]; then
-        echo "Failed to prune (${#prune_failures[@]}):"
-        printf '  - %s\n' "${prune_failures[@]}"
-    fi
+	if [[ ${#prune_failures[@]} -gt 0 ]]; then
+		echo "Failed to prune (${#prune_failures[@]}):"
+		printf '  - %s\n' "${prune_failures[@]}"
+	fi
 
-    exit 1
+	exit 1
 fi
 
 echo ""

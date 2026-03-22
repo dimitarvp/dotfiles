@@ -22,10 +22,10 @@ echo "syncing Claude data from robeast..."
 mkdir -p "$HOME/.claude/" "$HOME/.claude-code/"
 
 rsync -az --out-format='%n' --stats --delete \
-  "${REMOTE}:~/.claude/" "$HOME/.claude/"
+	"${REMOTE}:~/.claude/" "$HOME/.claude/"
 
 rsync -az --out-format='%n' --stats --delete \
-  "${REMOTE}:~/.claude-code/" "$HOME/.claude-code/"
+	"${REMOTE}:~/.claude-code/" "$HOME/.claude-code/"
 
 # Merge ~/.claude.json: take everything from robeast except auth keys,
 # which are preserved from the local copy.
@@ -33,14 +33,14 @@ REMOTE_JSON=$(ssh "$REMOTE" 'cat ~/.claude.json')
 LOCAL_FILE="$HOME/.claude.json"
 
 if [[ -f "$LOCAL_FILE" ]]; then
-  # Extract local auth keys, merge remote on top, restore local auth
-  LOCAL_AUTH=$(jq '{oauthAccount, anonymousId, userID}' "$LOCAL_FILE")
-  echo "$REMOTE_JSON" | jq --argjson auth "$LOCAL_AUTH" '. * $auth' > "${LOCAL_FILE}.tmp"
-  mv "${LOCAL_FILE}.tmp" "$LOCAL_FILE"
-  echo "merged ~/.claude.json (local auth preserved)"
+	# Extract local auth keys, merge remote on top, restore local auth
+	LOCAL_AUTH=$(jq '{oauthAccount, anonymousId, userID}' "$LOCAL_FILE")
+	echo "$REMOTE_JSON" | jq --argjson auth "$LOCAL_AUTH" '. * $auth' >"${LOCAL_FILE}.tmp"
+	mv "${LOCAL_FILE}.tmp" "$LOCAL_FILE"
+	echo "merged ~/.claude.json (local auth preserved)"
 else
-  echo "$REMOTE_JSON" > "$LOCAL_FILE"
-  echo "created ~/.claude.json (no local auth to preserve — run 'claude' to log in)"
+	echo "$REMOTE_JSON" >"$LOCAL_FILE"
+	echo "created ~/.claude.json (no local auth to preserve — run 'claude' to log in)"
 fi
 
 # Remap project dirs for cross-platform $HOME differences.
@@ -50,14 +50,14 @@ LOCAL_PREFIX="$(echo "$HOME" | sed 's|^/||; s|/|-|g')"
 PROJECTS="$HOME/.claude/projects"
 
 for dir in "$PROJECTS"/*; do
-  [[ -d "$dir" ]] || continue
-  [[ -L "$dir" ]] && continue  # skip existing symlinks
-  base="$(basename "$dir")"
-  remapped="${base/#-Users-dimi/-$LOCAL_PREFIX}"
-  if [[ "$remapped" != "$base" && ! -e "$PROJECTS/$remapped" ]]; then
-    ln -sfn "$dir" "$PROJECTS/$remapped"
-    echo "symlink: $remapped -> $base"
-  fi
+	[[ -d "$dir" ]] || continue
+	[[ -L "$dir" ]] && continue # skip existing symlinks
+	base="$(basename "$dir")"
+	remapped="${base/#-Users-dimi/-$LOCAL_PREFIX}"
+	if [[ "$remapped" != "$base" && ! -e "$PROJECTS/$remapped" ]]; then
+		ln -sfn "$dir" "$PROJECTS/$remapped"
+		echo "symlink: $remapped -> $base"
+	fi
 done
 
 echo "done."

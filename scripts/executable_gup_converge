@@ -17,9 +17,9 @@ export GOBIN="$HOME/go/bin"
 CONFIG_FILE="${HOME}/.config/gup/gup.json"
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
-    echo "ERROR: Config file not found: $CONFIG_FILE"
-    echo "Run 'chezmoi apply' first to create it."
-    exit 1
+	echo "ERROR: Config file not found: $CONFIG_FILE"
+	echo "Run 'chezmoi apply' first to create it."
+	exit 1
 fi
 
 echo "=== gup_converge ==="
@@ -37,14 +37,14 @@ echo ">>> Phase 1: Installing missing tools..."
 to_install=$(comm -23 <(echo "$configured") <(echo "$installed"))
 
 if [[ -z "$to_install" ]]; then
-    echo "Nothing to install. All configured tools are present."
+	echo "Nothing to install. All configured tools are present."
 else
-    while IFS= read -r name; do
-        # Look up import_path from the JSON
-        import_path=$(jq -r --arg n "$name" '.packages[] | select(.name == $n) | .import_path' "$CONFIG_FILE")
-        echo "[INSTALL] $name ($import_path@latest)"
-        go install "${import_path}@latest"
-    done <<< "$to_install"
+	while IFS= read -r name; do
+		# Look up import_path from the JSON
+		import_path=$(jq -r --arg n "$name" '.packages[] | select(.name == $n) | .import_path' "$CONFIG_FILE")
+		echo "[INSTALL] $name ($import_path@latest)"
+		go install "${import_path}@latest"
+	done <<<"$to_install"
 fi
 echo ""
 
@@ -61,12 +61,12 @@ installed=$(gup list 2>/dev/null | awk -F: '{gsub(/^[ \t]+|[ \t]+$/, "", $1); pr
 to_prune=$(comm -23 <(echo "$installed") <(echo "$configured"))
 
 if [[ -z "$to_prune" ]]; then
-    echo "Nothing to prune."
+	echo "Nothing to prune."
 else
-    echo "Pruning:"
-    echo "$to_prune"
-    echo ""
-    echo "$to_prune" | xargs gup remove -f
+	echo "Pruning:"
+	echo "$to_prune"
+	echo ""
+	echo "$to_prune" | xargs gup remove -f
 fi
 echo ""
 

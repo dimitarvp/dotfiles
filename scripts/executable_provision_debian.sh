@@ -29,13 +29,13 @@ sudo timedatectl set-timezone "$TIMEZONE"
 # ==== Phase 2: Core bootstrap tools ====
 
 $INSTALL \
-    build-essential make gcc git cmake curl wget zsh vim neovim \
-    direnv fzf gh \
-    pkg-config libssl-dev libclang-dev libwxgtk3.2-dev libwebkit2gtk-4.1-dev \
-    libncurses-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev \
-    libxml2-dev libxml2-utils unixodbc-dev autoconf m4 xsltproc fop default-jdk \
-    mold libjemalloc-dev unzip xclip jq rsync npm \
-    bind9-dnsutils inotify-tools python3-pynvim
+	build-essential make gcc git cmake curl wget zsh vim neovim \
+	direnv fzf gh \
+	pkg-config libssl-dev libclang-dev libwxgtk3.2-dev libwebkit2gtk-4.1-dev \
+	libncurses-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev \
+	libxml2-dev libxml2-utils unixodbc-dev autoconf m4 xsltproc fop default-jdk \
+	mold libjemalloc-dev unzip xclip jq rsync npm \
+	bind9-dnsutils inotify-tools python3-pynvim
 
 # ==== Phase 3: SSH ====
 
@@ -45,23 +45,23 @@ touch ~/.ssh/config
 chmod 600 ~/.ssh/config
 
 for entry in github.com:dimi_github gitlab.com:dimi_gitlab git.sr.ht:dimi_srht; do
-    host="${entry%%:*}"
-    key="${entry##*:}"
-    if ! grep -qF "Host $host" ~/.ssh/config; then
-        cat <<SSHC >>~/.ssh/config
+	host="${entry%%:*}"
+	key="${entry##*:}"
+	if ! grep -qF "Host $host" ~/.ssh/config; then
+		cat <<SSHC >>~/.ssh/config
 
 Host $host
     HostName $host
     IdentityFile ~/.ssh/$key
 SSHC
-    fi
+	fi
 done
 
 for entry in s1:s1 robotko:robotko robeast:robeast; do
-    host="${entry%%:*}"
-    hostname="${entry##*:}"
-    if ! grep -qF "Host $host" ~/.ssh/config; then
-        cat <<SSHC >>~/.ssh/config
+	host="${entry%%:*}"
+	hostname="${entry##*:}"
+	if ! grep -qF "Host $host" ~/.ssh/config; then
+		cat <<SSHC >>~/.ssh/config
 
 Host $host
     HostName $hostname
@@ -69,13 +69,13 @@ Host $host
     Port 22
     IdentityFile ~/.ssh/dimi_master
 SSHC
-    fi
+	fi
 done
 
 # ==== Phase 4: Rust toolchain ====
 
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    sh -s -- -y --no-modify-path --default-toolchain stable -c clippy,rust-docs,rust-src
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
+	sh -s -- -y --no-modify-path --default-toolchain stable -c clippy,rust-docs,rust-src
 export PATH="$PATH:$HOME/.cargo/bin"
 rustup target add wasm32-unknown-unknown --toolchain stable
 cargo install cargo-binstall
@@ -120,22 +120,22 @@ mise install -y
 # ==== Phase 10: System CLI tools (non-Rust, non-Go) ====
 
 $INSTALL \
-    ack aria2 asciidoc atomicparsley \
-    bmon borgbackup btop csvkit \
-    esbuild ffmpeg fio \
-    git-filter-repo git-lfs gnuplot graphviz gron \
-    htop httrack \
-    jc jnettop lbzip2 lnav \
-    lua5.4 luajit luarocks mediainfo miller moreutils multitail \
-    ncdu nmap p7zip-full parallel pdfgrep pigz \
-    pngquant progress pspg pv \
-    pipx python3-pygments \
-    rclone rename restic ruby \
-    sc-im shellcheck shfmt smartmontools \
-    syncthing \
-    silversearcher-ag timg tealdeer tree ttyplot \
-    ugrep visidata w3m wget wrk xh xmlstarlet \
-    yq yt-dlp zpaq
+	ack aria2 asciidoc atomicparsley \
+	bmon borgbackup btop csvkit \
+	esbuild ffmpeg fio \
+	git-filter-repo git-lfs gnuplot graphviz gron \
+	htop httrack \
+	jc jnettop lbzip2 lnav \
+	lua5.4 luajit luarocks mediainfo miller moreutils multitail \
+	ncdu nmap p7zip-full parallel pdfgrep pigz \
+	pngquant progress pspg pv \
+	pipx python3-pygments \
+	rclone rename restic ruby \
+	sc-im shellcheck shfmt smartmontools \
+	syncthing \
+	silversearcher-ag timg tealdeer tree ttyplot \
+	ugrep visidata w3m wget wrk xh xmlstarlet \
+	yq yt-dlp zpaq
 # NOTE: bfg, curlie, darkhttpd, dbmate, duckdb, fx not in Debian repos
 # curlie, dbmate, fx available via gup_converge (Go tools)
 

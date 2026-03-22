@@ -15,24 +15,24 @@ set -euo pipefail
 REMOTE="robeast"
 
 if [[ ! -d "$HOME/.claude" ]]; then
-  echo "ERROR: ~/.claude not found. Nothing to push."
-  exit 1
+	echo "ERROR: ~/.claude not found. Nothing to push."
+	exit 1
 fi
 
 echo "syncing Claude data to robeast..."
 
 rsync -az --out-format='%n' --stats --delete \
-  "$HOME/.claude/" "${REMOTE}:~/.claude/"
+	"$HOME/.claude/" "${REMOTE}:~/.claude/"
 
 rsync -az --out-format='%n' --stats --delete \
-  "$HOME/.claude-code/" "${REMOTE}:~/.claude-code/"
+	"$HOME/.claude-code/" "${REMOTE}:~/.claude-code/"
 
 # Merge ~/.claude.json: push local keys to robeast except auth keys,
 # which are preserved from robeast's copy.
 LOCAL_JSON=$(cat "$HOME/.claude.json")
 REMOTE_AUTH=$(ssh "$REMOTE" 'jq "{oauthAccount, anonymousId, userID}" ~/.claude.json 2>/dev/null || echo "{}"')
-echo "$LOCAL_JSON" | jq --argjson auth "$REMOTE_AUTH" '. * $auth' | \
-  ssh "$REMOTE" 'cat > ~/.claude.json'
+echo "$LOCAL_JSON" | jq --argjson auth "$REMOTE_AUTH" '. * $auth' |
+	ssh "$REMOTE" 'cat > ~/.claude.json'
 echo "merged remote ~/.claude.json (remote auth preserved)"
 
 echo "done."

@@ -4,26 +4,26 @@ set -euo pipefail
 threshold=0
 
 if [[ -n "${1:-}" ]]; then
-    case "$1" in
-        *[Gg]) threshold=$(( ${1%[Gg]} * 1073741824 )) ;;
-        *[Mm]) threshold=$(( ${1%[Mm]} * 1048576 )) ;;
-        *[Kk]) threshold=$(( ${1%[Kk]} * 1024 )) ;;
-        *[0-9]) threshold=$1 ;;
-        *)
-            echo "Usage: git largest [threshold] [rev-list args...]"
-            echo "  e.g. git largest 10M"
-            exit 1
-            ;;
-    esac
-    shift
+	case "$1" in
+	*[Gg]) threshold=$((${1%[Gg]} * 1073741824)) ;;
+	*[Mm]) threshold=$((${1%[Mm]} * 1048576)) ;;
+	*[Kk]) threshold=$((${1%[Kk]} * 1024)) ;;
+	*[0-9]) threshold=$1 ;;
+	*)
+		echo "Usage: git largest [threshold] [rev-list args...]"
+		echo "  e.g. git largest 10M"
+		exit 1
+		;;
+	esac
+	shift
 fi
 
-git rev-list --objects --all "$@" \
-    | git cat-file --batch-check='%(objectsize) %(objecttype) %(objectname) %(rest)' \
-    | awk -v t="$threshold" '$2 == "blob" && $1+0 >= t { print $1, $4 }' \
-    | sort -rn \
-    | head -40 \
-    | awk '{
+git rev-list --objects --all "$@" |
+	git cat-file --batch-check='%(objectsize) %(objecttype) %(objectname) %(rest)' |
+	awk -v t="$threshold" '$2 == "blob" && $1+0 >= t { print $1, $4 }' |
+	sort -rn |
+	head -40 |
+	awk '{
         b = $1+0
         if (b >= 1073741824)    s = sprintf("%.1fG", b/1073741824)
         else if (b >= 1048576)  s = sprintf("%.1fM", b/1048576)

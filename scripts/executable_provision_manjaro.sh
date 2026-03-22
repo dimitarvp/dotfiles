@@ -18,7 +18,7 @@ TIMEZONE='Europe/Sofia'
 # ==== Phase 1: System setup ====
 
 if ! sudo grep -qF "$USER ALL = (ALL) NOPASSWD:ALL" /etc/sudoers; then
-    echo "$USER ALL = (ALL) NOPASSWD:ALL" | sudo tee --append /etc/sudoers
+	echo "$USER ALL = (ALL) NOPASSWD:ALL" | sudo tee --append /etc/sudoers
 fi
 
 mkdir -p ~/bin ~/scripts
@@ -43,23 +43,23 @@ touch ~/.ssh/config
 chmod 600 ~/.ssh/config
 
 for entry in github.com:dimi_github gitlab.com:dimi_gitlab git.sr.ht:dimi_srht; do
-    host="${entry%%:*}"
-    key="${entry##*:}"
-    if ! grep -qF "Host $host" ~/.ssh/config; then
-        cat <<SSHC >>~/.ssh/config
+	host="${entry%%:*}"
+	key="${entry##*:}"
+	if ! grep -qF "Host $host" ~/.ssh/config; then
+		cat <<SSHC >>~/.ssh/config
 
 Host $host
     HostName $host
     IdentityFile ~/.ssh/$key
 SSHC
-    fi
+	fi
 done
 
 for entry in s1:s1 robeast:robeast robogamer:robogamer; do
-    host="${entry%%:*}"
-    hostname="${entry##*:}"
-    if ! grep -qF "Host $host" ~/.ssh/config; then
-        cat <<SSHC >>~/.ssh/config
+	host="${entry%%:*}"
+	hostname="${entry##*:}"
+	if ! grep -qF "Host $host" ~/.ssh/config; then
+		cat <<SSHC >>~/.ssh/config
 
 Host $host
     HostName $hostname
@@ -67,21 +67,21 @@ Host $host
     Port 22
     IdentityFile ~/.ssh/dimi_master
 SSHC
-    fi
+	fi
 done
 
 # ==== Phase 3: Core bootstrap tools ====
 
 $INSTALL base-devel make gcc git cmake curl wget zsh vim neovim \
-    chezmoi direnv fzf fzy peco pick github-cli \
-    pkg-config pkgconf fop unzip xclip wl-clipboard bind \
-    inotify-tools extra/wxwidgets-gtk3 extra/webkit2gtk-4.1 \
-    extra/mold jemalloc jq python-pynvim
+	chezmoi direnv fzf fzy peco pick github-cli \
+	pkg-config pkgconf fop unzip xclip wl-clipboard bind \
+	inotify-tools extra/wxwidgets-gtk3 extra/webkit2gtk-4.1 \
+	extra/mold jemalloc jq python-pynvim
 
 # ==== Phase 4: Rust toolchain ====
 
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    sh -s -- -y --no-modify-path --default-toolchain stable -c clippy rust-docs rust-src
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
+	sh -s -- -y --no-modify-path --default-toolchain stable -c clippy rust-docs rust-src
 export PATH="$PATH:$HOME/.cargo/bin"
 rustup target add wasm32-unknown-unknown --toolchain stable
 cargo install cargo-binstall
@@ -122,24 +122,24 @@ mise install -y
 # ==== Phase 10: System CLI tools (non-Rust, non-Go — those are handled above) ====
 
 $INSTALL \
-    ack aria2 asciidoc atomicparsley aws-cli-v2 aws-session-manager-plugin \
-    bfg bloaty bmon borg btop cmatrix csvkit ctop curlie \
-    darkhttpd dbmate diff-so-fancy difftastic dive \
-    docker docker-buildx docker-compose dool duckdb duf \
-    esbuild ffmpeg fio fx gallery-dl gdu \
-    git-filter-repo git-lfs glances glow gnuplot graphviz gron \
-    hey hstr htop httrack imgcat \
-    jc jnettop kopia lazydocker lazygit lbzip2 lnav \
-    lua luajit luarocks mediainfo miller moreutils multitail \
-    ncdu nmap openapi-generator p7zip parallel pdfgrep pigz \
-    pkgfile plumber pngquant procs progress pspg pv \
-    python-pipx python-pygments \
-    rclone rename restic ruby \
-    sc-im scdoc selene shellcheck shfmt smartmontools source-highlight \
-    streamlink swagger-codegen syncthing \
-    the_silver_searcher tigervnc timg tldr tree tree-sitter ttyplot typescript \
-    ugrep up visidata w3m wget wrk xh xmlstarlet \
-    you-get youtubedr yq yt-dlp zenith zpaq
+	ack aria2 asciidoc atomicparsley aws-cli-v2 aws-session-manager-plugin \
+	bfg bloaty bmon borg btop cmatrix csvkit ctop curlie \
+	darkhttpd dbmate diff-so-fancy difftastic dive \
+	docker docker-buildx docker-compose dool duckdb duf \
+	esbuild ffmpeg fio fx gallery-dl gdu \
+	git-filter-repo git-lfs glances glow gnuplot graphviz gron \
+	hey hstr htop httrack imgcat \
+	jc jnettop kopia lazydocker lazygit lbzip2 lnav \
+	lua luajit luarocks mediainfo miller moreutils multitail \
+	ncdu nmap openapi-generator p7zip parallel pdfgrep pigz \
+	pkgfile plumber pngquant procs progress pspg pv \
+	python-pipx python-pygments \
+	rclone rename restic ruby \
+	sc-im scdoc selene shellcheck shfmt smartmontools source-highlight \
+	streamlink swagger-codegen syncthing \
+	the_silver_searcher tigervnc timg tldr tree tree-sitter ttyplot typescript \
+	ugrep up visidata w3m wget wrk xh xmlstarlet \
+	you-get youtubedr yq yt-dlp zenith zpaq
 
 # ==== Phase 11: AUR packages ====
 
@@ -159,16 +159,16 @@ sudo usermod "$USER" -aG docker
 # ==== Phase 14: Fonts ====
 
 $INSTALL \
-    ttf-ubuntu-mono-nerd ttf-ms-fonts powerline-fonts ttf-symbola \
-    noto-fonts-emoji ttf-twemoji ttf-twemoji-color otf-openmoji \
-    extra/ttf-cascadia-mono-nerd
+	ttf-ubuntu-mono-nerd ttf-ms-fonts powerline-fonts ttf-symbola \
+	noto-fonts-emoji ttf-twemoji ttf-twemoji-color otf-openmoji \
+	extra/ttf-cascadia-mono-nerd
 fc-cache -fv
 
 # ==== Phase 15: UI applications ====
 
 $INSTALL alacritty enpass telegram-desktop firefox librewolf-bin \
-    streamlink-twitch-gui-bin mpv valentina-studio zulip-desktop-bin \
-    seahorse
+	streamlink-twitch-gui-bin mpv valentina-studio zulip-desktop-bin \
+	seahorse
 
 # ==== Done ====
 

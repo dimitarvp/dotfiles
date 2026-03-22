@@ -2,26 +2,26 @@
 set -euo pipefail
 
 if [[ -z "${1:-}" ]]; then
-    echo "Usage: git cleanup <size>"
-    echo "  e.g. git cleanup 10M"
-    echo ""
-    echo "Removes all blobs larger than <size> from git history."
-    echo "WARNING: rewrites history, requires force push afterward."
-    exit 1
+	echo "Usage: git cleanup <size>"
+	echo "  e.g. git cleanup 10M"
+	echo ""
+	echo "Removes all blobs larger than <size> from git history."
+	echo "WARNING: rewrites history, requires force push afterward."
+	exit 1
 fi
 
 if ! command -v git-filter-repo &>/dev/null; then
-    echo "git-filter-repo is not installed."
-    echo "  pip install git-filter-repo"
-    exit 1
+	echo "git-filter-repo is not installed."
+	echo "  pip install git-filter-repo"
+	exit 1
 fi
 
 echo "Will remove all blobs larger than $1 from history."
 echo "A force push will be required afterward."
 read -rp "Continue? [y/N] " confirm
 if [[ "$confirm" != [yY] ]]; then
-    echo "Aborted."
-    exit 0
+	echo "Aborted."
+	exit 0
 fi
 
 # Save remotes before filter-repo removes them
@@ -33,15 +33,15 @@ git filter-repo --strip-blobs-bigger-than "$1" --force --report-dir "$report_dir
 
 # Restore remotes
 while read -r name url; do
-    [[ -z "$name" ]] && continue
-    git remote add "$name" "$url" 2>/dev/null || true
-done <<< "$remotes"
+	[[ -z "$name" ]] && continue
+	git remote add "$name" "$url" 2>/dev/null || true
+done <<<"$remotes"
 
 echo "Remote(s) restored."
 
 read -rp "Force push now? [y/N] " push_confirm
 if [[ "$push_confirm" == [yY] ]]; then
-    git push --force-with-lease
-    git push --tags --force
-    echo "Pushed."
+	git push --force-with-lease
+	git push --tags --force
+	echo "Pushed."
 fi

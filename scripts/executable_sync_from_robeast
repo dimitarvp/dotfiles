@@ -19,17 +19,17 @@ ALL_DIRS=(w kod ow)
 EXCLUSIONS="$HOME/scripts/dev.exclusions"
 
 if [[ ! -f "$EXCLUSIONS" ]]; then
-  echo "ERROR: exclusions file not found: $EXCLUSIONS"
-  exit 1
+	echo "ERROR: exclusions file not found: $EXCLUSIONS"
+	exit 1
 fi
 
 # Normalize a path to be relative to $HOME
 normalize() {
-  local p="$1"
-  p="${p/#\~\//$HOME/}"   # expand ~/
-  p="${p/#$HOME\//}"      # strip $HOME/
-  p="${p%/}"              # strip trailing slash
-  echo "$p"
+	local p="$1"
+	p="${p/#\~\//$HOME/}" # expand ~/
+	p="${p/#$HOME\//}"    # strip $HOME/
+	p="${p%/}"            # strip trailing slash
+	echo "$p"
 }
 
 # Parse arguments
@@ -37,64 +37,64 @@ DRY_RUN="--dry-run"
 FORCE=""
 DIRS=()
 for arg in "$@"; do
-  if [[ "$arg" == "--go" ]]; then
-    DRY_RUN=""
-  elif [[ "$arg" == "--force" ]]; then
-    FORCE="1"
-  else
-    DIRS+=("$(normalize "$arg")")
-  fi
+	if [[ "$arg" == "--go" ]]; then
+		DRY_RUN=""
+	elif [[ "$arg" == "--force" ]]; then
+		FORCE="1"
+	else
+		DIRS+=("$(normalize "$arg")")
+	fi
 done
 [[ ${#DIRS[@]} -eq 0 ]] && DIRS=("${ALL_DIRS[@]}")
 
 UPDATE_FLAG="--update"
 DELETE_FLAG=""
 if [[ -n "$FORCE" ]]; then
-  UPDATE_FLAG=""
-  DELETE_FLAG="--delete"
+	UPDATE_FLAG=""
+	DELETE_FLAG="--delete"
 fi
 
 if [[ -z "$DRY_RUN" ]]; then
-  if [[ -n "$FORCE" ]]; then
-    echo "╔══════════════════════════════════════════════════════════╗"
-    echo "║  LIVE SYNC (FORCE): robeast ──> here                   ║"
-    echo "║  Dirs: $(printf '%s ' "${DIRS[@]}")"
-    echo "║  SOURCE WINS — local files WILL be overwritten         ║"
-    echo "╚══════════════════════════════════════════════════════════╝"
-  else
-    echo "╔══════════════════════════════════════════════════════════╗"
-    echo "║  LIVE SYNC: robeast ──> here                           ║"
-    echo "║  Dirs: $(printf '%s ' "${DIRS[@]}")"
-    echo "║  Newer local files will NOT be overwritten (--update)   ║"
-    echo "╚══════════════════════════════════════════════════════════╝"
-  fi
-  echo
-  read -rp "Proceed? [y/N] " confirm
-  if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-    echo "Aborted."
-    exit 0
-  fi
+	if [[ -n "$FORCE" ]]; then
+		echo "╔══════════════════════════════════════════════════════════╗"
+		echo "║  LIVE SYNC (FORCE): robeast ──> here                   ║"
+		echo "║  Dirs: $(printf '%s ' "${DIRS[@]}")"
+		echo "║  SOURCE WINS — local files WILL be overwritten         ║"
+		echo "╚══════════════════════════════════════════════════════════╝"
+	else
+		echo "╔══════════════════════════════════════════════════════════╗"
+		echo "║  LIVE SYNC: robeast ──> here                           ║"
+		echo "║  Dirs: $(printf '%s ' "${DIRS[@]}")"
+		echo "║  Newer local files will NOT be overwritten (--update)   ║"
+		echo "╚══════════════════════════════════════════════════════════╝"
+	fi
+	echo
+	read -rp "Proceed? [y/N] " confirm
+	if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+		echo "Aborted."
+		exit 0
+	fi
 else
-  echo "╔══════════════════════════════════════════════════════════╗"
-  echo "║  DRY RUN: robeast ──> here $([ -n "$FORCE" ] && echo "(FORCE)" || echo "       ")"
-  echo "║  Dirs: $(printf '%s ' "${DIRS[@]}")"
-  echo "║  Nothing will be changed. Use --go to execute.          ║"
-  echo "╚══════════════════════════════════════════════════════════╝"
-  echo
+	echo "╔══════════════════════════════════════════════════════════╗"
+	echo "║  DRY RUN: robeast ──> here $([ -n "$FORCE" ] && echo "(FORCE)" || echo "       ")"
+	echo "║  Dirs: $(printf '%s ' "${DIRS[@]}")"
+	echo "║  Nothing will be changed. Use --go to execute.          ║"
+	echo "╚══════════════════════════════════════════════════════════╝"
+	echo
 fi
 
 for dir in "${DIRS[@]}"; do
-  echo "── syncing ~/$dir/ ──"
-  mkdir -p "$HOME/$dir/"
-  rsync -az --out-format='%n' --stats $UPDATE_FLAG $DELETE_FLAG \
-    --exclude-from="$EXCLUSIONS" \
-    $DRY_RUN \
-    "${REMOTE}:~/${dir}/" "$HOME/$dir/"
-  echo
+	echo "── syncing ~/$dir/ ──"
+	mkdir -p "$HOME/$dir/"
+	rsync -az --out-format='%n' --stats $UPDATE_FLAG $DELETE_FLAG \
+		--exclude-from="$EXCLUSIONS" \
+		$DRY_RUN \
+		"${REMOTE}:~/${dir}/" "$HOME/$dir/"
+	echo
 done
 
 if [[ -n "$DRY_RUN" ]]; then
-  echo "Dry run complete. To apply, run: sync_from_robeast ${DIRS[*]} --go$([ -n "$FORCE" ] && echo " --force")"
+	echo "Dry run complete. To apply, run: sync_from_robeast ${DIRS[*]} --go$([ -n "$FORCE" ] && echo " --force")"
 else
-  echo "Sync complete: robeast ──> here (${DIRS[*]})"
+	echo "Sync complete: robeast ──> here (${DIRS[*]})"
 fi
