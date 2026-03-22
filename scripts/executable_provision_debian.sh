@@ -122,7 +122,6 @@ mise install -y
 $INSTALL \
     ack aria2 asciidoc atomicparsley \
     bmon borgbackup btop csvkit \
-    \
     esbuild ffmpeg fio \
     git-filter-repo git-lfs gnuplot graphviz gron \
     htop httrack \
