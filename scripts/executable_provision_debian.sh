@@ -122,7 +122,7 @@ mise install -y
 $INSTALL \
     ack aria2 asciidoc atomicparsley \
     bmon borgbackup btop csvkit \
-    docker.io docker-buildx docker-compose \
+    \
     esbuild ffmpeg fio \
     git-filter-repo git-lfs gnuplot graphviz gron \
     htop httrack \
@@ -156,12 +156,21 @@ rm -f /tmp/session-manager-plugin.deb
 $INSTALL postgresql redis
 sudo systemctl enable --now postgresql redis-server
 
-# ==== Phase 12: Docker ====
+# ==== Phase 12: Docker (official repo, not Debian's) ====
+
+# Debian unstable's docker.io/containerd packages break on rolling updates.
+# Use Docker's official repo with bookworm (stable) target — binaries are
+# statically linked and work fine on sid.
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable" | sudo tee /etc/apt/sources.list.d/docker.list
+sudo apt update
+$INSTALL docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 sudo /usr/sbin/usermod "$USER" -aG docker
 # NOTE: docker group requires logout
 sudo systemctl enable --now docker.service
-# NOTE: Docker in WSL2 — consider using Docker Desktop on Windows instead
 
 # ==== Done ====
 
