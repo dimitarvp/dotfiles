@@ -16,9 +16,9 @@ echo "=== cargo_export ==="
 echo "Exporting installed crates to: $CONFIG_FILE"
 echo ""
 
-cargo install --list | awk '/^[a-zA-Z]/ {gsub(/ .*/, ""); print}' | sort > "$CONFIG_FILE"
+cargo install --list | awk '/^[a-zA-Z]/ {gsub(/ .*/, ""); print}' | sort >"$CONFIG_FILE"
 
-count=$(wc -l < "$CONFIG_FILE" | tr -d ' ')
+count=$(wc -l <"$CONFIG_FILE" | tr -d ' ')
 echo "Done. $count crates exported."
 echo ""
 
@@ -26,9 +26,9 @@ chezmoi add "$CONFIG_FILE"
 chezmoi git -- add private_dot_config/cargo-crates/crates.conf
 
 if chezmoi git -- diff --quiet --staged; then
-    echo "No changes to commit."
+	echo "No changes to commit."
 else
-    chezmoi git -- commit -m "update crates.conf ($count cargo crates)"
-    chezmoi git -- push
-    echo "Committed and pushed."
+	chezmoi git -- commit -m "update crates.conf ($count cargo crates)"
+	chezmoi git -- push
+	echo "Committed and pushed."
 fi

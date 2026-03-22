@@ -21,9 +21,9 @@ chezmoi add "$CONFIG_FILE"
 chezmoi git -- add private_dot_config/gup/private_gup.json
 
 if chezmoi git -- diff --quiet --staged; then
-    echo "No changes to commit."
+	echo "No changes to commit."
 else
-    chezmoi git -- commit -m "update gup.json ($count go tools)"
-    chezmoi git -- push
-    echo "Committed and pushed."
+	chezmoi git -- commit -m "update gup.json ($count go tools)"
+	chezmoi git -- push
+	echo "Committed and pushed."
 fi
