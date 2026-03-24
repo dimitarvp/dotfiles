@@ -48,8 +48,21 @@ OnUnitActiveSec=1h
 [Install]
 WantedBy=timers.target
 TZEOF
+sudo tee /etc/systemd/system/tz-update-resume.service >/dev/null <<'TZEOF'
+[Unit]
+Description=Update timezone after resume
+After=suspend.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'sleep 10 && TZ=$(curl -sf --max-time 10 https://ipapi.co/timezone) && [ -n "$TZ" ] && timedatectl set-timezone "$TZ"'
+
+[Install]
+WantedBy=suspend.target
+TZEOF
 sudo systemctl daemon-reload
 sudo systemctl enable --now tz-update.timer
+sudo systemctl enable tz-update-resume.service
 
 # ==== Phase 2: Core bootstrap tools ====
 
