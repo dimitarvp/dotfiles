@@ -149,6 +149,7 @@ $INSTALL earthly-bin exercism-bin noti repomix semgrep-bin tabula
 
 $INSTALL postgresql redis mongodb-bin
 sudo systemctl enable --now postgresql redis
+sudo -u postgres createuser -s "$(whoami)"
 
 # ==== Phase 13: Docker ====
 

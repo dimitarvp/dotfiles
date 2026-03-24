@@ -154,6 +154,7 @@ rm -f /tmp/session-manager-plugin.deb
 
 $INSTALL postgresql redis
 sudo systemctl enable --now postgresql redis-server
+sudo -u postgres createuser -s "$(whoami)"
 
 # ==== Phase 12: Docker (official repo, not Debian's) ====
 
