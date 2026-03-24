@@ -27,6 +27,31 @@ sudo systemctl enable fstrim.timer
 sudo systemctl enable avahi-daemon
 sudo usermod "$USER" -aG wheel
 
+# Automatic timezone from IP geolocation (no GeoClue dependency)
+sudo tee /etc/systemd/system/tz-update.service >/dev/null <<'TZEOF'
+[Unit]
+Description=Update timezone from IP geolocation
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'TZ=$(curl -sf --max-time 10 https://ipapi.co/timezone) && [ -n "$TZ" ] && timedatectl set-timezone "$TZ"'
+TZEOF
+sudo tee /etc/systemd/system/tz-update.timer >/dev/null <<'TZEOF'
+[Unit]
+Description=Periodic timezone update
+
+[Timer]
+OnBootSec=30
+OnUnitActiveSec=1h
+
+[Install]
+WantedBy=timers.target
+TZEOF
+sudo systemctl daemon-reload
+sudo systemctl enable --now tz-update.timer
+
 sudo pacman-mirrors --fasttrack && sudo pacman -Syyu --noconfirm
 sudo pacman -S --noconfirm --needed yay
 $INSTALL pacman-contrib

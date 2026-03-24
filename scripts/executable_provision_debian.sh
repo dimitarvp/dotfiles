@@ -26,6 +26,31 @@ mkdir -p ~/bin ~/scripts
 sudo timedatectl set-timezone "$TIMEZONE"
 # NOTE: WSL2 syncs time from Windows host; no timesyncd needed
 
+# Automatic timezone from IP geolocation (no GeoClue dependency)
+sudo tee /etc/systemd/system/tz-update.service >/dev/null <<'TZEOF'
+[Unit]
+Description=Update timezone from IP geolocation
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'TZ=$(curl -sf --max-time 10 https://ipapi.co/timezone) && [ -n "$TZ" ] && timedatectl set-timezone "$TZ"'
+TZEOF
+sudo tee /etc/systemd/system/tz-update.timer >/dev/null <<'TZEOF'
+[Unit]
+Description=Periodic timezone update
+
+[Timer]
+OnBootSec=30
+OnUnitActiveSec=1h
+
+[Install]
+WantedBy=timers.target
+TZEOF
+sudo systemctl daemon-reload
+sudo systemctl enable --now tz-update.timer
+
 # ==== Phase 2: Core bootstrap tools ====
 
 $INSTALL \
