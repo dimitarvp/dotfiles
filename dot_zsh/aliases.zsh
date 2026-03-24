@@ -41,6 +41,7 @@ if is_macos; then
   # Note: ls uses GNU coreutils via PATH (see gnu.zsh)
 fi
 
+alias tzrefresh='sudo systemctl start tz-update.service && timedatectl | grep "Time zone"'
 alias ytdl="yt-dlp"
 
 # --------------------------------------------------
