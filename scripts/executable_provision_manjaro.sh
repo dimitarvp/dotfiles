@@ -43,7 +43,7 @@ sudo tee /etc/systemd/system/tz-update.timer >/dev/null <<'TZEOF'
 Description=Periodic timezone update
 
 [Timer]
-OnBootSec=30
+OnBootSec=5
 OnUnitActiveSec=1h
 
 [Install]
