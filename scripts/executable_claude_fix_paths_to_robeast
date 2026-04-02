@@ -1,0 +1,60 @@
+#!/bin/bash
+set -euo pipefail
+
+# ─────────────────────────────────────────────────────────────────
+# claude_fix_paths_to_robeast — rewrite Linux paths to macOS
+#
+# After syncing Claude data to robeast, session files contain
+# "cwd":"/home/dimi/..." which prevents --continue from matching
+# on macOS where cwd is "/Users/dimi/...".
+#
+# Runs on robeast via SSH. Surgically rewrites ONLY:
+#   - "cwd" fields in session .jsonl files
+#   - "originalPath" in sessions-index.json
+#   - "project" field in history.jsonl
+# Message content, tool results, and code are NOT touched.
+# ─────────────────────────────────────────────────────────────────
+
+REMOTE="robeast"
+
+FROM_PREFIX="/home/dimi/"
+TO_PREFIX="/Users/dimi/"
+
+echo "fixing Claude paths on robeast: $FROM_PREFIX → $TO_PREFIX"
+
+ssh "$REMOTE" bash -s "$FROM_PREFIX" "$TO_PREFIX" <<'REMOTESCRIPT'
+FROM_PREFIX="$1"
+TO_PREFIX="$2"
+PROJECTS="$HOME/.claude/projects"
+
+# Fix cwd fields in all session .jsonl files
+count=0
+for jsonl in "$PROJECTS"/*/*.jsonl; do
+    [ -f "$jsonl" ] || continue
+    if grep -q "\"cwd\":\"${FROM_PREFIX}" "$jsonl"; then
+        sed -i "" "s|\"cwd\":\"${FROM_PREFIX}|\"cwd\":\"${TO_PREFIX}|g" "$jsonl"
+        count=$((count + 1))
+        echo "  fixed cwd: $(basename "$(dirname "$jsonl")")/$(basename "$jsonl")"
+    fi
+done
+echo "fixed $count session files"
+
+# Fix originalPath in sessions-index.json files
+for idx in "$PROJECTS"/*/sessions-index.json; do
+    [ -f "$idx" ] || continue
+    if grep -q "${FROM_PREFIX}" "$idx"; then
+        sed -i "" "s|${FROM_PREFIX}|${TO_PREFIX}|g" "$idx"
+        echo "  fixed: $(basename "$(dirname "$idx")")/sessions-index.json"
+    fi
+done
+
+# Fix project field in history.jsonl
+HISTORY="$HOME/.claude/history.jsonl"
+if [ -f "$HISTORY" ] && grep -q "\"project\":\"${FROM_PREFIX}" "$HISTORY"; then
+    sed -i "" "s|\"project\":\"${FROM_PREFIX}|\"project\":\"${TO_PREFIX}|g" "$HISTORY"
+    sed -i "" "s|\"project\":\"/home/dimi\"|\"project\":\"/Users/dimi\"|g" "$HISTORY"
+    echo "fixed history.jsonl"
+fi
+REMOTESCRIPT
+
+echo "done."

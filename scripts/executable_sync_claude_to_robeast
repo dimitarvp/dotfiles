@@ -35,4 +35,7 @@ echo "$LOCAL_JSON" | jq --argjson auth "$REMOTE_AUTH" '. * $auth' |
 	ssh "$REMOTE" 'cat > ~/.claude.json'
 echo "merged remote ~/.claude.json (remote auth preserved)"
 
+# Fix cwd paths in session files on robeast so --continue works
+claude_fix_paths_to_robeast
+
 echo "done."

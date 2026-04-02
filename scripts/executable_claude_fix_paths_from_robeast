@@ -1,0 +1,59 @@
+#!/bin/bash
+set -euo pipefail
+
+# ─────────────────────────────────────────────────────────────────
+# claude_fix_paths_from_robeast — rewrite macOS paths to Linux
+#
+# After syncing Claude data from robeast, session files contain
+# "cwd":"/Users/dimi/..." which prevents --continue from matching
+# on Linux where cwd is "/home/dimi/...".
+#
+# This script surgically rewrites ONLY:
+#   - "cwd" fields in session .jsonl files
+#   - "originalPath" in sessions-index.json
+#   - "project" field in history.jsonl
+# Message content, tool results, and code are NOT touched.
+# ─────────────────────────────────────────────────────────────────
+
+FROM_PREFIX="/Users/dimi/"
+TO_PREFIX="/home/dimi/"
+PROJECTS="$HOME/.claude/projects"
+
+if [[ "$FROM_PREFIX" == "$TO_PREFIX" ]]; then
+	echo "already on macOS, nothing to fix"
+	exit 0
+fi
+
+echo "fixing Claude paths: $FROM_PREFIX → $TO_PREFIX"
+
+# Fix cwd fields in all session .jsonl files
+count=0
+for jsonl in "$PROJECTS"/*/*.jsonl; do
+	[[ -f "$jsonl" ]] || continue
+	if grep -q "\"cwd\":\"${FROM_PREFIX}" "$jsonl"; then
+		sed -i "s|\"cwd\":\"${FROM_PREFIX}|\"cwd\":\"${TO_PREFIX}|g" "$jsonl"
+		count=$((count + 1))
+		echo "  fixed cwd: $(basename "$(dirname "$jsonl")")/$(basename "$jsonl")"
+	fi
+done
+echo "fixed $count session files"
+
+# Fix originalPath in sessions-index.json files
+for idx in "$PROJECTS"/*/sessions-index.json; do
+	[[ -f "$idx" ]] || continue
+	if grep -q "${FROM_PREFIX}" "$idx"; then
+		sed -i "s|${FROM_PREFIX}|${TO_PREFIX}|g" "$idx"
+		echo "  fixed: $(basename "$(dirname "$idx")")/sessions-index.json"
+	fi
+done
+
+# Fix project field in history.jsonl
+HISTORY="$HOME/.claude/history.jsonl"
+if [[ -f "$HISTORY" ]] && grep -q "\"project\":\"${FROM_PREFIX}" "$HISTORY"; then
+	sed -i "s|\"project\":\"${FROM_PREFIX}|\"project\":\"${TO_PREFIX}|g" "$HISTORY"
+	# Also handle the bare home dir case (no trailing path)
+	sed -i "s|\"project\":\"/Users/dimi\"|\"project\":\"/home/dimi\"|g" "$HISTORY"
+	echo "fixed history.jsonl"
+fi
+
+echo "done."

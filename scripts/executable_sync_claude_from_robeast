@@ -60,4 +60,7 @@ for dir in "$PROJECTS"/*; do
 	fi
 done
 
+# Fix cwd paths in session files so --continue works cross-platform
+claude_fix_paths_from_robeast
+
 echo "done."
