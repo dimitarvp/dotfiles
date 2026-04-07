@@ -154,6 +154,9 @@ touch ~/.zsh/secrets.zsh
 
 # ==== Phase 9: Language runtimes (mise) ====
 
+# Erlang plugin — mise's core support has stale version lists; the asdf plugin is authoritative
+mise plugins install erlang https://github.com/asdf-vm/asdf-erlang.git
+
 export KERL_CONFIGURE_OPTIONS='--without-odbc'
 mise install -y
 
