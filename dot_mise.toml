@@ -2,6 +2,7 @@
 erlang = ["28", "27"]
 elixir = ["1.19", "1.18"]
 go = "latest"
+node = "latest"
 rebar = "latest"
 
 [tasks.converge]
