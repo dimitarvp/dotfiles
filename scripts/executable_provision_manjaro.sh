@@ -185,7 +185,13 @@ $INSTALL \
 
 # ==== Phase 11: AUR packages ====
 
-$INSTALL earthly-bin exercism-bin noti repomix semgrep-bin tabula
+$INSTALL earthly-bin exercism-bin nbfc-linux noti repomix semgrep-bin tabula
+
+# NBFC (NoteBook FanControl) — reads fan speed from EC, not hwmon.
+# hp-wmi reports 0 RPM on HP laptops; nbfc is the only way to get fan readings.
+# After install: nbfc config -a "$(nbfc get-model-name)" && nbfc start
+# KDE widget: install "Command Output" (by zren) from KDE Store, command:
+#   nbfc status | grep "Current Fan Speed" | awk '{printf "🌀 %.1f%%\n", $NF}'
 
 # ==== Phase 12: Databases ====
 
