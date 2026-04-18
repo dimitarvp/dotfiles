@@ -94,6 +94,30 @@ fi
 
 for dir in "${DIRS[@]}"; do
 	echo "── syncing ~/$dir/ ──"
+
+	# rsync --delete refuses to remove dirs that still contain excluded
+	# content (e.g. a dest-only project with _build/ or .DS_Store inside).
+	# Under --force, pre-purge those via rm -rf so the sync becomes a mirror.
+	if [[ -n "$FORCE" ]]; then
+		mapfile -t stale < <(
+			rsync -an --delete --exclude-from="$EXCLUSIONS" \
+				"$HOME/$dir/" "${REMOTE}:~/${dir}/" 2>&1 |
+				sed -n 's|^rsync([0-9]*): warning: .*//\./\(.*\): not empty, cannot delete$|\1|p' || true
+		)
+		if [[ ${#stale[@]} -gt 0 ]]; then
+			if [[ -n "$DRY_RUN" ]]; then
+				echo "  would pre-purge ${#stale[@]} stale dir(s) on ${REMOTE}:"
+			else
+				echo "  pre-purging ${#stale[@]} stale dir(s) on ${REMOTE}:"
+			fi
+			printf '    %s\n' "${stale[@]}"
+			if [[ -z "$DRY_RUN" ]]; then
+				printf '%s\0' "${stale[@]}" |
+					ssh "$REMOTE" "cd ~/$dir && xargs -0 rm -rf --"
+			fi
+		fi
+	fi
+
 	rsync -az --out-format='%n' --stats $UPDATE_FLAG $DELETE_FLAG \
 		--exclude-from="$EXCLUSIONS" \
 		$DRY_RUN \
