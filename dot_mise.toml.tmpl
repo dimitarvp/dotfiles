@@ -5,6 +5,10 @@ go = "latest"
 node = "latest"
 rebar = "latest"
 "npm:@google/gemini-cli" = "latest"
+"github:Ataraxy-Labs/inspect" = "latest"
+{{- if ne .chezmoi.os "darwin" }}
+"aqua:remoteoss/dexter" = "latest"
+{{- end }}
 
 [tasks.converge]
 description = "Install, upgrade, and prune tools"
