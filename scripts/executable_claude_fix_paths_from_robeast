@@ -56,4 +56,23 @@ if [[ -f "$HISTORY" ]] && grep -q "\"project\":\"${FROM_PREFIX}" "$HISTORY"; the
 	echo "fixed history.jsonl"
 fi
 
+# Fix path-keyed data in ~/.claude.json (projects/githubRepoPaths keys + nested
+# path strings). jq walk rewrites both object keys and string values, structured.
+CLAUDE_JSON="$HOME/.claude.json"
+if [[ -f "$CLAUDE_JSON" ]] && grep -q "${FROM_PREFIX%/}" "$CLAUDE_JSON"; then
+	tmp="$(mktemp)"
+	if jq --arg from "${FROM_PREFIX%/}" --arg to "${TO_PREFIX%/}" '
+		walk(
+			if type == "string" then gsub($from; $to)
+			elif type == "object" then with_entries(.key |= gsub($from; $to))
+			else . end
+		)' "$CLAUDE_JSON" >"$tmp" && [[ -s "$tmp" ]]; then
+		mv "$tmp" "$CLAUDE_JSON"
+		echo "fixed ~/.claude.json"
+	else
+		rm -f "$tmp"
+		echo "WARNING: ~/.claude.json jq rewrite failed; left unchanged"
+	fi
+fi
+
 echo "done."

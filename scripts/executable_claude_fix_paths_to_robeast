@@ -55,6 +55,24 @@ if [ -f "$HISTORY" ] && grep -q "\"project\":\"${FROM_PREFIX}" "$HISTORY"; then
     sed -i "" "s|\"project\":\"/home/dimi\"|\"project\":\"/Users/dimi\"|g" "$HISTORY"
     echo "fixed history.jsonl"
 fi
+
+# Fix path-keyed data in ~/.claude.json on robeast (keys + nested path strings)
+CLAUDE_JSON="$HOME/.claude.json"
+if [ -f "$CLAUDE_JSON" ] && grep -q "${FROM_PREFIX%/}" "$CLAUDE_JSON"; then
+    tmp="$(mktemp)"
+    if jq --arg from "${FROM_PREFIX%/}" --arg to "${TO_PREFIX%/}" '
+        walk(
+            if type == "string" then gsub($from; $to)
+            elif type == "object" then with_entries(.key |= gsub($from; $to))
+            else . end
+        )' "$CLAUDE_JSON" >"$tmp" && [ -s "$tmp" ]; then
+        mv "$tmp" "$CLAUDE_JSON"
+        echo "  fixed ~/.claude.json"
+    else
+        rm -f "$tmp"
+        echo "  WARNING: ~/.claude.json jq rewrite failed"
+    fi
+fi
 REMOTESCRIPT
 
 echo "done."
