@@ -210,6 +210,12 @@
       "import_path": "github.com/sibprogrammer/xq",
       "version": "v1.4.0",
       "channel": "latest"
+    },
+    {
+      "name": "kopia",
+      "import_path": "github.com/kopia/kopia",
+      "version": "v0.23.0",
+      "channel": "latest"
     }
   ]
 }
