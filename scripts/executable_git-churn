@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# git churn — rank files by code churn (added+removed lines) with commit count.
+# Usage: git churn [-n N] [-e ext,ext,...]    e.g. git churn -e ex,exs -n 20
+n=15
+exts=""
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		-n) n="$2"; shift 2 ;;
+		-e) exts="$2"; shift 2 ;;
+		*)  shift ;;
+	esac
+done
+filter='.'
+[[ -n "$exts" ]] && filter="\\.(${exts//,/|})\$"
+{
+	printf '%8s  %7s  %8s  %4s  %-16s %s\n' churn added removed cmt '' file
+	git log --no-merges --numstat --format='' \
+		| awk -F'\t' 'NF==3 && $1!="-"{a[$3]+=$1;d[$3]+=$2;c[$3]++} END{for(f in a) print (a[f]+d[f])"\t"a[f]"\t"d[f]"\t"c[f]"\t"f}' \
+		| grep -E "$filter" \
+		| sort -rn | head -n "$n" \
+		| awk -F'\t' 'NR==1{max=$1}{b=int(($1/max)*16);bar="";for(i=0;i<b;i++)bar=bar"█";printf "%8d  %7d  %8d  %4d  %-16s %s\n",$1,$2,$3,$4,bar,$5}'
+}
