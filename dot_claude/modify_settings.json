@@ -1,0 +1,10 @@
+#!/bin/sh
+# Ensure statusLine is configured in ~/.claude/settings.json; pass all other
+# keys through untouched (Claude Code rewrites this file itself).
+input=$(cat)
+[ -z "$input" ] && input='{}'
+if [ "$(printf '%s\n' "$input" | jq -r '.statusLine.command // empty')" = '~/.claude/statusline.sh' ]; then
+	printf '%s\n' "$input"
+else
+	printf '%s\n' "$input" | jq '.statusLine = {"type": "command", "command": "~/.claude/statusline.sh"}'
+fi
