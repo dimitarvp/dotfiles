@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# plasmoid_update — CLI updater for KDE-Store (KNewStuff) plasmoids.
+# Usage: plasmoid_update [-n]    -n = check only, change nothing
+# Compares each installed widget's metadata.json version against the KDE
+# Store OCS API and upgrades in place via kpackagetool6. The KNewStuff
+# registry <version> is patched afterwards so the GUI stays in agreement.
+# Uses download slot 1 of each store entry; fine for single-payload widgets.
+
+REG="$HOME/.local/share/knewstuff3/plasmoids.knsregistry"
+PLASMOIDS="$HOME/.local/share/plasma/plasmoids"
+API="https://api.kde-look.org/ocs/v1/content/data"
+
+command -v kpackagetool6 >/dev/null 2>&1 || { echo "plasmoid_update: no kpackagetool6 here, nothing to do" >&2; exit 0; }
+command -v bsdtar >/dev/null 2>&1 || { echo "plasmoid_update: bsdtar (libarchive) required" >&2; exit 0; }
+command -v xmlstarlet >/dev/null 2>&1 || { echo "plasmoid_update: xmlstarlet required" >&2; exit 0; }
+[ -f "$REG" ] || { echo "plasmoid_update: no plasmoid registry, nothing to do" >&2; exit 0; }
+
+dry=0
+[ "${1:-}" = "-n" ] && dry=1
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+updated=0
+# local version = registry <version>: what we last installed from the store.
+# (NOT metadata.json — sloppy authors ship payloads whose internal version
+# lags their store listing, which would re-update forever.)
+while IFS=$'\t' read -r id name local_v dir; do
+	[ -n "$id" ] && [ -d "$dir" ] || continue
+	json=$(curl -sf --max-time 20 "$API/$id?format=json") \
+		|| { printf '  ! %-36s API fetch failed\n' "$name"; continue; }
+	remote_v=$(jq -r '.data[0].version // empty' <<<"$json")
+	[ -n "$remote_v" ] || { printf '  ! %-36s no remote version\n' "$name"; continue; }
+	# compare with any leading "v" stripped (store strings are sloppy: "v7.2.0")
+	if [ "${remote_v#v}" = "${local_v#v}" ]; then
+		printf '  = %-36s %s\n' "$name" "$local_v"
+		continue
+	fi
+	printf '  ^ %-36s %s -> %s\n' "$name" "$local_v" "$remote_v"
+	[ "$dry" = 1 ] && continue
+	url=$(jq -r '.data[0].downloadlink1 // empty' <<<"$json")
+	[ -n "$url" ] || { printf '  ! %-36s no download link\n' "$name"; continue; }
+	pkg="$tmp/$id.package"
+	curl -sfL --max-time 60 -o "$pkg" "$url" \
+		|| { printf '  ! %-36s download failed\n' "$name"; continue; }
+	# payloads are .plasmoid zips or tarballs, package root sometimes nested
+	# one dir down — extract uniformly and locate metadata.json
+	exdir="$tmp/$id.x"
+	mkdir -p "$exdir"
+	bsdtar -xf "$pkg" -C "$exdir" 2>/dev/null \
+		|| { printf '  ! %-36s archive extract failed\n' "$name"; continue; }
+	pkgdir=""
+	if [ -f "$exdir/metadata.json" ]; then
+		pkgdir="$exdir"
+	else
+		for d in "$exdir"/*/; do
+			[ -f "${d}metadata.json" ] && { pkgdir="${d%/}"; break; }
+		done
+	fi
+	[ -n "$pkgdir" ] || { printf '  ! %-36s no metadata.json in payload\n' "$name"; continue; }
+	pkg_id=$(jq -r '.KPlugin.Id // empty' "$pkgdir/metadata.json")
+	want_id=$(basename "$dir")
+	if [ "$pkg_id" != "$want_id" ]; then
+		printf '  ! %-36s payload is %s, not %s — manual update needed\n' "$name" "$pkg_id" "$want_id"
+		continue
+	fi
+	ok=0
+	if err=$(kpackagetool6 -t Plasma/Applet -u "$pkgdir" 2>&1); then
+		ok=1
+	elif [ -d "$PLASMOIDS/$want_id" ]; then
+		# legacy install invisible to KF6 kpackage (no KPackageStructure in its
+		# metadata) — replace it: backup, fresh install, restore on failure
+		mv "$PLASMOIDS/$want_id" "$tmp/bak-$want_id"
+		if err=$(kpackagetool6 -t Plasma/Applet -i "$pkgdir" 2>&1); then
+			ok=1
+		else
+			mv "$tmp/bak-$want_id" "$PLASMOIDS/$want_id"
+		fi
+	fi
+	if [ "$ok" = 1 ]; then
+		updated=$((updated + 1))
+		command -v xmlstarlet >/dev/null 2>&1 \
+			&& xmlstarlet ed --inplace -u "//stuff[id='$id']/version" -v "$remote_v" "$REG" 2>/dev/null
+	else
+		printf '  ! %-36s upgrade failed: %s\n' "$name" "$(head -1 <<<"$err")"
+	fi
+done < <(xmlstarlet sel -T -t -m '//stuff' -v 'id' -o $'\t' -v 'name' -o $'\t' -v 'version' -o $'\t' -v 'installedfile[1]' -n "$REG" 2>/dev/null)
+
+[ "$updated" -gt 0 ] && echo "plasmoid_update: $updated updated — restart plasmashell (or relog) to apply"
+exit 0
