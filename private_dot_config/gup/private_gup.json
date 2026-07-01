@@ -92,6 +92,12 @@
       "channel": "latest"
     },
     {
+      "name": "gopls",
+      "import_path": "golang.org/x/tools/gopls",
+      "version": "v0.22.0",
+      "channel": "latest"
+    },
+    {
       "name": "gotests",
       "import_path": "github.com/cweill/gotests/gotests",
       "version": "v1.9.0",
