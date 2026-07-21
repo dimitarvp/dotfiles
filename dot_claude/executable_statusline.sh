@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # statusline.sh — Claude Code status line.
-# Reads session JSON on stdin, prints: cwd • model • effort • 5h limit • 7d limit
+# Reads session JSON on stdin, prints:
+#   cwd • model • effort • ctx • 5h limit • 7d all-other • 7d fable
 # rate_limits is absent until the session's first API response; parts degrade away.
+# The Fable weekly bucket is NOT in the statusline payload (CC <=2.1.216) — it is
+# fetched from Anthropic's undocumented OAuth usage endpoint (same source as
+# /usage), cached 120s in ~/.cache, degrading to omission on any failure.
 
 input=$(cat)
 
@@ -31,9 +35,53 @@ input=$(cat)
 
 # GNU vs BSD date (robeast is macOS)
 if [ "$(uname)" = Darwin ]; then
+	IS_DARWIN=1
 	epoch_fmt() { date -r "$1" "+$2"; }
 else
+	IS_DARWIN=0
 	epoch_fmt() { date -d "@$1" "+$2"; }
+fi
+
+# Fable weekly limit via the OAuth usage endpoint, cached. Token is read fresh
+# per fetch (CC rotates it) and passed via curl --config stdin, never argv.
+# On fetch failure the cache mtime is bumped (or a stub written) so a dead
+# endpoint is retried at most every 120s instead of every render.
+USAGE_CACHE="$HOME/.cache/claude_usage_limits.json"
+fetch_usage() {
+	local now age tok tmpf
+	now=$(date +%s)
+	if [ -f "$USAGE_CACHE" ]; then
+		if [ "$IS_DARWIN" = 1 ]; then age=$(( now - $(stat -f %m "$USAGE_CACHE" 2>/dev/null || echo 0) ))
+		else age=$(( now - $(stat -c %Y "$USAGE_CACHE" 2>/dev/null || echo 0) )); fi
+		[ "$age" -lt 120 ] && return 0
+	fi
+	tok=$(jq -r '.claudeAiOauth.accessToken // empty' "$HOME/.claude/.credentials.json" 2>/dev/null)
+	[ -n "$tok" ] || return 0
+	tmpf=$(mktemp "${TMPDIR:-/tmp}/clusage.XXXXXX") || return 0
+	if curl -sf --max-time 2 -o "$tmpf" --config /dev/stdin <<EOF
+url = "https://api.anthropic.com/api/oauth/usage"
+header = "Authorization: Bearer $tok"
+header = "anthropic-beta: oauth-2025-04-20"
+EOF
+	then
+		mkdir -p "$HOME/.cache"
+		mv "$tmpf" "$USAGE_CACHE" && chmod 600 "$USAGE_CACHE"
+	else
+		rm -f "$tmpf"
+		if [ -f "$USAGE_CACHE" ]; then touch "$USAGE_CACHE"
+		else mkdir -p "$HOME/.cache" && printf '{}' > "$USAGE_CACHE" && chmod 600 "$USAGE_CACHE"; fi
+	fi
+}
+
+fetch_usage
+pf="" rf=""
+if [ -f "$USAGE_CACHE" ]; then
+	pf=$(jq -r '[.limits[]? | select(.kind == "weekly_scoped")][0] | .percent | round | tostring' "$USAGE_CACHE" 2>/dev/null) || pf=""
+	[ "$pf" = "null" ] && pf=""
+	# resets_at is ISO with fractional secs (…59:59.9…): strip fraction, +1 lands
+	# on the true boundary; jq fromdate keeps this portable (no GNU/BSD date).
+	rf=$(jq -r '[.limits[]? | select(.kind == "weekly_scoped")][0] | .resets_at | sub("\\.[0-9]+"; "") | sub("\\+00:00"; "Z") | fromdate + 1 | tostring' "$USAGE_CACHE" 2>/dev/null) || rf=""
+	[ "$rf" = "null" ] && rf=""
 fi
 
 fmt_date_hm() { # "7 Jul 14:00"
@@ -64,6 +112,7 @@ DIM="${ESC}[2m"
 GRN="${ESC}[38;5;70m"
 YEL="${ESC}[38;5;220m"
 ORN="${ESC}[38;5;208m"
+PUR="${ESC}[38;5;135m"
 RED="${ESC}[1;38;5;196m"
 
 # model chip: white on family color
@@ -115,9 +164,17 @@ if [ -n "$p5" ]; then
 	[ -n "$r5" ] && seg="$seg ${DIM}↻ $(fmt_day_hm "$r5")${RST}"
 	parts+=("$seg")
 fi
+# two weekly buckets: "all other limits" (official payload, % in purple) and
+# "fable" (usage endpoint, % in orange); each 7d literal threshold-colored by
+# its own utilization
 if [ -n "$p7" ]; then
-	seg="$(pct_c "$p7")7d ${p7}%${RST}"
+	seg="$(pct_c "$p7")7d${RST} ${PUR}${p7}%${RST}"
 	[ -n "$r7" ] && seg="$seg ${DIM}↻ $(fmt_date_hm "$r7")${RST}"
+	parts+=("$seg")
+fi
+if [ -n "$pf" ]; then
+	seg="$(pct_c "$pf")7d${RST} ${ORN}${pf}%${RST}"
+	[ -n "$rf" ] && seg="$seg ${DIM}↻ $(fmt_date_hm "$rf")${RST}"
 	parts+=("$seg")
 fi
 
