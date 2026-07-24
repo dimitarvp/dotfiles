@@ -4,11 +4,17 @@ elixir = ["1.20", "1.19", "1.18"]
 go = "latest"
 node = "latest"
 rebar = "latest"
-"npm:@google/gemini-cli" = "latest"
+"aqua:google-antigravity/antigravity-cli" = "latest"
 "github:Ataraxy-Labs/inspect" = "latest"
 {{- if ne .chezmoi.os "darwin" }}
 "aqua:remoteoss/dexter" = "latest"
 {{- end }}
+
+[env]
+# antigravity-cli self-updates in place by default, fighting mise/aqua
+# ownership (it bumped 1.1.5→1.1.7 within minutes of first run); disable so
+# converge is the only updater. Undocumented but embedded in the binary.
+AGY_CLI_DISABLE_AUTO_UPDATE = "1"
 
 [tasks.converge]
 description = "Install, upgrade, and prune tools"
