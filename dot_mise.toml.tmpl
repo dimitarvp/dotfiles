@@ -3,6 +3,7 @@ erlang = ["29", "28.5.0", "27"]
 elixir = ["1.20", "1.19", "1.18"]
 go = "latest"
 node = "latest"
+pnpm = "10.7.0" # exact pin on purpose
 rebar = "latest"
 "aqua:google-antigravity/antigravity-cli" = "latest"
 "github:Ataraxy-Labs/inspect" = "latest"
@@ -15,6 +16,11 @@ rebar = "latest"
 # ownership (it bumped 1.1.5→1.1.7 within minutes of first run); disable so
 # converge is the only updater. Undocumented but embedded in the binary.
 AGY_CLI_DISABLE_AUTO_UPDATE = "1"
+
+[settings]
+# make mise honor repos' .nvmrc/.node-version (opt-in in current mise);
+# node only — keeps the blast radius minimal
+idiomatic_version_file_enable_tools = ["node"]
 
 [tasks.converge]
 description = "Install, upgrade, and prune tools"
