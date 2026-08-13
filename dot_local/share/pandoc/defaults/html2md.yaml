@@ -1,0 +1,10 @@
+# gfm-raw_html drops HTML with no markdown mapping (iframes, buttons, embeds);
+# complex tables (rowspan/colspan) silently degrade to flat pipe tables —
+# for table-heavy pages override the writer after -d: pandoc -d html2md -t markdown
+# sandbox stops readers fetching remote resources (iframe/image srcs).
+from: html-native_divs-native_spans
+to: gfm-raw_html
+wrap: none
+sandbox: true
+filters:
+  - html2md.lua
