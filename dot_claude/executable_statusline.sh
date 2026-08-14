@@ -20,6 +20,7 @@ input=$(cat)
 	IFS= read -r ctx_used
 	IFS= read -r ctx_size
 	IFS= read -r ctx_pct
+	IFS= read -r session_id
 } < <(jq -r '
 	.workspace.current_dir // .cwd // "?",
 	.model.id // "?",
@@ -30,7 +31,8 @@ input=$(cat)
 	(.rate_limits.seven_day.resets_at        | if type == "number" then floor | tostring else "" end),
 	((.context_window.total_input_tokens // 0) + (.context_window.total_output_tokens // 0) | tostring),
 	(.context_window.context_window_size     | if type == "number" then tostring else "" end),
-	(.context_window.used_percentage         | if type == "number" then round | tostring else "" end)
+	(.context_window.used_percentage         | if type == "number" then round | tostring else "" end),
+	(.session_id // "")
 ' <<<"$input")
 
 # GNU vs BSD date (robeast is macOS)
@@ -181,3 +183,27 @@ fi
 out="${parts[0]}"
 for p in "${parts[@]:1}"; do out+=" ${DIM}•${RST} $p"; done
 printf '%s\n' "$out"
+
+# Publish the context window size for ccctx. Claude Code reports the window ONLY
+# here, never in the transcript, so anything judging "how full is this session"
+# needs it exported — and reading it live means a bigger window on a future model
+# is picked up on its own, with no threshold to edit.
+#
+# Runs after the status line is printed, and every step is allowed to fail: a
+# read-only cache dir or a full disk must cost a stale sensor file, never a broken
+# status line. Written to a temp file and moved so a reader never sees half a write.
+publish_ctx_sensor() {
+	[ -n "$session_id" ] && [ -n "$ctx_size" ] || return 0
+	local dir tmp
+	dir="${XDG_CACHE_HOME:-$HOME/.cache}/claude_ctx"
+	[ -d "$dir" ] || mkdir -p "$dir" 2>/dev/null || return 0
+	tmp=$(mktemp "${dir}/.${session_id}.XXXXXX" 2>/dev/null) || return 0
+	if printf '{"window":%s,"used":%s,"pct":%s,"model":"%s","ts":%s}\n' \
+		"$ctx_size" "${ctx_used:-0}" "${ctx_pct:-0}" "$model_id" "$(date +%s)" >"$tmp" 2>/dev/null &&
+		mv -f "$tmp" "${dir}/${session_id}.json" 2>/dev/null; then
+		return 0
+	fi
+	rm -f "$tmp" 2>/dev/null
+	return 0
+}
+publish_ctx_sensor
