@@ -174,7 +174,7 @@ $INSTALL \
 	jc jnettop kopia lazydocker lazygit lbzip2 lnav \
 	lua luajit luarocks mediainfo miller moreutils multitail \
 	ncdu nmap openapi-generator p7zip parallel pdfgrep pigz \
-	pkgfile plumber pngquant procs progress pspg pv \
+	pkgfile plumber pngquant poppler procs progress pspg pv \
 	python-pipx python-pygments \
 	rclone rename restic ruby \
 	sc-im scdoc selene shellcheck shfmt smartmontools source-highlight \
@@ -210,14 +210,15 @@ sudo usermod "$USER" -aG docker
 $INSTALL \
 	ttf-ubuntu-mono-nerd ttf-ms-fonts powerline-fonts ttf-symbola \
 	noto-fonts-emoji ttf-twemoji ttf-twemoji-color otf-openmoji \
-	extra/ttf-cascadia-mono-nerd
+	extra/ttf-cascadia-mono-nerd \
+	ttf-carlito ttf-caladea # Calibri/Cambria metric substitutes (docx rendering)
 fc-cache -fv
 
 # ==== Phase 15: UI applications ====
 
 $INSTALL alacritty enpass telegram-desktop firefox librewolf-bin \
-	streamlink-twitch-gui-bin mpv valentina-studio zulip-desktop-bin \
-	seahorse
+	libreoffice-fresh streamlink-twitch-gui-bin mpv valentina-studio \
+	zulip-desktop-bin seahorse
 
 # ==== Done ====
 

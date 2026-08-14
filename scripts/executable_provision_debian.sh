@@ -192,13 +192,26 @@ curl -sf "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubunt
 sudo dpkg -i /tmp/session-manager-plugin.deb
 rm -f /tmp/session-manager-plugin.deb
 
-# ==== Phase 11: Databases ====
+# ==== Phase 11: Headless document rendering (LibreOffice) ====
+
+# -nogui variants: full convert engine without X/GTK dependencies.
+# draw-nogui carries the graphic export filters — docx→png fails without it.
+# carlito/caladea/liberation = metric-compatible substitutes for
+# Calibri/Cambria/Arial+Times; Aptos aliasing lives in
+# ~/.config/fontconfig/conf.d/60-aptos-fallback.conf (via chezmoi).
+# poppler-utils: pdftoppm renders per-page PNGs (soffice png = first page only).
+$INSTALL \
+	libreoffice-writer-nogui libreoffice-draw-nogui \
+	fonts-crosextra-carlito fonts-crosextra-caladea fonts-liberation \
+	poppler-utils
+
+# ==== Phase 12: Databases ====
 
 $INSTALL postgresql redis
 sudo systemctl enable --now postgresql redis-server
 sudo -u postgres createuser -s "$(whoami)"
 
-# ==== Phase 12: Docker (official repo, not Debian's) ====
+# ==== Phase 13: Docker (official repo, not Debian's) ====
 
 # Debian unstable's docker.io/containerd packages break on rolling updates.
 # Use Docker's official repo with bookworm (stable) target — binaries are
