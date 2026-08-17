@@ -1,6 +1,7 @@
 # Sourced for ALL zsh sessions (interactive, non-interactive, login, script).
-# Keep this minimal — only universal PATH entries that must be available everywhere
-# (e.g. non-interactive SSH commands, chezmoi apply, cron jobs).
+# Keep this minimal — only universal PATH entries and env vars that must be available
+# everywhere: non-interactive SSH commands, chezmoi apply, cron jobs, and the `zsh -c`
+# shells coding-agent harnesses spawn (they read this file and nothing else).
 
 typeset -U path # nested shells re-source this file; keep entries unique
 path=(
@@ -16,3 +17,7 @@ path=(
   # A shim resolves the current version and sets its env (GOROOT etc.).
   $HOME/.local/share/mise/shims
 )
+
+# probex (~/bin/probex, chezmoi external): opt-in usage log, read by the tool census.
+# Here and not in .zshrc so agent-spawned shells record too.
+export PROBEX_LOGFILE="$HOME/.probex/usage.jsonl"
