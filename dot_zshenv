@@ -2,6 +2,7 @@
 # Keep this minimal — only universal PATH entries that must be available everywhere
 # (e.g. non-interactive SSH commands, chezmoi apply, cron jobs).
 
+typeset -U path # nested shells re-source this file; keep entries unique
 path=(
   $HOME/.cargo/bin
   $HOME/go/bin
@@ -9,4 +10,9 @@ path=(
   $HOME/bin
   $HOME/scripts
   $path
+  # last-resort fallback: `mise activate` puts version-specific dirs like
+  # installs/go/1.26.6/bin on PATH; after `mise upgrade` prunes that version,
+  # long-lived shells/editors and scripts (frozen env) hold a dead path.
+  # A shim resolves the current version and sets its env (GOROOT etc.).
+  $HOME/.local/share/mise/shims
 )

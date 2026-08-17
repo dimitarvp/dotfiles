@@ -1,0 +1,32 @@
+#!/bin/zsh
+#
+# mise_reap_http_tarballs - delete orphaned entries of mise's http-backend cache
+#
+# mise installs http:* tools as symlinks:
+#   ~/.local/share/mise/installs/http-<tool>/<version> -> ~/.local/share/mise/http-tarballs/<sha256>/
+# `mise prune`/`mise uninstall` remove only the symlink; the extracted content
+# stays behind forever (mise has no GC for it). This removes every cache entry
+# no installed version links to. Run after `mise prune` (see mise task converge).
+
+set -euo pipefail
+
+data="${MISE_DATA_DIR:-$HOME/.local/share/mise}"
+cache="$data/http-tarballs"
+[[ -d "$cache" ]] || exit 0
+
+# Resolve every symlink among installed version dirs to its real target
+# (:A = absolute path with all symlinks resolved; alias dirs like "latest" resolve too).
+typeset -A referenced
+for link in "$data"/installs/*/*(@N); do
+	referenced[${link:A}]=1
+done
+
+reaped=0
+for entry in "$cache"/*(/N); do
+	if [[ -z "${referenced[${entry:A}]:-}" ]]; then
+		rm -rf -- "$entry"
+		echo "reaped orphaned http-tarball cache entry: ${entry:t}"
+		(( reaped++ )) || true
+	fi
+done
+(( reaped )) || echo "http-tarballs cache: no orphans"
