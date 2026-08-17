@@ -1,0 +1,15 @@
+# Externals: content chezmoi fetches from outside this repo and keeps in $HOME.
+# git-repo entries are cloned once and `git pull`ed on apply, at most once per
+# refreshPeriod (force with `chezmoi apply -R`) — the daily update_all apply is
+# the update lane for from-source tools that publish no releases.
+{{- if ne .role "server" }}
+
+# probex — AST queries over Elixir source for coding agents (alpha, no releases).
+# --rebase: we never commit here, so a force-push upstream just gets followed.
+["bin/probex"]
+    type = "git-repo"
+    url = "https://github.com/pnezis/probex.git"
+    refreshPeriod = "24h"
+    [ "bin/probex".pull ]
+        args = ["--rebase", "--autostash"]
+{{- end }}
