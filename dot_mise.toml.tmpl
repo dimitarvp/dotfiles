@@ -11,6 +11,23 @@ rebar = "latest"
 {{- if ne .chezmoi.os "darwin" }}
 "aqua:remoteoss/dexter" = "latest"
 {{- end }}
+{{- if ne .role "server" }}
+
+# OpenObserve publishes GitHub releases WITHOUT binary assets (tags only), so the
+# github: backend can't fetch it; binaries live on downloads.openobserve.ai.
+# Versions come from the releases API; version_order sorts them semver-wise
+# (the API returns newest-first and mise takes the LAST entry as latest).
+# Prereleases (-rc) are dropped by mise itself.
+[tools."http:openobserve"]
+version = "latest"
+version_order = "semver"
+version_list_url = "https://api.github.com/repos/openobserve/openobserve/releases"
+version_json_path = ".[].tag_name"
+[tools."http:openobserve".platforms]
+linux-x64 = { url = "https://downloads.openobserve.ai/releases/openobserve/v{{ "{{version}}" }}/openobserve-v{{ "{{version}}" }}-linux-amd64.tar.gz" }
+macos-x64 = { url = "https://downloads.openobserve.ai/releases/openobserve/v{{ "{{version}}" }}/openobserve-v{{ "{{version}}" }}-darwin-amd64.tar.gz" }
+macos-arm64 = { url = "https://downloads.openobserve.ai/releases/openobserve/v{{ "{{version}}" }}/openobserve-v{{ "{{version}}" }}-darwin-arm64.tar.gz" }
+{{- end }}
 
 [env]
 # antigravity-cli self-updates in place by default, fighting mise/aqua
@@ -25,4 +42,6 @@ idiomatic_version_file_enable_tools = ["node"]
 
 [tasks.converge]
 description = "Install, upgrade, and prune tools"
-run = "mise install && mise upgrade && mise prune -y"
+# http:* installs are symlinks into ~/.local/share/mise/http-tarballs/<sha256>/;
+# prune removes the symlink only, so orphaned content is reaped afterwards.
+run = "mise install && mise upgrade && mise prune -y && mise_reap_http_tarballs"

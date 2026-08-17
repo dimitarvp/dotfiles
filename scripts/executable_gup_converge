@@ -29,6 +29,18 @@ echo ""
 # Get sorted list of installed tool names
 installed=$(gup list 2>/dev/null | awk -F: '{gsub(/^[ \t]+|[ \t]+$/, "", $1); print $1}' | sort)
 
+# Locally built tools: a module path whose first element has no dot (e.g. "ccctx",
+# built with `go install .` from ~/kod/ccctx) is not fetchable — `go install
+# ccctx@latest` is impossible by Go's own rules — so gup can neither update nor
+# reinstall it. Leave such tools alone: skip them in update, protect them from prune.
+local_tools=("${(@f)$(gup list --json 2>/dev/null |
+	jq -r '.[] | select(.import_path | split("/")[0] | test("\\.") | not) | .name' | sort)}")
+local_tools=(${local_tools:#}) # drop the empty element a no-match yields
+if (( ${#local_tools} )); then
+	echo "Local (not fetchable, left alone): ${local_tools[*]}"
+	echo ""
+fi
+
 # Get sorted list of tool names from config
 configured=$(jq -r '.packages[].name' "$CONFIG_FILE" | sort)
 
@@ -50,7 +62,9 @@ echo ""
 
 # 2. Update all installed tools to latest
 echo ">>> Phase 2: Updating all tools to latest..."
-gup update
+update_args=()
+(( ${#local_tools} )) && update_args=(--exclude "${(j:,:)local_tools}")
+gup update "${update_args[@]}"
 echo ""
 
 # 3. Prune: remove tools not in config
@@ -58,7 +72,7 @@ echo ">>> Phase 3: Checking for tools to prune..."
 
 # Re-fetch installed list after installs/updates
 installed=$(gup list 2>/dev/null | awk -F: '{gsub(/^[ \t]+|[ \t]+$/, "", $1); print $1}' | sort)
-to_prune=$(comm -23 <(echo "$installed") <(echo "$configured"))
+to_prune=$(comm -23 <(echo "$installed") <(printf '%s\n' "$configured" "${local_tools[@]}" | sort))
 
 if [[ -z "$to_prune" ]]; then
 	echo "Nothing to prune."
