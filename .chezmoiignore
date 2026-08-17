@@ -7,4 +7,5 @@ scripts/extract_safari_bookmarks
 {{ if eq .role "server" }}
 .aws
 .ssh/pesto-aws-proxy.pem
+.local/bin/probex
 {{ end }}
