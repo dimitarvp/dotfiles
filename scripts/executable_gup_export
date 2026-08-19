@@ -13,6 +13,17 @@ echo "Exporting installed tools to: $CONFIG_FILE"
 
 gup export -f "$CONFIG_FILE"
 
+# gup exports EVERYTHING in $GOBIN, including locally built tools whose module
+# path is not fetchable (no dot in the first element, e.g. ccctx) — on other
+# machines `go install <path>@latest` for those fails and aborts converge.
+# Same rule as gup_converge: keep them installed, keep them out of the config.
+dropped=$(jq -r '.packages[] | select(.import_path | split("/")[0] | test("\\.") | not) | .name' "$CONFIG_FILE")
+if [[ -n "$dropped" ]]; then
+	jq '.packages |= map(select(.import_path | split("/")[0] | test("\\.")))' "$CONFIG_FILE" >"$CONFIG_FILE.tmp"
+	mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
+	echo "Dropped local (not fetchable) tools from export: $dropped"
+fi
+
 count=$(grep -c '"name"' "$CONFIG_FILE")
 echo "Done. $count tools exported."
 echo ""

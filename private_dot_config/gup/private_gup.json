@@ -222,6 +222,18 @@
       "import_path": "github.com/kopia/kopia",
       "version": "v0.23.0",
       "channel": "latest"
+    },
+    {
+      "name": "golangci-lint",
+      "import_path": "github.com/golangci/golangci-lint/v2/cmd/golangci-lint",
+      "version": "v2.12.2",
+      "channel": "latest"
+    },
+    {
+      "name": "nilaway",
+      "import_path": "go.uber.org/nilaway/cmd/nilaway",
+      "version": "v0.0.0-20260808063849-8649a03c818a",
+      "channel": "latest"
     }
   ]
 }
