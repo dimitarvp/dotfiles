@@ -9,3 +9,7 @@ scripts/extract_safari_bookmarks
 .ssh/pesto-aws-proxy.pem
 .local/bin/probex
 {{ end }}
+
+{{ if not .adblock }}
+adguard
+{{ end }}
