@@ -1,0 +1,62 @@
+# AdGuard Home blue/green with keepalived VIP — parallel to PiHole (untouched).
+# Containers live on macvlan (own L2 IPs) because PiHole's docker-proxy owns
+# host 0.0.0.0:53/80/443. Router redirect targets the VIP only.
+name: adguard
+networks:
+  aghnet:
+    driver: macvlan
+    driver_opts:
+      parent: enp1s0
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+          gateway: 192.168.1.1
+services:
+  agh-blue:
+    image: adguard/adguardhome:${AGH_TAG_BLUE:?set in .env}
+    container_name: agh-blue
+    restart: unless-stopped
+    networks:
+      aghnet:
+        ipv4_address: 192.168.1.97
+    volumes:
+      - ./blue/conf:/opt/adguardhome/conf
+      - ./blue/work:/opt/adguardhome/work
+  agh-green:
+    image: adguard/adguardhome:${AGH_TAG_GREEN:?set in .env}
+    container_name: agh-green
+    restart: unless-stopped
+    networks:
+      aghnet:
+        ipv4_address: 192.168.1.98
+    volumes:
+      - ./green/conf:/opt/adguardhome/conf
+      - ./green/work:/opt/adguardhome/work
+  keepalived-blue:
+    build: ./keepalived
+    container_name: keepalived-blue
+    restart: unless-stopped
+    network_mode: service:agh-blue
+    cap_add: [NET_ADMIN, NET_RAW, NET_BROADCAST]
+    volumes:
+      - ./keepalived/blue.conf:/etc/keepalived/keepalived.conf:ro
+    depends_on: [agh-blue]
+  keepalived-green:
+    build: ./keepalived
+    container_name: keepalived-green
+    restart: unless-stopped
+    network_mode: service:agh-green
+    cap_add: [NET_ADMIN, NET_RAW, NET_BROADCAST]
+    volumes:
+      - ./keepalived/green.conf:/etc/keepalived/keepalived.conf:ro
+    depends_on: [agh-green]
+  aghsync:
+    image: ghcr.io/bakito/adguardhome-sync:v0.9.2
+    container_name: aghsync
+    restart: unless-stopped
+    user: "1000:1000" # read the 600-mode config (holds the admin password)
+    network_mode: service:agh-blue
+    command: run --config /config/adguardhome-sync.yaml
+    volumes:
+      - ./sync/adguardhome-sync.yaml:/config/adguardhome-sync.yaml:ro
+    depends_on: [agh-blue]

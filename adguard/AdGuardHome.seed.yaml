@@ -1,0 +1,707 @@
+http:
+  pprof:
+    port: 6060
+    enabled: false
+  doh:
+    routes:
+      - GET /dns-query
+      - POST /dns-query
+      - GET /dns-query/{ClientID}
+      - POST /dns-query/{ClientID}
+    insecure_enabled: false
+  address: 0.0.0.0:80
+  session_ttl: 30d
+users:
+  - name: dimi
+    password: $2a$10$gBRP8kapIHnArUPQ5scGAuX2sP0gnkjX/L6KYU4gr4PFDQh/o3tle
+auth_attempts: 5
+block_auth_min: 15
+http_proxy: ""
+language: ""
+theme: auto
+dns:
+  bind_hosts:
+    - 0.0.0.0
+  port: 53
+  anonymize_client_ip: false
+  ratelimit: 0
+  ratelimit_subnet_len_ipv4: 24
+  ratelimit_subnet_len_ipv6: 56
+  ratelimit_whitelist: []
+  refuse_any: true
+  upstream_dns:
+    - 84.22.22.48
+    - 84.22.22.84
+  upstream_dns_file: ""
+  bootstrap_dns:
+    - 84.22.22.48
+    - 84.22.22.84
+  fallback_dns: []
+  upstream_mode: load_balance
+  fastest_timeout: 1s
+  allowed_clients:
+    - 192.168.1.0/24
+    - 127.0.0.1
+  disallowed_clients: []
+  blocked_hosts:
+    - version.bind
+    - id.server
+    - hostname.bind
+  trusted_proxies:
+    - 127.0.0.0/8
+    - ::1/128
+  cache_enabled: true
+  cache_size: 8388608
+  cache_ttl_min: 0
+  cache_ttl_max: 0
+  cache_optimistic: true
+  cache_optimistic_answer_ttl: 30s
+  cache_optimistic_max_age: 12h
+  bogus_nxdomain: []
+  aaaa_disabled: false
+  enable_dnssec: true
+  edns_client_subnet:
+    custom_ip: ""
+    enabled: false
+    use_custom: false
+  max_goroutines: 300
+  handle_ddr: true
+  ipset: []
+  ipset_file: ""
+  bootstrap_prefer_ipv6: false
+  upstream_timeout: 10s
+  private_networks: []
+  use_private_ptr_resolvers: false
+  local_ptr_upstreams: []
+  use_dns64: false
+  dns64_prefixes: []
+  serve_http3: false
+  use_http3_upstreams: false
+  serve_plain_dns: true
+  hostsfile_enabled: true
+  pending_requests:
+    enabled: true
+tls:
+  enabled: false
+  server_name: ""
+  force_https: false
+  port_https: 443
+  port_dns_over_tls: 853
+  port_dns_over_quic: 853
+  port_dnscrypt: 0
+  dnscrypt_config_file: ""
+  certificate_chain: ""
+  private_key: ""
+  certificate_path: ""
+  private_key_path: ""
+  strict_sni_check: false
+querylog:
+  dir_path: ""
+  ignored: []
+  interval: 180d
+  size_memory: 1000
+  enabled: true
+  ignored_enabled: false
+  file_enabled: true
+statistics:
+  dir_path: ""
+  ignored: []
+  interval: 90d
+  enabled: true
+  ignored_enabled: false
+filters:
+  - enabled: true
+    url: https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+    name: StevenBlack unified hosts
+    id: 1
+  - enabled: true
+    url: https://big.oisd.nl
+    name: OISD Big
+    id: 2
+  - enabled: true
+    url: https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/pro.txt
+    name: HaGeZi Pro
+    id: 3
+  - enabled: true
+    url: https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
+    name: Disconnect simple_ad
+    id: 1787196467
+  - enabled: true
+    url: https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-blocklist.txt
+    name: NoTrack blocklist
+    id: 1787196468
+  - enabled: true
+    url: https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-malware.txt
+    name: NoTrack malware
+    id: 1787196469
+  - enabled: true
+    url: https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt
+    name: WindowsSpyBlocker spy
+    id: 1787196470
+  - enabled: true
+    url: https://gist.githubusercontent.com/BBcan177/4a8bf37c131be4803cb2/raw/MS-2
+    name: BBcan177 MS-2 (unpinned)
+    id: 1787196471
+  - enabled: true
+    url: https://adaway.org/hosts.txt
+    name: AdAway
+    id: 1787196472
+  - enabled: true
+    url: https://v.firebog.net/hosts/AdguardDNS.txt
+    name: Firebog AdguardDNS
+    id: 1787196473
+  - enabled: true
+    url: https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt
+    name: anudeepND adservers
+    id: 1787196474
+  - enabled: true
+    url: https://v.firebog.net/hosts/Easylist.txt
+    name: Firebog Easylist
+    id: 1787196475
+  - enabled: true
+    url: https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext
+    name: yoyo adservers
+    id: 1787196476
+  - enabled: true
+    url: https://raw.githubusercontent.com/bigdargon/hostsVN/master/hosts
+    name: hostsVN
+    id: 1787196477
+  - enabled: true
+    url: https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Extension/GoodbyeAds-Xiaomi-Extension.txt
+    name: GoodbyeAds Xiaomi (dormant; recheck 2027)
+    id: 1787196478
+  - enabled: true
+    url: https://phishing.army/download/phishing_army_blocklist_extended.txt
+    name: Phishing Army extended
+    id: 1787196479
+  - enabled: true
+    url: https://raw.githubusercontent.com/FiltersHeroes/KADhosts/master/KADhosts.txt
+    name: KADhosts (successor)
+    id: 1787196480
+  - enabled: true
+    url: https://v.firebog.net/hosts/static/w3kbl.txt
+    name: Firebog w3kbl
+    id: 1787196481
+  - enabled: true
+    url: https://raw.githubusercontent.com/matomo-org/referrer-spam-list/master/spammers.txt
+    name: Matomo referrer spam (renamed repo)
+    id: 1787196482
+  - enabled: true
+    url: https://raw.githubusercontent.com/vokins/yhosts/master/hosts
+    name: yhosts CN ads
+    id: 1787196483
+  - enabled: true
+    url: https://raw.githubusercontent.com/RooneyMcNibNug/pihole-stuff/master/SNAFU.txt
+    name: SNAFU
+    id: 1787196484
+  - enabled: true
+    url: https://paulgb.github.io/BarbBlock/blacklists/hosts-file.txt
+    name: BarbBlock
+    id: 1787196485
+  - enabled: true
+    url: https://v.firebog.net/hosts/Admiral.txt
+    name: Firebog Admiral
+    id: 1787196486
+  - enabled: true
+    url: https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/doh.txt
+    name: HaGeZi Encrypted DNS/DoH bypass
+    id: 1787196487
+whitelist_filters: []
+user_rules:
+  - '! iCloud Private Relay blocked by decision 2026-08-20 (PiHole allowlisted it;
+    NOT ported)'
+  - '||mask.icloud.com^$dnsrewrite=NXDOMAIN;;'
+  - '||mask-h2.icloud.com^$dnsrewrite=NXDOMAIN;;'
+  - '||mask-canary.icloud.com^$dnsrewrite=NXDOMAIN;;'
+  - '! ===== Migrated from PiHole 2026-08-20 (gravity.db domainlist; comments preserved)
+    ====='
+  - '! PiHole exact entries match the bare domain only; @@||d^ / ||d^ also cover subdomains
+    — accepted upgrade.'
+  - '! NOT ported: mask.icloud.com + mask-h2.icloud.com allows (Private Relay decision
+    2026-08-20).'
+  - '! --- exact allowlist (77 of 79; 2 mask.* dropped) ---'
+  - '@@||s.youtube.com^ ! YT history'
+  - '@@||api.instabug.com^ ! 9gag is crazy if this is blacklisted'
+  - '@@||click.revue.email^ ! newsletters'
+  - '@@||slscr.update.microsoft.com^ ! Windows update'
+  - '@@||settings-win.data.microsoft.com^ ! Windows update'
+  - '@@||clients.l.google.com^ ! Google Drive'
+  - '@@||tracker.trackerfix.com^'
+  - '@@||images.footballaddicts.se^'
+  - '@@||track.aliexpress.com^'
+  - '@@||blog.theodo.com^'
+  - '@@||freeadultcomix.com^'
+  - '@@||gfwsl.geforce.com^ ! GeForce Experience updates'
+  - '@@||mandrillapp.miro.com^'
+  - '@@||mandrillapp.com^'
+  - '@@||transfer.sh^'
+  - '@@||api.rollbar.com^'
+  - '@@||rlog.9gag.com^ ! 9gag is crazy if this is blacklisted'
+  - '@@||js.hs-scripts.com^ ! Because of rollbar.com'
+  - '@@||js.hs-banner.com^'
+  - '@@||js.hs-analytics.net^'
+  - '@@||js.hsadspixel.net^'
+  - '@@||js.usemessages.com^'
+  - '@@||js.hsleadflows.net^'
+  - '@@||cdn.segment.com^'
+  - '@@||cdn.rollbar.com^'
+  - '@@||www.coinbase.com^'
+  - '@@||openvim.com^'
+  - '@@||onesignal.com^'
+  - '@@||api.intercom.io^'
+  - '@@||clickhouse.com^'
+  - '@@||hn.algolia.com^'
+  - '@@||www.lightstep.com^'
+  - '@@||www2.erlang-solutions.com^'
+  - '@@||plausible.io^'
+  - '@@||go.uber.org^'
+  - '@@||sketchfab.com^'
+  - '@@||lightstep.com^'
+  - '@@||opensearch.org^'
+  - '@@||files.catbox.moe^'
+  - '@@||tracker.leechers-paradise.org^'
+  - '@@||login.live.com^'
+  - '@@||rubygems.org^'
+  - '@@||gs-loc.apple.com^'
+  - '@@||pow7.com^'
+  - '@@||tracker2.itzmx.com^'
+  - '@@||mgtracker.org^'
+  - '@@||cdn.ravenjs.com^'
+  - '@@||www.wix.com^'
+  - '@@||img2.zamunda.se^'
+  - '@@||tracker.kicks-ass.net^'
+  - '@@||tracker.pirateparty.gr^'
+  - '@@||blog.kagi.com^'
+  - '@@||ghs.googlehosted.com^'
+  - '@@||developers.googleblog.com^'
+  - '@@||media.tenor.com^'
+  - '@@||tenor.googleapis.com^'
+  - '@@||novidam.com^'
+  - '@@||sdk-api-v1.singular.net^'
+  - '@@||static.wixstatic.com^'
+  - '@@||www.flingtrainer.com^'
+  - '@@||coralogix.com^'
+  - '@@||container.googleapis.com^'
+  - '@@||cloudresourcemanager.googleapis.com^'
+  - '@@||streetviewpixels-pa.googleapis.com^'
+  - '@@||wallpapers.com^'
+  - '@@||chatgpt.com^'
+  - '@@||go.skype.com^'
+  - '@@||posthog.com^'
+  - '@@||truthsocial.com^'
+  - '@@||firebaselogging-pa.googleapis.com^'
+  - '@@||content.googleapis.com^'
+  - '@@||sentry.io^'
+  - '@@||csp.withgoogle.com^'
+  - '@@||youtube.googleapis.com^'
+  - '@@||ogads-pa.clients6.google.com^'
+  - '@@||ipapi.co^'
+  - '! disabled in PiHole, preserved for the record: s.optnx.com'
+  - '! --- regex allowlist (7), PiHole (\.|^)d$ == allow domain+subdomains ---'
+  - '@@||gnu.org^'
+  - '@@||hackerrank.com^'
+  - '@@||logrocket.com^'
+  - '@@||newrelic.com^'
+  - '@@||binance.com^'
+  - '@@||coinbase.com^'
+  - '@@||kucoin.com^'
+  - '! --- exact denylist (3) ---'
+  - '||app.chat.global.xiaomi.net^ ! Xiaomi'
+  - '||1flchier.com^ ! the Vigilante malware'
+  - '||incoming.telemetry.mozilla.org^ ! Firefox telemetry'
+  - '! --- regex denylist (4, SolarWinds-era IOCs; 0 hits in 91d but harmless) ---'
+  - '||news.thaprior.net^ ! backdoor'
+  - '||blog.eduelects.com^ ! backdoor'
+  - '||cdn.mirror-codes.net^ ! backdoor'
+  - '||status.sublineover.net^ ! backdoor'
+  - '! --- local zones: answered NXDOMAIN locally, never forwarded (PiHole local=/zone/
+    parity, verified 2026-08-20; explicit rewrites override — proven by experiment)
+    ---'
+  - '||lan^$dnsrewrite=NXDOMAIN;;'
+  - '||internal^$dnsrewrite=NXDOMAIN;;'
+  - '||home.arpa^$dnsrewrite=NXDOMAIN;;'
+dhcp:
+  enabled: false
+  interface_name: ""
+  local_domain_name: lan
+  dhcpv4:
+    gateway_ip: ""
+    subnet_mask: ""
+    range_start: ""
+    range_end: ""
+    lease_duration: 86400
+    icmp_timeout_msec: 1000
+    options: []
+  dhcpv6:
+    range_start: ""
+    lease_duration: 86400
+    ra_slaac_only: false
+    ra_allow_slaac: false
+filtering:
+  blocking_ipv4: ""
+  blocking_ipv6: ""
+  blocked_services:
+    schedule:
+      time_zone: UTC
+    ids: []
+  protection_disabled_until: null
+  safe_search:
+    enabled: false
+    bing: true
+    duckduckgo: true
+    ecosia: true
+    google: true
+    pixabay: true
+    yandex: true
+    youtube: true
+  blocking_mode: null_ip
+  parental_block_host: family-block.dns.adguard.com
+  safebrowsing_block_host: standard-block.dns.adguard.com
+  rewrites:
+    - domain: zamunda.net
+      answer: 104.21.23.130
+      enabled: false
+  safe_fs_patterns:
+    - /opt/adguardhome/work/userfilters/*
+  max_http_size: 256MB
+  safebrowsing_cache_size: 1048576
+  safesearch_cache_size: 1048576
+  parental_cache_size: 1048576
+  cache_time: 30
+  filters_update_interval: 24
+  blocked_response_ttl: 2
+  filtering_enabled: true
+  rewrites_enabled: true
+  parental_enabled: false
+  safebrowsing_enabled: false
+  protection_enabled: true
+clients:
+  runtime_sources:
+    whois: true
+    arp: true
+    rdns: true
+    dhcp: true
+    hosts: true
+  persistent:
+    - safe_search:
+        enabled: false
+        bing: false
+        duckduckgo: false
+        ecosia: false
+        google: false
+        pixabay: false
+        yandex: false
+        youtube: false
+      blocked_services:
+        schedule:
+          time_zone: UTC
+        ids: []
+      name: airnity_probe
+      ids:
+        - 192.168.1.43
+      tags: []
+      upstreams: []
+      uid: 01a01d31-1f0f-7b5b-9016-0447bfc6d66e
+      upstreams_cache_size: 0
+      upstreams_cache_enabled: false
+      use_global_settings: true
+      filtering_enabled: false
+      parental_enabled: false
+      safebrowsing_enabled: false
+      use_global_blocked_services: true
+      ignore_querylog: false
+      ignore_statistics: false
+    - safe_search:
+        enabled: false
+        bing: false
+        duckduckgo: false
+        ecosia: false
+        google: false
+        pixabay: false
+        yandex: false
+        youtube: false
+      blocked_services:
+        schedule:
+          time_zone: UTC
+        ids: []
+      name: dimi_gaming_pc
+      ids:
+        - 192.168.1.13
+      tags: []
+      upstreams: []
+      uid: 01a01d31-1f6d-73de-93e8-c247c3583d7d
+      upstreams_cache_size: 0
+      upstreams_cache_enabled: false
+      use_global_settings: true
+      filtering_enabled: false
+      parental_enabled: false
+      safebrowsing_enabled: false
+      use_global_blocked_services: true
+      ignore_querylog: false
+      ignore_statistics: false
+    - safe_search:
+        enabled: false
+        bing: false
+        duckduckgo: false
+        ecosia: false
+        google: false
+        pixabay: false
+        yandex: false
+        youtube: false
+      blocked_services:
+        schedule:
+          time_zone: UTC
+        ids: []
+      name: dimi_imacpro
+      ids:
+        - 192.168.1.10
+      tags: []
+      upstreams: []
+      uid: 01a01d31-1bde-7ec6-b3cf-b783c2693471
+      upstreams_cache_size: 0
+      upstreams_cache_enabled: false
+      use_global_settings: true
+      filtering_enabled: false
+      parental_enabled: false
+      safebrowsing_enabled: false
+      use_global_blocked_services: true
+      ignore_querylog: false
+      ignore_statistics: false
+    - safe_search:
+        enabled: false
+        bing: false
+        duckduckgo: false
+        ecosia: false
+        google: false
+        pixabay: false
+        yandex: false
+        youtube: false
+      blocked_services:
+        schedule:
+          time_zone: UTC
+        ids: []
+      name: dimi_iphone
+      ids:
+        - 192.168.1.11
+      tags: []
+      upstreams: []
+      uid: 01a01d31-1c40-7f2c-b446-bf18f6f539ef
+      upstreams_cache_size: 0
+      upstreams_cache_enabled: false
+      use_global_settings: true
+      filtering_enabled: false
+      parental_enabled: false
+      safebrowsing_enabled: false
+      use_global_blocked_services: true
+      ignore_querylog: false
+      ignore_statistics: false
+    - safe_search:
+        enabled: false
+        bing: false
+        duckduckgo: false
+        ecosia: false
+        google: false
+        pixabay: false
+        yandex: false
+        youtube: false
+      blocked_services:
+        schedule:
+          time_zone: UTC
+        ids: []
+      name: dimi_nintendo_switch
+      ids:
+        - 192.168.1.42
+      tags: []
+      upstreams: []
+      uid: 01a01d31-1cf8-756f-9ebf-db656392d697
+      upstreams_cache_size: 0
+      upstreams_cache_enabled: false
+      use_global_settings: true
+      filtering_enabled: false
+      parental_enabled: false
+      safebrowsing_enabled: false
+      use_global_blocked_services: true
+      ignore_querylog: false
+      ignore_statistics: false
+    - safe_search:
+        enabled: false
+        bing: false
+        duckduckgo: false
+        ecosia: false
+        google: false
+        pixabay: false
+        yandex: false
+        youtube: false
+      blocked_services:
+        schedule:
+          time_zone: UTC
+        ids: []
+      name: dimi_redmi_note_13
+      ids:
+        - 192.168.1.15
+      tags: []
+      upstreams: []
+      uid: 01a01d31-1e60-734d-9bca-4a55f497c481
+      upstreams_cache_size: 0
+      upstreams_cache_enabled: false
+      use_global_settings: true
+      filtering_enabled: false
+      parental_enabled: false
+      safebrowsing_enabled: false
+      use_global_blocked_services: true
+      ignore_querylog: false
+      ignore_statistics: false
+    - safe_search:
+        enabled: false
+        bing: false
+        duckduckgo: false
+        ecosia: false
+        google: false
+        pixabay: false
+        yandex: false
+        youtube: false
+      blocked_services:
+        schedule:
+          time_zone: UTC
+        ids: []
+      name: niks_ipad
+      ids:
+        - 192.168.1.22
+      tags: []
+      upstreams: []
+      uid: 01a01d31-1eb5-7c35-a19f-4f176e8e88a4
+      upstreams_cache_size: 0
+      upstreams_cache_enabled: false
+      use_global_settings: true
+      filtering_enabled: false
+      parental_enabled: false
+      safebrowsing_enabled: false
+      use_global_blocked_services: true
+      ignore_querylog: false
+      ignore_statistics: false
+    - safe_search:
+        enabled: false
+        bing: false
+        duckduckgo: false
+        ecosia: false
+        google: false
+        pixabay: false
+        yandex: false
+        youtube: false
+      blocked_services:
+        schedule:
+          time_zone: UTC
+        ids: []
+      name: niks_iphone
+      ids:
+        - 192.168.1.21
+      tags: []
+      upstreams: []
+      uid: 01a01d31-1c9b-74a8-a80c-0015bc7c70db
+      upstreams_cache_size: 0
+      upstreams_cache_enabled: false
+      use_global_settings: true
+      filtering_enabled: false
+      parental_enabled: false
+      safebrowsing_enabled: false
+      use_global_blocked_services: true
+      ignore_querylog: false
+      ignore_statistics: false
+    - safe_search:
+        enabled: false
+        bing: false
+        duckduckgo: false
+        ecosia: false
+        google: false
+        pixabay: false
+        yandex: false
+        youtube: false
+      blocked_services:
+        schedule:
+          time_zone: UTC
+        ids: []
+      name: niks_laptop_asus
+      ids:
+        - 192.168.1.20
+      tags: []
+      upstreams: []
+      uid: 01a01d31-1d4d-798d-bcb9-f1c951d3eaed
+      upstreams_cache_size: 0
+      upstreams_cache_enabled: false
+      use_global_settings: true
+      filtering_enabled: false
+      parental_enabled: false
+      safebrowsing_enabled: false
+      use_global_blocked_services: true
+      ignore_querylog: false
+      ignore_statistics: false
+    - safe_search:
+        enabled: false
+        bing: false
+        duckduckgo: false
+        ecosia: false
+        google: false
+        pixabay: false
+        yandex: false
+        youtube: false
+      blocked_services:
+        schedule:
+          time_zone: UTC
+        ids: []
+      name: router
+      ids:
+        - 192.168.1.1
+      tags: []
+      upstreams: []
+      uid: 01a01d31-1daf-78f9-b37b-79eb5287a53b
+      upstreams_cache_size: 0
+      upstreams_cache_enabled: false
+      use_global_settings: true
+      filtering_enabled: false
+      parental_enabled: false
+      safebrowsing_enabled: false
+      use_global_blocked_services: true
+      ignore_querylog: false
+      ignore_statistics: false
+    - safe_search:
+        enabled: false
+        bing: false
+        duckduckgo: false
+        ecosia: false
+        google: false
+        pixabay: false
+        yandex: false
+        youtube: false
+      blocked_services:
+        schedule:
+          time_zone: UTC
+        ids: []
+      name: s1
+      ids:
+        - 192.168.1.99
+      tags: []
+      upstreams: []
+      uid: 01a01d31-1e08-7343-95f6-8ea9d678e55d
+      upstreams_cache_size: 0
+      upstreams_cache_enabled: false
+      use_global_settings: true
+      filtering_enabled: false
+      parental_enabled: false
+      safebrowsing_enabled: false
+      use_global_blocked_services: true
+      ignore_querylog: false
+      ignore_statistics: false
+log:
+  enabled: true
+  file: ""
+  max_backups: 0
+  max_size: 100
+  max_age: 3
+  compress: false
+  local_time: false
+  verbose: false
+os:
+  group: ""
+  user: ""
+  rlimit_nofile: 0
+schema_version: 34
