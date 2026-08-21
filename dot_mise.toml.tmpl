@@ -1,9 +1,9 @@
 [tools]
-# servers get only the toolchains they run (go tools + node for npm-backend
-# CLIs); the dev stack below would mean hours of erlang source builds on s1
+# servers stay lean: go only (for gup-managed tools); everything else is
+# dev-stack (erlang source builds etc. — hours on s1's i3)
 go = "latest"
-node = "latest"
 {{- if ne .role "server" }}
+node = "latest"
 erlang = ["29", "28.5.0", "27"]
 elixir = ["1.20", "1.19", "1.18"]
 pandoc = "latest"
