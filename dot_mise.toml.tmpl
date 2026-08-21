@@ -39,6 +39,10 @@ AGY_CLI_DISABLE_AUTO_UPDATE = "1"
 # make mise honor repos' .nvmrc/.node-version (opt-in in current mise);
 # node only — keeps the blast radius minimal
 idiomatic_version_file_enable_tools = ["node"]
+# do NOT export GOROOT: a stale exported value (shell predating a go-version
+# prune) poisons child processes incl. mise's own post-install `go version`
+# check (how robeast's 1.27 upgrade blew up). go self-derives GOROOT.
+go_set_goroot = false
 
 [tasks.converge]
 description = "Install, upgrade, and prune tools"
