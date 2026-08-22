@@ -10,6 +10,10 @@ pandoc = "latest"
 pnpm = "10.7.0" # exact pin on purpose
 rebar = "latest"
 "aqua:google-antigravity/antigravity-cli" = "latest"
+# kopia = checkpoint/backup infra; mise tracks upstream releases directly
+# (Manjaro lags ~2wk, Debian has no package, brew lags days). Single fleet lane —
+# no pacman/AUR/brew copies allowed.
+"aqua:kopia/kopia" = "latest"
 "github:Ataraxy-Labs/inspect" = "latest"
 {{- if ne .chezmoi.os "darwin" }}
 "aqua:remoteoss/dexter" = "latest"
