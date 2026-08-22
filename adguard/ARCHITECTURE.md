@@ -7,6 +7,11 @@ Deployed 2026-08-20; chezmoi-managed under the `adblock` data flag (s1 only).
   agh-blue = 192.168.1.97 (VRRP prio 150, normal MASTER), agh-green = .98 (prio 100).
 - VIP **192.168.1.96** floats via keepalived sidecars (one per color, sharing the AGH
   container's network namespace). The MikroTik NAT lever targets the VIP.
+- THIRD VRRP member: the MikroTik itself (prio 50) — if s1 dies entirely, the router claims
+  .96 in ~1-2s and its own resolver (same ISP upstreams, unfiltered) answers until s1
+  returns and blue preempts back. See "Router" below. Dialect is VRRPv3 multicast 300ms
+  no-auth EVERYWHERE — keepalived configs and the router must stay in lockstep; never
+  re-add unicast_peer to keepalived (RouterOS speaks multicast VRRP only).
 - aghsync (adguardhome-sync) shares blue's netns: origin blue → replica green, cron */10
   + on-start + API :8080 (basic auth = AGH admin creds). Make hand edits on BLUE (UI/API);
   green converges automatically.
@@ -36,11 +41,22 @@ them afterwards (the script does).
   resolvers' own upstream :53 queries from looping) + "AGH force UDP/TCP" (hairpin
   masquerade) — mirrored next to the PiHole set; swap = disable one set, enable the other.
 - Filter: "block DoT/DoQ (AGH project)" reject tcp/udp 853 at top of forward chain.
+- VRRP fallback (added 2026-08-23): `/interface vrrp` "vrrp-agh-dns" on bridge, vrid 96,
+  prio 50, version 3, interval 300ms + `/ip address 192.168.1.96/24` on it (active only
+  while master). The interface MUST be a member of interface-list LAN: input rule 6 drops
+  non-LAN traffic, and queries to the VIP's virtual MAC (00:00:5E:00:01:60) arrive on the
+  vrrp interface, NOT the bridge — heartbeats arrive on the bridge, so VRRP can work while
+  DNS is silently dropped (verified failure mode 2026-08-23). Rehearsal: stop both
+  keepalived sidecars → router MASTER ~1-2s, DNAT + direct paths both answer (unfiltered);
+  start them → blue back MASTER sub-second, filtering restored.
 - DHCP hands out the router (.1) as DNS; the dstnat hijack catches those queries too, so
   the lever moves the whole household. Hijacked flows appear as client "router"
   (hairpin masquerade). PENDING (after pilot): hand out .96 via DHCP for real per-device
   stats; hijack then only catches hardcoded-DNS devices.
 
 ## Coexistence
-PiHole stays warm and untouched at .99 (own compose at ~/pihole). Both stacks are always
-directly queryable from the LAN (intra-LAN traffic never crosses the router).
+PiHole RETIRED 2026-08-23 (pilot passed): container and network removed via
+`docker-compose down`, image still auto-updated by s1 update_all's pull-only line, config
+bind-mounts intact under ~/pihole. Revive = `cd ~/pihole && docker-compose up --detach
+pihole` + router lever swap. AGH instances remain directly queryable from the LAN
+(intra-LAN traffic never crosses the router).
