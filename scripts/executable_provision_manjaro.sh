@@ -171,21 +171,22 @@ $INSTALL \
 	esbuild ffmpeg fio fx gallery-dl gdu \
 	git-filter-repo git-lfs glances glow gnuplot graphviz gron \
 	hey hstr htop httrack imgcat \
-	jc jnettop kopia lazydocker lazygit lbzip2 lnav \
+	jc jnettop lazydocker lazygit lbzip2 lnav \
 	lua luajit luarocks mediainfo miller moreutils multitail \
-	ncdu nmap openapi-generator p7zip parallel pdfgrep pigz \
+	ncdu nmap openapi-generator opensnitch 7zip parallel pdfgrep pigz \
 	pkgfile plumber pngquant poppler procs progress pspg pv \
 	python-pipx python-pygments \
-	rclone rename restic ruby \
+	qemu-full rclone rename restic ruby \
 	sc-im scdoc selene shellcheck shfmt smartmontools source-highlight \
 	streamlink swagger-codegen syncthing \
 	the_silver_searcher tigervnc timg tldr tree tree-sitter ttyplot typescript \
 	ugrep up visidata w3m wget wrk xh xmlstarlet \
-	you-get youtubedr yq yt-dlp zenith zpaq
+	youtubedr yq yt-dlp zenith zpaq
 
 # ==== Phase 11: AUR packages ====
 
-$INSTALL earthly-bin exercism-bin nbfc-linux noti repomix semgrep-bin tabula
+$INSTALL 1password earthly-bin exercism-bin nbfc-linux noti repomix semgrep-bin \
+	slack-desktop sublime-text-4 tabula tailscaledesktop
 
 # NBFC (NoteBook FanControl) — reads fan speed from EC, not hwmon.
 # hp-wmi reports 0 RPM on HP laptops; nbfc is the only way to get fan readings.
@@ -195,8 +196,8 @@ $INSTALL earthly-bin exercism-bin nbfc-linux noti repomix semgrep-bin tabula
 
 # ==== Phase 12: Databases ====
 
-$INSTALL postgresql redis mongodb-bin
-sudo systemctl enable --now postgresql redis
+$INSTALL postgresql
+sudo systemctl enable --now postgresql
 sudo -u postgres createuser -s "$(whoami)"
 
 # ==== Phase 13: Docker ====
@@ -216,9 +217,19 @@ fc-cache -fv
 
 # ==== Phase 15: UI applications ====
 
-$INSTALL alacritty enpass telegram-desktop firefox librewolf-bin \
+# Manjaro's full ISO preinstalls libreoffice-still, which conflicts with -fresh;
+# --noconfirm answers the removal prompt with NO and yay still exits 0 → remove first.
+if pacman -Qq libreoffice-still &>/dev/null; then
+	sudo pacman -Rns --noconfirm libreoffice-still
+fi
+
+# seahorse deliberately absent: KDE machines use KWallet (kwalletmanager). Its old
+# job was silencing Chromium/Electron "unlock login keyring" prompts (by setting the
+# GNOME keyring password = login password); if such prompts return, use kwalletmanager
+# first — re-add seahorse only if an app hard-requires gnome-keyring.
+$INSTALL alacritty enpass ghostty telegram-desktop firefox \
 	libreoffice-fresh streamlink-twitch-gui-bin mpv valentina-studio \
-	zulip-desktop-bin seahorse
+	wezterm zulip-desktop-bin
 
 # ==== Done ====
 
@@ -226,7 +237,7 @@ cat <<'NOTES'
 
 === Post-install checklist ===
 1. Log out and back in (zsh + docker group)
-2. Run `seahorse` and set keyring password = user password
+2. If apps nag to unlock a keyring/wallet: kwalletmanager → set wallet password = user password
 3. Add keyboard layouts and adjust repeat rate
 4. Add SSH public key to GitHub/GitLab/Sourcehut
 5. Authenticate: gh auth login
