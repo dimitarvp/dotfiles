@@ -179,14 +179,18 @@ $INSTALL \
 	qemu-full rclone rename restic ruby \
 	sc-im scdoc selene shellcheck shfmt smartmontools source-highlight \
 	streamlink swagger-codegen syncthing \
-	the_silver_searcher tigervnc timg tldr tree tree-sitter ttyplot typescript \
+	the_silver_searcher tigervnc timeshift timeshift-autosnap-manjaro \
+	timg tldr tree tree-sitter ttyplot typescript \
 	ugrep up visidata w3m wget wrk xh xmlstarlet \
 	youtubedr yq yt-dlp zenith zpaq
 
 # ==== Phase 11: AUR packages ====
 
 $INSTALL 1password earthly-bin exercism-bin nbfc-linux noti repomix semgrep-bin \
-	slack-desktop sublime-text-4 tabula tailscaledesktop
+	slack-desktop sublime-text-4 tabula tailscaledesktop weasis-bin
+
+# Deliberate orphans — installed by hand, intentionally NOT declared here:
+# - roam (ro.am conferencing): job-mandated, may not outlive the job; audits skip it.
 
 # NBFC (NoteBook FanControl) — reads fan speed from EC, not hwmon.
 # hp-wmi reports 0 RPM on HP laptops; nbfc is the only way to get fan readings.
@@ -229,7 +233,7 @@ fi
 # first — re-add seahorse only if an app hard-requires gnome-keyring.
 $INSTALL alacritty enpass ghostty telegram-desktop firefox \
 	libreoffice-fresh streamlink-twitch-gui-bin mpv valentina-studio \
-	wezterm zulip-desktop-bin
+	vlc wezterm zulip-desktop-bin
 
 # ==== Done ====
 

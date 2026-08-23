@@ -72,12 +72,12 @@ $INSTALL \
 	pkg-config libssl-dev libclang-dev libwxgtk3.2-dev libwebkit2gtk-4.1-dev \
 	libncurses-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev \
 	libxml2-dev libxml2-utils unixodbc-dev autoconf m4 xsltproc fop default-jdk \
-	mold libjemalloc-dev unzip xclip jq rsync npm \
+	mold libjemalloc-dev unzip xclip jq rsync \
 	bind9-dnsutils inotify-tools python3-pynvim
 
 # ==== Phase 3: SSH ====
 
-$INSTALL openssh-client
+$INSTALL openssh-client openssh-server
 ssh-keygen -q -t ed25519 -N '' -f ~/.ssh/id_ed25519 <<<y >/dev/null 2>&1
 touch ~/.ssh/config
 chmod 600 ~/.ssh/config
@@ -162,7 +162,7 @@ mise install -y
 # ==== Phase 10: System CLI tools (non-Rust, non-Go) ====
 
 $INSTALL \
-	ack aria2 asciidoc atomicparsley \
+	7zip ack aria2 asciidoc atomicparsley \
 	bmon borgbackup btop csvkit \
 	esbuild ffmpeg fio \
 	git-filter-repo git-lfs gnuplot graphviz gron \
@@ -172,14 +172,17 @@ $INSTALL \
 	ncdu nmap p7zip-full parallel pdfgrep pigz \
 	pngquant progress pspg pv \
 	pipx python3-pygments \
-	rclone rename restic ruby \
-	sc-im shellcheck shfmt smartmontools \
+	rclone rename restic ruby ruby-dev \
+	sc-im shellcheck shfmt smartmontools sshpass \
 	syncthing \
 	silversearcher-ag timg tealdeer tree ttyplot \
 	ugrep visidata w3m wget wrk xh xmlstarlet \
 	yq yt-dlp zpaq
 # NOTE: bfg, curlie, darkhttpd, dbmate, duckdb, fx not in Debian repos
 # curlie, dbmate, fx available via gup_converge (Go tools)
+
+# Some older TLS peers/tools still need OpenSSL's legacy algorithms provider.
+$INSTALL openssl-provider-legacy
 
 # AWS CLI v2 (not in Debian repos)
 curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
