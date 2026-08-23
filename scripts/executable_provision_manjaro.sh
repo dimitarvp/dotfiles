@@ -233,7 +233,7 @@ fi
 # first — re-add seahorse only if an app hard-requires gnome-keyring.
 $INSTALL alacritty enpass ghostty haruna telegram-desktop firefox \
 	libreoffice-fresh streamlink-twitch-gui-bin mpv valentina-studio \
-	vlc wezterm zulip-desktop-bin
+	smplayer vlc wezterm zulip-desktop-bin
 
 # ==== Done ====
 
