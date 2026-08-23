@@ -231,7 +231,7 @@ fi
 # job was silencing Chromium/Electron "unlock login keyring" prompts (by setting the
 # GNOME keyring password = login password); if such prompts return, use kwalletmanager
 # first — re-add seahorse only if an app hard-requires gnome-keyring.
-$INSTALL alacritty enpass ghostty telegram-desktop firefox \
+$INSTALL alacritty enpass ghostty haruna telegram-desktop firefox \
 	libreoffice-fresh streamlink-twitch-gui-bin mpv valentina-studio \
 	vlc wezterm zulip-desktop-bin
 
