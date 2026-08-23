@@ -176,7 +176,7 @@ $INSTALL \
 	ncdu nmap openapi-generator opensnitch 7zip parallel pdfgrep pigz \
 	pkgfile plumber pngquant poppler procs progress pspg pv \
 	python-pipx python-pygments \
-	qemu-full rclone rename restic ruby \
+	qemu-full rclone rename ruby \
 	sc-im scdoc selene shellcheck shfmt smartmontools source-highlight \
 	streamlink swagger-codegen syncthing \
 	the_silver_searcher tigervnc timeshift timeshift-autosnap-manjaro \

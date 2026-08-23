@@ -172,7 +172,7 @@ $INSTALL \
 	ncdu nmap p7zip-full parallel pdfgrep pigz \
 	pngquant progress pspg pv \
 	pipx python3-pygments \
-	rclone rename restic ruby ruby-dev \
+	rclone rename ruby ruby-dev \
 	sc-im shellcheck shfmt smartmontools sshpass \
 	syncthing \
 	silversearcher-ag timg tealdeer tree ttyplot \
