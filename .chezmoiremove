@@ -3,3 +3,7 @@
 scripts/update_openobserve.sh
 bin/openobserve
 openobserve-v*.tar.gz
+
+# rustic retired 2026-08-23 (decision: no critical infra on a one-maintainer project's bandwidth)
+scripts/inspect_rustic_snapshot
+scripts/rustic_backup.exclusions
