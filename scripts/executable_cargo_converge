@@ -8,6 +8,11 @@
 #
 # The source of truth is always ~/.config/cargo-crates/crates.conf (managed by chezmoi)
 #
+# Config lines are crate names; a line may pin a version as name@version
+# (needed for prerelease-only crates, which plain cargo install refuses).
+# Pinned crates are installed at exactly that version and re-pinned after
+# the update-all phase if it moved them.
+#
 # Failures are collected and reported at the end; one failing crate won't stop the rest.
 
 set -uo pipefail
@@ -39,10 +44,14 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 	exit 1
 fi
 
-# Get sorted list of configured crate names
-configured=$(sort "$CONFIG_FILE")
+# Get sorted list of configured crate names (pins stripped) + the pin map
+typeset -A pins
+while IFS= read -r line; do
+	[[ "$line" == *@* ]] && pins[${line%%@*}]="${line#*@}"
+done <"$CONFIG_FILE"
+configured=$(sed 's/@.*//' "$CONFIG_FILE" | sort)
 configured_count=$(echo "$configured" | grep -c . || echo 0)
-echo "Configured crates: $configured_count"
+echo "Configured crates: $configured_count (${#pins[@]} pinned)"
 
 # Get sorted list of installed crate names
 # Parse 'cargo install --list' - extract crate names (lines starting with alphanumeric, ending with version:)
@@ -62,10 +71,16 @@ else
 	echo "$to_install" | sed 's/^/  - /'
 	echo ""
 
-	# Install each missing crate
+	# Install each missing crate (pinned crates at exactly their pin)
 	while IFS= read -r crate; do
-		echo "[INSTALL] $crate"
-		if "${INSTALL_CMD[@]}" "$crate"; then
+		if [[ -n "${pins[$crate]:-}" ]]; then
+			echo "[INSTALL] $crate (pinned ${pins[$crate]})"
+			install_cmd=("${INSTALL_CMD[@]}" "$crate" --version "${pins[$crate]}")
+		else
+			echo "[INSTALL] $crate"
+			install_cmd=("${INSTALL_CMD[@]}" "$crate")
+		fi
+		if "${install_cmd[@]}"; then
 			echo "[OK] $crate installed successfully"
 		else
 			echo "[FAILED] $crate failed to install"
@@ -90,6 +105,26 @@ else
 	echo "Install with: cargo install cargo-update"
 fi
 echo ""
+
+# 2b. Re-pin: the update phase may have moved pinned crates off their pin
+if [[ ${#pins[@]} -gt 0 ]]; then
+	echo ">>> Phase 2b: Enforcing version pins..."
+	for crate ver in "${(@kv)pins}"; do
+		inst_ver=$(cargo install --list | awk -v c="$crate" '$1 == c { gsub(/^v|:$/, "", $2); print $2; exit }')
+		if [[ -z "$inst_ver" ]]; then
+			echo "[PIN] $crate not installed (install phase should have handled it)"
+		elif [[ "$inst_ver" != "$ver" ]]; then
+			echo "[RE-PIN] $crate $inst_ver -> $ver"
+			if ! "${INSTALL_CMD[@]}" "$crate" --version "$ver" --force; then
+				echo "[FAILED] $crate re-pin failed"
+				install_failures+=("$crate (re-pin to $ver)")
+			fi
+		else
+			echo "[OK] $crate pinned at $ver"
+		fi
+	done
+	echo ""
+fi
 
 # 3. Prune: remove crates not in config
 echo ">>> Phase 3: Checking for crates to prune..."
