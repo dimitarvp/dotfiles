@@ -3,7 +3,10 @@
 # cargo_export - Export cargo-installed crates and sync to chezmoi repo
 #
 # Exports installed crates to crates.conf, adds to chezmoi, commits, and pushes.
-# Format: one crate name per line (without version, to always get latest on converge)
+# Format: one crate name per line (without version, to always get latest on converge).
+# Lines may carry a version pin as name@version — pins live only in the config
+# (cargo state doesn't know about them), so they are carried over from the
+# existing config on every export.
 
 set -euo pipefail
 
@@ -16,7 +19,16 @@ echo "=== cargo_export ==="
 echo "Exporting installed crates to: $CONFIG_FILE"
 echo ""
 
-cargo install --list | awk '/^[a-zA-Z]/ {gsub(/ .*/, ""); print}' | sort >"$CONFIG_FILE"
+tmp_new="$(mktemp)"
+cargo install --list | awk '/^[a-zA-Z]/ {gsub(/ .*/, ""); print}' | sort >"$tmp_new"
+if [[ -f "$CONFIG_FILE" ]]; then
+	awk -F@ 'NR==FNR { if (NF == 2) pin[$1] = $0; next } { print ($1 in pin) ? pin[$1] : $1 }' \
+		"$CONFIG_FILE" "$tmp_new" >"${CONFIG_FILE}.new"
+	mv "${CONFIG_FILE}.new" "$CONFIG_FILE"
+	rm -f "$tmp_new"
+else
+	mv "$tmp_new" "$CONFIG_FILE"
+fi
 
 count=$(wc -l <"$CONFIG_FILE" | tr -d ' ')
 echo "Done. $count crates exported."
