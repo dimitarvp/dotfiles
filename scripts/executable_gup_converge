@@ -8,8 +8,16 @@
 # 4. (removed: auto-export was dangerous — use gup_export manually)
 #
 # The source of truth is always ~/.config/gup/gup.json (managed by chezmoi)
+#
+# Failures are collected and reported at the end; one failing tool won't stop
+# the rest (a tool whose repo is briefly unreachable must not block updates
+# of the other 40).
 
-set -euo pipefail
+set -uo pipefail
+
+declare -a install_failures=()
+update_failed=false
+prune_failed=false
 
 eval "$(mise activate zsh --shims)"
 export GOBIN="$HOME/go/bin"
@@ -55,7 +63,10 @@ else
 		# Look up import_path from the JSON
 		import_path=$(jq -r --arg n "$name" '.packages[] | select(.name == $n) | .import_path' "$CONFIG_FILE")
 		echo "[INSTALL] $name ($import_path@latest)"
-		go install "${import_path}@latest"
+		if ! go install "${import_path}@latest"; then
+			echo "[FAILED] $name"
+			install_failures+=("$name")
+		fi
 	done <<<"$to_install"
 fi
 echo ""
@@ -64,7 +75,10 @@ echo ""
 echo ">>> Phase 2: Updating all tools to latest..."
 update_args=()
 (( ${#local_tools} )) && update_args=(--exclude "${(j:,:)local_tools}")
-gup update "${update_args[@]}"
+if ! gup update "${update_args[@]}"; then
+	echo "[FAILED] update phase had errors (see above)"
+	update_failed=true
+fi
 echo ""
 
 # 3. Prune: remove tools not in config
@@ -80,10 +94,20 @@ else
 	echo "Pruning:"
 	echo "$to_prune"
 	echo ""
-	echo "$to_prune" | xargs gup remove -f
+	if ! echo "$to_prune" | xargs gup remove -f; then
+		echo "[FAILED] prune had errors"
+		prune_failed=true
+	fi
 fi
 echo ""
 
 # NOTE: do NOT auto-export here. If gup update fails, the config would be
 # overwritten with only surviving tools. Run gup_export manually instead.
+if (( ${#install_failures[@]} )) || [[ "$update_failed" == true ]] || [[ "$prune_failed" == true ]]; then
+	echo "=== FAILURES ==="
+	(( ${#install_failures[@]} )) && printf 'install: %s\n' "${install_failures[@]}"
+	[[ "$update_failed" == true ]] && echo "update phase had errors"
+	[[ "$prune_failed" == true ]] && echo "prune had errors"
+	exit 1
+fi
 echo "Done. Run gup_export manually if you added new tools."
