@@ -2,15 +2,15 @@
   "schema_version": 1,
   "packages": [
     {
-      "name": "glow",
-      "import_path": "github.com/charmbracelet/glow/v2",
-      "version": "v2.1.1",
-      "channel": "latest"
-    },
-    {
       "name": "callgraph",
       "import_path": "golang.org/x/tools/cmd/callgraph",
       "version": "v0.42.0",
+      "channel": "latest"
+    },
+    {
+      "name": "ccctx",
+      "import_path": "github.com/dimitarvp/ccctx",
+      "version": "v0.1.0",
       "channel": "latest"
     },
     {
@@ -56,6 +56,12 @@
       "channel": "latest"
     },
     {
+      "name": "glow",
+      "import_path": "github.com/charmbracelet/glow/v2",
+      "version": "v2.1.1",
+      "channel": "latest"
+    },
+    {
       "name": "go-mod-upgrade",
       "import_path": "github.com/oligot/go-mod-upgrade",
       "version": "v0.12.0",
@@ -71,6 +77,12 @@
       "name": "goimports",
       "import_path": "golang.org/x/tools/cmd/goimports",
       "version": "v0.42.0",
+      "channel": "latest"
+    },
+    {
+      "name": "golangci-lint",
+      "import_path": "github.com/golangci/golangci-lint/v2/cmd/golangci-lint",
+      "version": "v2.12.2",
       "channel": "latest"
     },
     {
@@ -164,9 +176,27 @@
       "channel": "latest"
     },
     {
+      "name": "klodsync",
+      "import_path": "github.com/dimitarvp/klodsync",
+      "version": "v0.1.0",
+      "channel": "latest"
+    },
+    {
+      "name": "kopia",
+      "import_path": "github.com/kopia/kopia",
+      "version": "v0.23.0",
+      "channel": "latest"
+    },
+    {
       "name": "lux",
       "import_path": "github.com/iawia002/lux",
       "version": "v0.24.1",
+      "channel": "latest"
+    },
+    {
+      "name": "nilaway",
+      "import_path": "go.uber.org/nilaway/cmd/nilaway",
+      "version": "v0.0.0-20260808063849-8649a03c818a",
       "channel": "latest"
     },
     {
@@ -215,24 +245,6 @@
       "name": "xq",
       "import_path": "github.com/sibprogrammer/xq",
       "version": "v1.4.0",
-      "channel": "latest"
-    },
-    {
-      "name": "kopia",
-      "import_path": "github.com/kopia/kopia",
-      "version": "v0.23.0",
-      "channel": "latest"
-    },
-    {
-      "name": "golangci-lint",
-      "import_path": "github.com/golangci/golangci-lint/v2/cmd/golangci-lint",
-      "version": "v2.12.2",
-      "channel": "latest"
-    },
-    {
-      "name": "nilaway",
-      "import_path": "go.uber.org/nilaway/cmd/nilaway",
-      "version": "v0.0.0-20260808063849-8649a03c818a",
       "channel": "latest"
     }
   ]
