@@ -1,4 +1,5 @@
 README.md
+the-server
 
 {{ if ne .chezmoi.os "darwin" }}
 scripts/extract_safari_bookmarks
