@@ -1,0 +1,23 @@
+[connection]
+id=wan2
+uuid=12654d42-cf2a-4142-8c22-332884299298
+type=ethernet
+interface-name=enp0s20f0u3u2
+timestamp=1788015089
+
+[ethernet]
+
+[ipv4]
+ignore-auto-dns=true
+method=auto
+route-table=101
+route1=0.0.0.0/0,192.168.2.1,200
+route1_options=table=254
+routing-rule1=priority 10100 from 192.168.2.0/24 table 101
+routing-rule2=priority 10101 to 192.168.2.0/24 table 101
+
+[ipv6]
+addr-gen-mode=default
+method=disabled
+
+[proxy]

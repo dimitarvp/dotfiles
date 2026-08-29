@@ -1,0 +1,102 @@
+#!/bin/bash
+# s1_capture — nightly capture of s1's configuration into ZFS (misc/s1config),
+# snapshotting only when something actually changed (kopia-style skip).
+# Runs from root's crontab (must read /etc fully); router fetches run as dimi
+# (his ssh config + dimi_master key). Restore: /data/misc/s1config/RESTORE.md
+set -euo pipefail
+
+DS=misc/s1config
+ROOT=/data/misc/s1config
+CUR="$ROOT/current"
+KEEP=90 # auto snapshots retained
+
+log() { logger -t s1_capture "$*"; }
+fail() {
+	log "FAILED: $*"
+	printf '%s FAILED: %s\n' "$(date -Is)" "$*" >"$ROOT/LAST_RUN"
+	exit 1
+}
+trap 'fail "unexpected error at line $LINENO"' ERR
+
+[ "$(id -u)" -eq 0 ] || fail "must run as root"
+zfs list "$DS" >/dev/null 2>&1 || fail "dataset $DS missing"
+mkdir -p "$CUR/etc" "$CUR/home" "$CUR/state" "$CUR/routers/cooolbox" "$CUR/routers/bulsatcom"
+
+CHANGED=""
+
+# Checksum-based rsync: mtime-only churn (adjtime and friends) never counts
+# as a change; -O ignores directory-time noise.
+sync_tree() { # src dst [extra rsync args...]
+	local src=$1 dst=$2 out
+	shift 2
+	out=$(rsync -a --delete -c -i -O "$@" "$src" "$dst") || fail "rsync $src"
+	[ -n "$out" ] && CHANGED="fs"
+	return 0
+}
+
+sync_tree /etc/ "$CUR/etc/" --exclude=/mtab --exclude=/adjtime --exclude=/.updated
+for p in adguard pihole scripts .ssh .config .zshrc .zsh_history .tool-versions; do
+	[ -e "/home/dimi/$p" ] && sync_tree "/home/dimi/$p" "$CUR/home/"
+done
+
+# State manifests: regenerated every run, count as changed only on content
+# change. Callers use process substitution — a plain pipe would run this in a
+# subshell and lose CHANGED.
+manifest() { # filename; content on stdin
+	local f="$CUR/state/$1" tmp
+	tmp=$(mktemp)
+	cat >"$tmp"
+	if cmp -s "$tmp" "$f" 2>/dev/null; then
+		rm -f "$tmp"
+	else
+		mv "$tmp" "$f"
+		CHANGED="${CHANGED:+$CHANGED+}state"
+	fi
+}
+
+manifest packages.txt < <(pacman -Qqe)
+manifest units_enabled.txt < <(systemctl list-unit-files --state=enabled --no-pager --no-legend)
+manifest nm_wan1.txt < <(nmcli connection show wan1)
+manifest nm_wan2.txt < <(nmcli connection show wan2)
+manifest ip_rule.txt < <(ip rule show)
+manifest ip_routes.txt < <(ip route show table all)
+manifest crontab_dimi.txt < <(crontab -l -u dimi 2>/dev/null)
+manifest crontab_root.txt < <(crontab -l 2>/dev/null)
+manifest docker_ps.txt < <(docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null | sort)
+manifest zpool_status.txt < <(zpool status misc)
+
+# Routers: refetch the binary backup only when the normalized export changed.
+# Verified 2026-08-29: the '# <date> by RouterOS' line is the ONLY volatile
+# part of back-to-back exports on both routers.
+router() { # name
+	local r=$1 tmp btmp raw="$CUR/routers/$1/export.rsc"
+	tmp=$(mktemp)
+	HOME=/home/dimi runuser -u dimi -- ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 "$r" '/export' 2>/dev/null |
+		rg -v '^\*\* ' >"$tmp" || true
+	[ -s "$tmp" ] || fail "empty export from $r"
+	if cmp -s <(rg -v '^# .* by RouterOS' "$tmp") <(rg -v '^# .* by RouterOS' "$raw" 2>/dev/null); then
+		rm -f "$tmp"
+	else
+		mv "$tmp" "$raw"
+		btmp="/tmp/s1capture_$r.$$.backup"
+		HOME=/home/dimi runuser -u dimi -- ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new "$r" '/system backup save name=s1capture' >/dev/null 2>&1
+		HOME=/home/dimi runuser -u dimi -- scp -q -o BatchMode=yes -o StrictHostKeyChecking=accept-new "$r:s1capture.backup" "$btmp" || fail "backup fetch from $r"
+		mv "$btmp" "$CUR/routers/$r/config.backup"
+		CHANGED="${CHANGED:+$CHANGED+}router-$r"
+	fi
+	return 0
+}
+router cooolbox
+router bulsatcom
+
+if [ -n "$CHANGED" ]; then
+	snap="auto-$(date +%F_%H%M%S)"
+	zfs snapshot "$DS@$snap"
+	zfs list -H -t snapshot -o name -s creation "$DS" | rg "^$DS@auto-" | head -n -"$KEEP" |
+		while read -r s; do zfs destroy "$s"; done
+	log "changed ($CHANGED) — snapshot $snap"
+	printf '%s OK changed=%s snapshot=%s\n' "$(date -Is)" "$CHANGED" "$snap" >"$ROOT/LAST_RUN"
+else
+	log "no change — no snapshot"
+	printf '%s OK no-change\n' "$(date -Is)" >"$ROOT/LAST_RUN"
+fi
