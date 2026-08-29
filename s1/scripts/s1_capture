@@ -39,6 +39,10 @@ for p in adguard pihole scripts .ssh .config .zshrc .zsh_history .tool-versions;
 	[ -e "/home/dimi/$p" ] && sync_tree "/home/dimi/$p" "$CUR/home/"
 done
 
+# Headscale server state (pre-wired 2026-08-29 before the build; empty dir
+# until headscale goes live — its loss would force fleet-wide re-enrollment).
+[ -d /var/lib/headscale ] && sync_tree /var/lib/headscale/ "$CUR/headscale-state/"
+
 # State manifests: regenerated every run, count as changed only on content
 # change. Callers use process substitution — a plain pipe would run this in a
 # subshell and lose CHANGED.

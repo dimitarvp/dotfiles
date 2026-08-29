@@ -91,6 +91,18 @@ them afterwards (the script does).
   test via the router path: `dig -b 192.168.2.99 @192.168.2.1 t.co` (0.0.0.0 = filtering
   live) — the hairpin masquerade makes the reply routable.
 
+## The macvlan shim (added 2026-08-29, TS/HS rehearsal finding)
+By macvlan design the s1 HOST could never reach its own AGH children (.96/.97/.98) —
+fine for LAN clients, fatal for the Tailscale subnet-router role (roaming devices'
+DNS must transit s1's kernel INTO the VIP). Fix: NM connection `aghshim` — a macvlan
+sidecar interface on enp1s0 (bridge mode) holding 192.168.1.95/32 plus /32 routes to
+.96/.97/.98 via it. Children↔shim are macvlan siblings, so traffic flows. Side effect:
+s1 itself can finally query the VIP (`dig @192.168.1.96` works on-host now). Subnet-
+routed roaming traffic is SNATed to the shim IP, so AGH logs roamers as client
+192.168.1.95 (per-roamer identity = optional later upgrade: --snat-subnet-routes=false
++ 100.64.0.0/10 routes back via the shim in the AGH containers + router static routes).
+Reference copy: repo s1/etc/NetworkManager/system-connections/aghshim.nmconnection.
+
 ## Coexistence
 PiHole RETIRED 2026-08-23 (pilot passed): container and network removed via
 `docker-compose down`, image still auto-updated by s1 update_all's pull-only line, config
