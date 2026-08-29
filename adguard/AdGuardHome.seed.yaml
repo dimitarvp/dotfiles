@@ -41,6 +41,7 @@ dns:
   fastest_timeout: 1s
   allowed_clients:
     - 192.168.1.0/24
+    - 192.168.2.0/24
     - 127.0.0.1
   disallowed_clients: []
   blocked_hosts:

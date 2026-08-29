@@ -36,7 +36,7 @@ Measured: ≤2×200ms gaps per rollover. RULE: netns sidecars (keepalived-*, agh
 when their parent container is recreated — always `docker compose up -d --force-recreate`
 them afterwards (the script does).
 
-## Router (MikroTik, 192.168.1.1)
+## Primary router (cooolBox MikroTik, 192.168.1.1)
 - NAT lever: "AGH UDP/TCP" (dstnat :53 → .96; src+dst exclude .96-.98 to prevent the
   resolvers' own upstream :53 queries from looping) + "AGH force UDP/TCP" (hairpin
   masquerade) — mirrored next to the PiHole set; swap = disable one set, enable the other.
@@ -53,6 +53,36 @@ them afterwards (the script does).
   the lever moves the whole household. Hijacked flows appear as client "router"
   (hairpin masquerade). PENDING (after pilot): hand out .96 via DHCP for real per-device
   stats; hijack then only catches hardcoded-DNS devices.
+
+## Second network (bulsatcom LAN, added 2026-08-29)
+- The same blue/green pair also serves 192.168.2.0/24 (the Bulsatcom uplink's LAN) through
+  a second macvlan (`aghnet2`, parent = the USB NIC enp0s20f0u3u2): blue = 192.168.2.97,
+  green = .98, VIP **192.168.2.96** as a second vrrp_instance (AGH_NET2) in the same
+  keepalived sidecars — same vrid 96 (valid: VRID scope is per-link and the two LANs are
+  separate L2 domains), same 150/100/50 priority ladder, same health script for both
+  instances (one AGH process serves both nets, so one health truth).
+- Container interface names are PINNED via compose `interface_name:` (net1/net2) and the
+  keepalived configs reference net1/net2 — kernel eth0/eth1 order is a RACE with multiple
+  networks (blue came up cross-wired on the first net2 deploy). Never reference ethN.
+- The containers' default route stays on net1 (compose attach `priority: 100` on aghnet):
+  upstream DNS egress always exits the cooolbox uplink; net2 clients are answered over
+  net2's connected subnet. No automatic upstream failover yet — if the cooolbox uplink
+  dies, net2 clients get cached answers only.
+- AGH `allowed_clients` = 192.168.1.0/24 + 192.168.2.0/24 + 127.0.0.1 (set via API on both
+  instances). A source outside the list is REFUSED silently — symptom: dig timeouts from
+  that subnet while everything else looks healthy.
+- Bulsatcom router (RB2011UiAS-2HnD, RouterOS 7.23.2, 192.168.2.1): same rule set as the
+  primary — "AGH UDP/TCP" dstnat :53 → 2.96 (src+dst exclude 2.96-2.98), "AGH force
+  UDP/TCP" hairpin masquerade, "block DoT/DoQ (AGH project)" reject 853 placed BEFORE the
+  defconf fasttrack rule, vrrp-agh-dns on bridge (vrid 96, prio 50, 300ms) + 192.168.2.96/24
+  on it. Its input chain has no LAN interface-list rule (default-accept policy), so the
+  cooolBox vrrp/interface-list gotcha does not apply. DHCP still hands out 2.1 as DNS; the
+  hijack catches those queries (lever semantics identical to net1). Pre-change backups:
+  bulsatcom_preagh_20260829.{rsc,backup} in ~/adguard/. SSH: key-only (dimi_master), host
+  alias `bulsatcom` (from non-net2 machines it hops via s1 automatically).
+- s1's host cannot reach the 2.96-2.98 macvlan children directly (same isolation as net1);
+  test via the router path: `dig -b 192.168.2.99 @192.168.2.1 t.co` (0.0.0.0 = filtering
+  live) — the hairpin masquerade makes the reply routable.
 
 ## Coexistence
 PiHole RETIRED 2026-08-23 (pilot passed): container and network removed via

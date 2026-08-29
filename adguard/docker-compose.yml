@@ -1,6 +1,10 @@
 # AdGuard Home blue/green with keepalived VIP — parallel to PiHole (untouched).
 # Containers live on macvlan (own L2 IPs) because PiHole's docker-proxy owns
-# host 0.0.0.0:53/80/443. Router redirect targets the VIP only.
+# host 0.0.0.0:53/80/443. Router redirects target the VIPs only.
+# Two macvlans since 2026-08-29: aghnet (net1/cooolbox via enp1s0, VIP .96)
+# and aghnet2 (net2/bulsatcom via the USB NIC, VIP 192.168.2.96). aghnet has
+# attach priority so it stays eth0 and provides the default route (upstream
+# DNS egress = net1); net2 clients are answered over eth1's connected subnet.
 name: adguard
 networks:
   aghnet:
@@ -11,6 +15,14 @@ networks:
       config:
         - subnet: 192.168.1.0/24
           gateway: 192.168.1.1
+  aghnet2:
+    driver: macvlan
+    driver_opts:
+      parent: enp0s20f0u3u2
+    ipam:
+      config:
+        - subnet: 192.168.2.0/24
+          gateway: 192.168.2.1
 services:
   agh-blue:
     image: adguard/adguardhome:${AGH_TAG_BLUE:?set in .env}
@@ -19,6 +31,11 @@ services:
     networks:
       aghnet:
         ipv4_address: 192.168.1.97
+        interface_name: net1
+        priority: 100
+      aghnet2:
+        ipv4_address: 192.168.2.97
+        interface_name: net2
     volumes:
       - ./blue/conf:/opt/adguardhome/conf
       - ./blue/work:/opt/adguardhome/work
@@ -29,6 +46,11 @@ services:
     networks:
       aghnet:
         ipv4_address: 192.168.1.98
+        interface_name: net1
+        priority: 100
+      aghnet2:
+        ipv4_address: 192.168.2.98
+        interface_name: net2
     volumes:
       - ./green/conf:/opt/adguardhome/conf
       - ./green/work:/opt/adguardhome/work
