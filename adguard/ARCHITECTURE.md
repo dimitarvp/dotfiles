@@ -64,10 +64,17 @@ them afterwards (the script does).
 - Container interface names are PINNED via compose `interface_name:` (net1/net2) and the
   keepalived configs reference net1/net2 — kernel eth0/eth1 order is a RACE with multiple
   networks (blue came up cross-wired on the first net2 deploy). Never reference ethN.
-- The containers' default route stays on net1 (compose attach `priority: 100` on aghnet):
-  upstream DNS egress always exits the cooolbox uplink; net2 clients are answered over
-  net2's connected subnet. No automatic upstream failover yet — if the cooolbox uplink
-  dies, net2 clients get cached answers only.
+- The containers' default route stays on net1 (compose attach `priority: 100` on aghnet);
+  net2 clients are answered over net2's connected subnet. Non-DNS egress (blocklist
+  downloads, update checks) follows the default route and pauses while cooolbox is down.
+- Upstream diversity (2026-08-29): upstream_dns = both ISPs' resolvers (cooolbox
+  84.22.22.48/.84 + bulsatcom 212.39.90.42/.43), upstream_mode=parallel (all four asked,
+  fastest answer wins). Each ISP's pair is pinned to its own uplink via /32 routes
+  installed by the keepalived sidecars' post_start hooks — ISP resolvers answer on-net
+  only (verified: bulsatcom's time out when routed via cooolbox). Either uplink dying
+  leaves FULL-capacity resolution for both LANs via the survivor (drill: cooolbox
+  resolvers rerouted dead → uncached answer in 116ms through bulsatcom). If the resolver
+  IPs ever change, update BOTH the compose post_start hooks and AGH's upstream list.
 - AGH `allowed_clients` = 192.168.1.0/24 + 192.168.2.0/24 + 127.0.0.1 (set via API on both
   instances). A source outside the list is REFUSED silently — symptom: dig timeouts from
   that subnet while everything else looks healthy.

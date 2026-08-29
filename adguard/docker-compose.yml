@@ -63,6 +63,15 @@ services:
     volumes:
       - ./keepalived/blue.conf:/etc/keepalived/keepalived.conf:ro
     depends_on: [agh-blue]
+    # Upstream diversity plumbing (2026-08-29): pin each ISP's resolvers to its
+    # own uplink inside the shared netns — cooolbox's (84.22.22.x) via net1,
+    # bulsatcom's (212.39.90.x) via net2. ISP resolvers answer on-net only
+    # (verified: bulsatcom's time out via cooolbox), so without these routes a
+    # dead uplink kills all upstream resolution. Re-runs on every (re)create;
+    # the rollover script force-recreates sidecars after parent recreates, so
+    # the routes always come back. AGH asks all four in parallel upstream_mode.
+    post_start:
+      - command: ["/bin/sh", "-c", "ip route replace 84.22.22.48/32 via 192.168.1.1 && ip route replace 84.22.22.84/32 via 192.168.1.1 && ip route replace 212.39.90.42/32 via 192.168.2.1 && ip route replace 212.39.90.43/32 via 192.168.2.1"]
   keepalived-green:
     build: ./keepalived
     container_name: keepalived-green
@@ -72,6 +81,9 @@ services:
     volumes:
       - ./keepalived/green.conf:/etc/keepalived/keepalived.conf:ro
     depends_on: [agh-green]
+    # Same upstream-diversity route plumbing as keepalived-blue.
+    post_start:
+      - command: ["/bin/sh", "-c", "ip route replace 84.22.22.48/32 via 192.168.1.1 && ip route replace 84.22.22.84/32 via 192.168.1.1 && ip route replace 212.39.90.42/32 via 192.168.2.1 && ip route replace 212.39.90.43/32 via 192.168.2.1"]
   aghsync:
     image: ghcr.io/bakito/adguardhome-sync:v0.9.2
     container_name: aghsync

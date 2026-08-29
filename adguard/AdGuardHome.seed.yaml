@@ -32,12 +32,14 @@ dns:
   upstream_dns:
     - 84.22.22.48
     - 84.22.22.84
+    - 212.39.90.42
+    - 212.39.90.43
   upstream_dns_file: ""
   bootstrap_dns:
     - 84.22.22.48
     - 84.22.22.84
   fallback_dns: []
-  upstream_mode: load_balance
+  upstream_mode: parallel
   fastest_timeout: 1s
   allowed_clients:
     - 192.168.1.0/24
