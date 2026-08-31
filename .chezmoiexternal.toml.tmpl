@@ -12,4 +12,22 @@
     refreshPeriod = "24h"
     [ "bin/probex".pull ]
         args = ["--rebase", "--autostash"]
+
+# unison — the wsync engine. Version-PINNED on purpose: unison's sync-state
+# archives are compatibility-sensitive, so a bump is deliberate (new URL+path
+# here on all machines, then re-run the wsync gauntlet). No refreshPeriod:
+# a pinned release URL never changes, the cached download is final.
+{{- if eq .chezmoi.os "darwin" }}
+[".local/bin/unison"]
+    type = "archive-file"
+    url = "https://github.com/bcpierce00/unison/releases/download/v2.54.0/unison-2.54.0-macos-x86-64.tar.gz"
+    path = "unison-2.54.0-macos-x86-64/bin/unison"
+    executable = true
+{{- else }}
+[".local/bin/unison"]
+    type = "archive-file"
+    url = "https://github.com/bcpierce00/unison/releases/download/v2.54.0/unison-2.54.0-ubuntu-22.04-x86_64-static.tar.gz"
+    path = "unison-2.54.0-ubuntu-22.04-x86_64-static/bin/unison"
+    executable = true
+{{- end }}
 {{- end }}
