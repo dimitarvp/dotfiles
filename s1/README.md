@@ -6,8 +6,8 @@ live OUTSIDE $HOME and therefore outside chezmoi's normal reach — survives
 even if s1 and its ZFS pool die together.
 
 Deployment is MANUAL, per RESTORE.md (also captured nightly, with everything
-else, into s1's dataset misc/s1config by scripts/s1_capture — root cron 00:45,
-snapshot only when something changed).
+else, into s1's dataset misc/s1config — mounted at /data/misc/backups/s1config —
+by scripts/s1_capture — root cron 00:45, snapshot only when something changed).
 
 Live truth = the real files on s1. Update these copies when those change:
 - etc/NetworkManager/system-connections/wan1|wan2.nmconnection — dual-WAN

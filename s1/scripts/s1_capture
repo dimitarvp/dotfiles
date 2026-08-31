@@ -2,11 +2,11 @@
 # s1_capture — nightly capture of s1's configuration into ZFS (misc/s1config),
 # snapshotting only when something actually changed (kopia-style skip).
 # Runs from root's crontab (must read /etc fully); router fetches run as dimi
-# (his ssh config + dimi_master key). Restore: /data/misc/s1config/RESTORE.md
+# (his ssh config + dimi_master key). Restore: /data/misc/backups/s1config/RESTORE.md
 set -euo pipefail
 
 DS=misc/s1config
-ROOT=/data/misc/s1config
+ROOT=/data/misc/backups/s1config # dataset mountpoint (moved 2026-08-31; dataset name unchanged)
 CUR="$ROOT/current"
 KEEP=90 # auto snapshots retained
 

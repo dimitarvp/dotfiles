@@ -1,4 +1,4 @@
-# Restoring s1 from this dataset (misc/s1config)
+# Restoring s1 from this dataset (misc/s1config, mounted at /data/misc/backups/s1config)
 
 Written 2026-08-29. This dataset travels with the pool: on new hardware either
 move the disks and `zpool import misc`, or from the old (still-alive) machine
