@@ -4,12 +4,15 @@
 # Re-runs whenever the unit files change (their hashes are baked in below).
 # s1_capture.service: {{ include "s1/etc/systemd/system/s1_capture.service" | sha256sum }}
 # s1_capture.timer:   {{ include "s1/etc/systemd/system/s1_capture.timer" | sha256sum }}
+# panic sysctl:       {{ include "s1/etc/sysctl.d/90-panic-reboot.conf" | sha256sum }}
 set -euo pipefail
-SRC="{{ .chezmoi.sourceDir }}/s1/etc/systemd/system"
-sudo install -m 0644 "$SRC/s1_capture.service" "$SRC/s1_capture.timer" /etc/systemd/system/
+SRC="{{ .chezmoi.sourceDir }}/s1/etc"
+sudo install -m 0644 "$SRC/systemd/system/s1_capture.service" "$SRC/systemd/system/s1_capture.timer" /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now s1_capture.timer
-echo "s1_capture units deployed; timer: $(systemctl is-active s1_capture.timer)"
+sudo install -m 0644 "$SRC/sysctl.d/90-panic-reboot.conf" /etc/sysctl.d/
+sudo sysctl -q -p /etc/sysctl.d/90-panic-reboot.conf
+echo "s1 /etc artifacts deployed; capture timer: $(systemctl is-active s1_capture.timer)"
 {{ else -}}
 #!/bin/bash
 : # s1-only /etc deployer — no-op on this machine
