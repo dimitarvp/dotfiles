@@ -62,3 +62,6 @@ poetry.lock
 .cache/
 tmp/
 *.log
+
+# Live per-machine session state — churns mid-transfer, meaningless elsewhere
+.watch_cursors/
