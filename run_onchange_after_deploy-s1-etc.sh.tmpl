@@ -5,6 +5,12 @@
 # s1_capture.service: {{ include "s1/etc/systemd/system/s1_capture.service" | sha256sum }}
 # s1_capture.timer:   {{ include "s1/etc/systemd/system/s1_capture.timer" | sha256sum }}
 # panic sysctl:       {{ include "s1/etc/sysctl.d/90-panic-reboot.conf" | sha256sum }}
+# wan1:               {{ include "s1/etc/NetworkManager/system-connections/wan1.nmconnection" | sha256sum }}
+# wan2:               {{ include "s1/etc/NetworkManager/system-connections/wan2.nmconnection" | sha256sum }}
+# aghshim:            {{ include "s1/etc/NetworkManager/system-connections/aghshim.nmconnection" | sha256sum }}
+# 25-failover:        {{ include "s1/etc/NetworkManager/conf.d/25-failover.conf" | sha256sum }}
+# 90-no-auto-default: {{ include "s1/etc/NetworkManager/conf.d/90-no-auto-default-wan2.conf" | sha256sum }}
+# rt_tables wan2:     {{ include "s1/etc/iproute2/rt_tables.d/wan2.conf" | sha256sum }}
 set -euo pipefail
 SRC="{{ .chezmoi.sourceDir }}/s1/etc"
 sudo install -m 0644 "$SRC/systemd/system/s1_capture.service" "$SRC/systemd/system/s1_capture.timer" /etc/systemd/system/
@@ -12,7 +18,16 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now s1_capture.timer
 sudo install -m 0644 "$SRC/sysctl.d/90-panic-reboot.conf" /etc/sysctl.d/
 sudo sysctl -q -p /etc/sysctl.d/90-panic-reboot.conf
-echo "s1 /etc artifacts deployed; capture timer: $(systemctl is-active s1_capture.timer)"
+# Network files are STAGED only — deliberately no NM restart/reload here
+# (lifeline config on a remote box); changes take effect at the next
+# deliberate reload or boot.
+sudo install -m 0600 "$SRC/NetworkManager/system-connections/wan1.nmconnection" \
+	"$SRC/NetworkManager/system-connections/wan2.nmconnection" \
+	"$SRC/NetworkManager/system-connections/aghshim.nmconnection" /etc/NetworkManager/system-connections/
+sudo install -m 0644 "$SRC/NetworkManager/conf.d/25-failover.conf" \
+	"$SRC/NetworkManager/conf.d/90-no-auto-default-wan2.conf" /etc/NetworkManager/conf.d/
+sudo install -m 0644 "$SRC/iproute2/rt_tables.d/wan2.conf" /etc/iproute2/rt_tables.d/
+echo "s1 /etc artifacts deployed; capture timer: $(systemctl is-active s1_capture.timer); network files staged (no NM reload)"
 {{ else -}}
 #!/bin/bash
 : # s1-only /etc deployer — no-op on this machine
