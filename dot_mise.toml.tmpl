@@ -15,8 +15,19 @@ rebar = "latest"
 # no pacman/AUR/brew copies allowed.
 "aqua:kopia/kopia" = "latest"
 "github:Ataraxy-Labs/inspect" = "latest"
+# npm tools via the mise npm backend, moved off brew-node (prettier's tailwind
+# plugin is NOT here on purpose — it is bin-less and resolves per-project)
+"npm:repomix" = "latest"
+"npm:typescript" = "latest"
+"npm:prettier" = "latest"
+"npm:@redocly/cli" = "latest"
+"npm:http-server" = "latest"
 {{- if ne .chezmoi.os "darwin" }}
 "aqua:remoteoss/dexter" = "latest"
+{{- end }}
+{{- if eq .chezmoi.os "darwin" }}
+# brew 6 builds no x86_64 bottles anymore; neovim comes from GitHub release builds
+"aqua:neovim/neovim" = "latest"
 {{- end }}
 {{- end }}
 {{- if ne .role "server" }}
