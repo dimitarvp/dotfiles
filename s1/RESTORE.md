@@ -21,7 +21,10 @@ fresh machine precisely for this; flip it only at cutover.
    current/state/packages.txt` (review first; AUR bits are not in there).
 2. `zpool import misc` (or recv, above).
 3. Home: copy `current/home/{scripts,.ssh,.zshrc,.zsh_history}` back; check
-   `current/state/crontab_*.txt` and re-install both crontabs.
+   `current/state/crontab_*.txt` and re-install both crontabs. Re-enable the
+   capture schedule: s1_capture.service + .timer (in `current/etc` and the
+   repo `s1/` dir) → /etc/systemd/system, then
+   `systemctl enable --now s1_capture.timer`.
 4. chezmoi: `chezmoi init git@github.com:dimitarvp/dotfiles.git`, set
    role/flags in ~/.config/chezmoi/chezmoi.toml per the old machine
    (`adblock=true` ONLY at cutover — see trap above), `chezmoi apply`.

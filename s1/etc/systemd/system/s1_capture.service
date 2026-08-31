@@ -1,0 +1,6 @@
+[Unit]
+Description=nightly s1 config capture into ZFS (misc/s1config)
+
+[Service]
+Type=oneshot
+ExecStart=/home/dimi/scripts/s1_capture

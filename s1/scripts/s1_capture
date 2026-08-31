@@ -1,7 +1,8 @@
 #!/bin/bash
 # s1_capture — nightly capture of s1's configuration into ZFS (misc/s1config),
 # snapshotting only when something actually changed (kopia-style skip).
-# Runs from root's crontab (must read /etc fully); router fetches run as dimi
+# Runs as root via the s1_capture systemd timer, 00:45 nightly, Persistent
+# (must read /etc fully); router fetches run as dimi
 # (his ssh config + dimi_master key). Restore: /data/misc/backups/s1config/RESTORE.md
 set -euo pipefail
 
