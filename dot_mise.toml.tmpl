@@ -7,7 +7,6 @@ node = "latest"
 erlang = ["29", "28.5.0", "27"]
 elixir = ["1.20", "1.19", "1.18"]
 pandoc = "latest"
-pnpm = "10" # pnpm 11+ ships no darwin/amd64 binary (Intel mac); 10.x still does
 rebar = "latest"
 "aqua:google-antigravity/antigravity-cli" = "latest"
 # kopia = checkpoint/backup infra; mise tracks upstream releases directly
@@ -22,6 +21,9 @@ rebar = "latest"
 "npm:prettier" = "latest"
 "npm:@redocly/cli" = "latest"
 "npm:http-server" = "latest"
+# pnpm rides the npm backend on purpose: 11+ ships no darwin/amd64 standalone
+# binary, but the npm dist is pure JS on node — latest lands everywhere
+"npm:pnpm" = "latest"
 {{- if ne .chezmoi.os "darwin" }}
 "aqua:remoteoss/dexter" = "latest"
 {{- end }}
