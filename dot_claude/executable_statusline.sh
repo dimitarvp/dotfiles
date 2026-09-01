@@ -3,9 +3,10 @@
 # Reads session JSON on stdin, prints:
 #   cwd • model • effort • ctx • 5h limit • 7d all-other • 7d fable
 # rate_limits is absent until the session's first API response; parts degrade away.
-# The Fable weekly bucket is NOT in the statusline payload (CC <=2.1.216) — it is
-# fetched from Anthropic's undocumented OAuth usage endpoint (same source as
-# /usage), cached 120s in ~/.cache, degrading to omission on any failure.
+# The Fable weekly bucket is NOT in the statusline payload (still true at CC
+# 2.1.252) — it is fetched from Anthropic's undocumented OAuth usage endpoint
+# (same source as /usage), cached in ~/.cache; stale or unfetchable data
+# degrades to omission, never to another account's numbers.
 
 input=$(cat)
 
@@ -35,29 +36,53 @@ input=$(cat)
 	(.session_id // "")
 ' <<<"$input")
 
-# GNU vs BSD date (robeast is macOS)
+# GNU vs BSD date/stat. On the mac, brew coreutils' gnubin dir shadows both
+# names in PATH with GNU-flavored ones whose -r/-f mean something else — so
+# darwin binds the system binaries by absolute path. Bare `date +%s`-style
+# calls are flavor-agnostic and stay bare.
 if [ "$(uname)" = Darwin ]; then
 	IS_DARWIN=1
-	epoch_fmt() { date -r "$1" "+$2"; }
+	epoch_fmt() { /bin/date -r "$1" "+$2"; }
+	stat_mtime() { /usr/bin/stat -f %m "$1" 2>/dev/null || echo 0; }
 else
 	IS_DARWIN=0
 	epoch_fmt() { date -d "@$1" "+$2"; }
+	stat_mtime() { stat -c %Y "$1" 2>/dev/null || echo 0; }
 fi
 
-# Fable weekly limit via the OAuth usage endpoint, cached. Token is read fresh
-# per fetch (CC rotates it) and passed via curl --config stdin, never argv.
-# On fetch failure the cache mtime is bumped (or a stub written) so a dead
-# endpoint is retried at most every 120s instead of every render.
+# Fable weekly limit via the OAuth usage endpoint, cached. The token lives in
+# the macOS Keychain on darwin (CC moves it there on login and deletes
+# ~/.claude/.credentials.json) and in ~/.claude/.credentials.json on linux.
+# Darwin must read the Keychain FIRST: a leftover credentials file there can
+# belong to a previously-logged-in account and must not win. Token is read
+# fresh per fetch (CC rotates it) and passed via curl --config stdin, never
+# argv.
+# Retry throttling and data freshness are tracked separately: the .attempt
+# sidecar limits fetches to one per 120s, while the cache file's mtime is only
+# ever set by a successful fetch — so the display refuses data older than
+# 300s instead of serving numbers from a dead login (how a stuck "7d 100%"
+# survived an account switch on 2026-09-01).
 USAGE_CACHE="$HOME/.cache/claude_usage_limits.json"
-fetch_usage() {
-	local now age tok tmpf
-	now=$(date +%s)
-	if [ -f "$USAGE_CACHE" ]; then
-		if [ "$IS_DARWIN" = 1 ]; then age=$(( now - $(stat -f %m "$USAGE_CACHE" 2>/dev/null || echo 0) ))
-		else age=$(( now - $(stat -c %Y "$USAGE_CACHE" 2>/dev/null || echo 0) )); fi
-		[ "$age" -lt 120 ] && return 0
+
+get_token() {
+	local t=""
+	if [ "$IS_DARWIN" = 1 ]; then
+		t=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null |
+			jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
 	fi
-	tok=$(jq -r '.claudeAiOauth.accessToken // empty' "$HOME/.claude/.credentials.json" 2>/dev/null)
+	[ -n "$t" ] || t=$(jq -r '.claudeAiOauth.accessToken // empty' "$HOME/.claude/.credentials.json" 2>/dev/null)
+	printf '%s' "$t"
+}
+
+file_age() { # seconds since mtime of $1; missing file reads as very old
+	printf '%s' $(( $(date +%s) - $(stat_mtime "$1") ))
+}
+
+fetch_usage() {
+	local tok tmpf
+	[ "$(file_age "$USAGE_CACHE.attempt")" -lt 120 ] && return 0
+	mkdir -p "$HOME/.cache" && touch "$USAGE_CACHE.attempt"
+	tok=$(get_token)
 	[ -n "$tok" ] || return 0
 	tmpf=$(mktemp "${TMPDIR:-/tmp}/clusage.XXXXXX") || return 0
 	if curl -sf --max-time 2 -o "$tmpf" --config /dev/stdin <<EOF
@@ -66,18 +91,15 @@ header = "Authorization: Bearer $tok"
 header = "anthropic-beta: oauth-2025-04-20"
 EOF
 	then
-		mkdir -p "$HOME/.cache"
 		mv "$tmpf" "$USAGE_CACHE" && chmod 600 "$USAGE_CACHE"
 	else
 		rm -f "$tmpf"
-		if [ -f "$USAGE_CACHE" ]; then touch "$USAGE_CACHE"
-		else mkdir -p "$HOME/.cache" && printf '{}' > "$USAGE_CACHE" && chmod 600 "$USAGE_CACHE"; fi
 	fi
 }
 
 fetch_usage
 pf="" rf=""
-if [ -f "$USAGE_CACHE" ]; then
+if [ -f "$USAGE_CACHE" ] && [ "$(file_age "$USAGE_CACHE")" -le 300 ]; then
 	pf=$(jq -r '[.limits[]? | select(.kind == "weekly_scoped")][0] | .percent | round | tostring' "$USAGE_CACHE" 2>/dev/null) || pf=""
 	[ "$pf" = "null" ] && pf=""
 	# resets_at is ISO with fractional secs (…59:59.9…): strip fraction, +1 lands
