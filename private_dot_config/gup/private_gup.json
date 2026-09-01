@@ -164,6 +164,12 @@
       "channel": "latest"
     },
     {
+      "name": "jplot",
+      "import_path": "github.com/rs/jplot",
+      "version": "v1.2.1",
+      "channel": "latest"
+    },
+    {
       "name": "jp",
       "import_path": "github.com/sgreben/jp/cmd/jp",
       "version": "v0.0.0-20190324121206-5e551d10fba9",
@@ -203,6 +209,12 @@
       "name": "rush",
       "import_path": "github.com/shenwei356/rush",
       "version": "v0.8.0",
+      "channel": "latest"
+    },
+    {
+      "name": "shfmt",
+      "import_path": "mvdan.cc/sh/v3/cmd/shfmt",
+      "version": "v3.14.0",
       "channel": "latest"
     },
     {
