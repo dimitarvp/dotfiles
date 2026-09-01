@@ -2,6 +2,9 @@
 # servers stay lean: go only (for gup-managed tools); everything else is
 # dev-stack (erlang source builds etc. — hours on s1's i3)
 go = "latest"
+# go-task runs the update taskfiles (update_via_gotask) on every machine,
+# servers included
+"aqua:go-task/task" = "latest"
 {{- if ne .role "server" }}
 node = "latest"
 erlang = ["29", "28.5.0", "27"]
