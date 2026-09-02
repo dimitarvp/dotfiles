@@ -12,3 +12,7 @@ scripts/rustic_backup.exclusions
 # lane, all three machines migrated
 scripts/sync_to_robeast
 scripts/sync_from_robeast
+# brew-only PATH guards for ruby/openjdk — both tools left brew (mise owns any
+# future ruby/java, and mise activate handles PATH)
+.zsh/languages/ruby.zsh
+.zsh/languages/java.zsh

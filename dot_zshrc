@@ -22,11 +22,9 @@ source $HOME/.zsh/programs/atuin.zsh
 
 source $HOME/.zsh/languages/erlang.zsh
 source $HOME/.zsh/languages/elixir.zsh
-source $HOME/.zsh/languages/java.zsh
 source $HOME/.zsh/languages/golang.zsh
 source $HOME/.zsh/languages/rust.zsh
 source $HOME/.zsh/languages/ocaml.zsh
-source $HOME/.zsh/languages/ruby.zsh
 source $HOME/.zsh/languages/python.zsh
 
 source $HOME/.zsh/programs/direnv.zsh
