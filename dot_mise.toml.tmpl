@@ -5,6 +5,9 @@ go = "latest"
 # go-task runs the update taskfiles (update_via_gotask) on every machine,
 # servers included
 "aqua:go-task/task" = "latest"
+# yt-dlp everywhere (s1 included): the standalone release build via the github
+# backend replaces the root-owned /usr/local/bin copies and the OS packages
+yt-dlp = "latest"
 {{- if ne .role "server" }}
 node = "latest"
 erlang = ["29", "28.5.0", "27"]
@@ -19,20 +22,57 @@ rebar = "latest"
 "github:Ataraxy-Labs/inspect" = "latest"
 # npm tools via the mise npm backend, moved off brew-node (prettier's tailwind
 # plugin is NOT here on purpose — it is bin-less and resolves per-project)
-"npm:repomix" = "latest"
-"npm:typescript" = "latest"
-"npm:prettier" = "latest"
-"npm:@redocly/cli" = "latest"
-"npm:http-server" = "latest"
+# npm tools keep a 24h release delay (see [settings] minimum_release_age)
+"npm:repomix" = { version = "latest", minimum_release_age = "24h" }
+"npm:typescript" = { version = "latest", minimum_release_age = "24h" }
+"npm:prettier" = { version = "latest", minimum_release_age = "24h" }
+"npm:@redocly/cli" = { version = "latest", minimum_release_age = "24h" }
+"npm:http-server" = { version = "latest", minimum_release_age = "24h" }
 # pnpm rides the npm backend on purpose: 11+ ships no darwin/amd64 standalone
 # binary, but the npm dist is pure JS on node — latest lands everywhere
-"npm:pnpm" = "latest"
+"npm:pnpm" = { version = "latest", minimum_release_age = "24h" }
 {{- if ne .chezmoi.os "darwin" }}
 "aqua:remoteoss/dexter" = "latest"
 {{- end }}
 {{- if eq .chezmoi.os "darwin" }}
 # brew 6 builds no x86_64 bottles anymore; neovim comes from GitHub release builds
 "aqua:neovim/neovim" = "latest"
+# brew exodus (Intel = Homebrew tier 3, every bump compiles): Go/Rust CLIs come
+# from release binaries (aqua/ubi), Python CLIs from uv-managed venvs (pipx
+# backend). Linux keeps its OS-packager copies until the Linux wave.
+fzf = "latest"
+gh = "latest"
+lazygit = "latest"
+lazydocker = "latest"
+yq = "latest"
+rclone = "latest"
+direnv = "latest"
+dive = "latest"
+gdu = "latest"
+duf = "latest"
+fx = "latest"
+gron = "latest"
+ctop = "latest"
+curlie = "latest"
+dbmate = "latest"
+miller = "latest"
+peco = "latest"
+xh = "latest"
+"ubi:exercism/cli" = { version = "latest", exe = "exercism" }
+"ubi:variadico/noti" = "latest"
+"ubi:akavel/up" = "latest"
+"ubi:kkdai/youtube" = { version = "latest", exe = "youtubedr" }
+"ubi:dalance/procs" = "latest"
+"ubi:Kampfkarren/selene" = "latest"
+"pipx:csvkit" = "latest"
+"pipx:diffoscope" = "latest"
+"pipx:pgcli" = "latest"
+"pipx:streamlink" = "latest"
+"pipx:you-get" = "latest"
+"pipx:asciidoc" = "latest"
+"pipx:git-filter-repo" = "latest"
+"pipx:jc" = "latest"
+"npm:esbuild" = { version = "latest", minimum_release_age = "24h" }
 {{- end }}
 {{- end }}
 {{- if ne .role "server" }}
@@ -67,6 +107,10 @@ idiomatic_version_file_enable_tools = ["node"]
 # prune) poisons child processes incl. mise's own post-install `go version`
 # check (how robeast's 1.27 upgrade blew up). go self-derives GOROOT.
 go_set_goroot = false
+# mise's own default is a 24h "supply-chain" delay on new versions; this is a
+# dev fleet and new tool versions are wanted the day they ship. The npm tools
+# keep the 24h per-tool (npm is the one ecosystem with a poisoned-release record).
+minimum_release_age = "0s"
 
 [tasks.converge]
 description = "Install, upgrade, and prune tools"
