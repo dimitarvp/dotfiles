@@ -188,12 +188,6 @@
       "channel": "latest"
     },
     {
-      "name": "kopia",
-      "import_path": "github.com/kopia/kopia",
-      "version": "v0.23.0",
-      "channel": "latest"
-    },
-    {
       "name": "lux",
       "import_path": "github.com/iawia002/lux",
       "version": "v0.24.1",
