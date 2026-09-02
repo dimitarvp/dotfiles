@@ -3,6 +3,7 @@ s1
 
 {{ if ne .chezmoi.os "darwin" }}
 scripts/extract_safari_bookmarks
+.zprofile
 {{ end }}
 
 {{ if eq .role "server" }}

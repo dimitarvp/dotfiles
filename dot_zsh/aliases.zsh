@@ -31,7 +31,6 @@ alias rmv='rm -rfv'
 if is_macos; then
   alias ldd='otool -L'
   alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
-  alias bri='ddcctl -d 1 -b'  # monitor brightness via ddcctl
 
   # Prefer Homebrew versions
   [[ -x "$HOMEBREW_PREFIX/bin/vim" ]] && alias vim="$HOMEBREW_PREFIX/bin/vim"

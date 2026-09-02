@@ -23,6 +23,13 @@ pandoc = "latest"
 rebar = "latest"
 # serena MCP server — python pinned to 3.13 exactly like the old uv lane did
 "pipx:serena-agent" = { version = "latest", uvx_args = "--python 3.13" }
+# unison for wsync — one release build on every sync peer (version parity);
+# ubi cannot pick between the macos/ubuntu assets, the github backend can
+{{- if eq .chezmoi.os "darwin" }}
+"github:bcpierce00/unison" = { version = "latest", asset_pattern = "unison-*-macos-x86-64.tar.gz" }
+{{- else }}
+"github:bcpierce00/unison" = { version = "latest", asset_pattern = "unison-*-ubuntu-*-x86_64-static.tar.gz" }
+{{- end }}
 "aqua:google-antigravity/antigravity-cli" = "latest"
 # kopia = checkpoint/backup infra; mise tracks upstream releases directly
 # (Manjaro lags ~2wk, Debian has no package, brew lags days). Single fleet lane —
@@ -85,6 +92,9 @@ xh = "latest"
 "pipx:glances" = "latest"
 "pipx:visidata" = "latest"
 "npm:esbuild" = { version = "latest", minimum_release_age = "24h" }
+# the interactive python3 (replaces three python.org framework installs;
+# brew's python@3.14 stays a formula dependency, uv brings its own for tools)
+python = "latest"
 {{- end }}
 {{- end }}
 {{- if ne .role "server" }}
