@@ -8,13 +8,13 @@ go = "latest"
 # yt-dlp everywhere (s1 included): the standalone release build via the github
 # backend replaces the root-owned /usr/local/bin copies and the OS packages
 yt-dlp = "latest"
-# gallery-dl everywhere via the pipx backend (uv is the engine on workstations;
-# s1 has no uv, so it gets a standalone pipx + system python3). Its GitHub
-# releases carry no binaries anymore — the old curl-the-.bin task fetched a 404.
+# uv everywhere, mise-managed: the engine behind every pipx: entry (mise hands
+# its own uv to the backend), and the interactive uv. The installer/pipx copies
+# it replaced were never updated by any lane (robeast sat on 0.9.26 for months).
+uv = "latest"
+# gallery-dl everywhere via the pipx backend. Its GitHub releases carry no
+# binaries anymore — the old curl-the-.bin task fetched a 404 page.
 "pipx:gallery-dl" = "latest"
-{{- if eq .role "server" }}
-pipx = "latest"
-{{- end }}
 {{- if ne .role "server" }}
 node = "latest"
 erlang = ["29", "28.5.0", "27"]
