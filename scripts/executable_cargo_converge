@@ -9,9 +9,11 @@
 # The source of truth is always ~/.config/cargo-crates/crates.conf (managed by chezmoi)
 #
 # Config lines are crate names; a line may pin a version as name@version
-# (needed for prerelease-only crates, which plain cargo install refuses).
-# Pinned crates are installed at exactly that version and re-pinned after
-# the update-all phase if it moved them.
+# (needed for prerelease-only crates, which plain cargo install refuses), or
+# ask for name@newest: the newest version published on crates.io, pre-releases
+# included (a moving project followed through its alphas). Both kinds are
+# installed at exactly that version and re-pinned after the update-all phase
+# if it moved them; @newest is resolved once per run via the crates.io API.
 #
 # Failures are collected and reported at the end; one failing crate won't stop the rest.
 
@@ -44,10 +46,30 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 	exit 1
 fi
 
-# Get sorted list of configured crate names (pins stripped) + the pin map
+# Get sorted list of configured crate names (pins stripped) + the pin map.
+# name@newest resolves to the newest published version, pre-releases included
+# (crates.io's max_version skips yanked versions); if crates.io cannot be
+# reached the crate is left as it is and reported as a failure.
 typeset -A pins
+newest_version() {
+	curl -fsS --max-time 20 -A 'cargo_converge (dimitarvp dotfiles)' \
+		"https://crates.io/api/v1/crates/$1" | jq -r '.crate.max_version // empty'
+}
 while IFS= read -r line; do
-	[[ "$line" == *@* ]] && pins[${line%%@*}]="${line#*@}"
+	[[ "$line" == *@* ]] || continue
+	crate="${line%%@*}"
+	spec="${line#*@}"
+	if [[ "$spec" == "newest" ]]; then
+		if ver=$(newest_version "$crate") && [[ -n "$ver" ]]; then
+			echo "[NEWEST] $crate -> $ver (crates.io max_version)"
+			pins[$crate]="$ver"
+		else
+			echo "[FAILED] $crate: could not resolve @newest from crates.io"
+			install_failures+=("$crate (resolve @newest)")
+		fi
+	else
+		pins[$crate]="$spec"
+	fi
 done <"$CONFIG_FILE"
 configured=$(sed 's/@.*//' "$CONFIG_FILE" | sort)
 configured_count=$(echo "$configured" | grep -c . || echo 0)
