@@ -16,3 +16,8 @@ scripts/sync_from_robeast
 # future ruby/java, and mise activate handles PATH)
 .zsh/languages/ruby.zsh
 .zsh/languages/java.zsh
+
+# rsync-era claude sync mirrors: klodsync + the sync_to/sync_from pair own the
+# lane; the source files left the repo, the applied copies go on apply
+scripts/sync_claude_to_robeast
+scripts/sync_claude_from_robeast
