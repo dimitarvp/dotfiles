@@ -186,7 +186,7 @@ $INSTALL \
 
 # ==== Phase 11: AUR packages ====
 
-$INSTALL 1password earthly-bin exercism-bin nbfc-linux noti repomix semgrep-bin \
+$INSTALL 1password earthly-bin exercism-bin nbfc-linux noti repomix \
 	slack-desktop sublime-text-4 tabula tailscaledesktop weasis-bin
 
 # Deliberate orphans — installed by hand, intentionally NOT declared here:
