@@ -21,3 +21,7 @@ scripts/sync_from_robeast
 # lane; the source files left the repo, the applied copies go on apply
 scripts/sync_claude_to_robeast
 scripts/sync_claude_from_robeast
+
+# unison: mise (github:bcpierce00/unison) is the one owner; the chezmoi
+# external that also delivered it is gone, the applied copy goes on apply
+.local/bin/unison
