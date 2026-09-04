@@ -1,0 +1,23 @@
+#!/bin/sh
+# Remove packages nothing depends on any more, repeating until the graph is
+# clean: removing one layer can orphan the next. Runs before the system
+# upgrade. Keepers are marked with `pacman -D --asexplicit`.
+
+command -v pacman >/dev/null 2>&1 || {
+	echo "pacman_orphan_sweep: pacman not found on this machine" >&2
+	exit 1
+}
+
+pass=1
+while [ "$pass" -le 5 ]; do
+	# -Qdtq exits 1 when there are no orphans: the clean case, not a failure
+	orphans=$(pacman -Qdtq 2>/dev/null || true)
+	[ -z "$orphans" ] && exit 0
+	echo ">>> orphan sweep pass $pass — removing:"
+	echo "$orphans"
+	# shellcheck disable=SC2086 # one package per word, straight from pacman
+	sudo pacman -Rns --noconfirm $orphans || exit 1
+	pass=$((pass + 1))
+done
+echo ">>> orphan sweep: orphans remain after 5 passes, inspect by hand" >&2
+exit 0
