@@ -12,7 +12,6 @@ Thumbs.db
 _build/
 deps/
 cover/
-doc/
 .elixir_ls/
 .expert/
 .lexical/
@@ -42,9 +41,6 @@ build/
 *.js.map
 *.css.map
 *.min.css.map
-yarn.lock
-composer.lock
-poetry.lock
 
 # Go build artifacts (binaries have no extension — delete manually)
 
@@ -54,9 +50,6 @@ poetry.lock
 *.so
 *.dll
 *.zwc
-
-# Editor / IDE
-.vscode/
 
 # Caches
 .cache/
