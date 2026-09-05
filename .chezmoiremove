@@ -25,3 +25,6 @@ scripts/sync_claude_from_robeast
 # unison: mise (github:bcpierce00/unison) is the one owner; the chezmoi
 # external that also delivered it is gone, the applied copy goes on apply
 .local/bin/unison
+
+# the frozen `mise activate` snapshot: activation is evaluated live now
+.cache/zsh/mise.zsh
