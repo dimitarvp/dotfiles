@@ -1,6 +1,13 @@
-# Exclusions for rsync between dev workstations.
-# Include .git (need full history), PDFs, PNGs, HTMLs.
-# Exclude only build artifacts and regenerable content.
+# Exclusions for treesync (unison) between the workstations and the hub.
+# Every line is a NAME. It matches a file or directory with that name at ANY
+# depth under ~/w, ~/kod and ~/ow, regardless of git: a git-tracked file with
+# one of these names never leaves the machine that has it, and the checkouts on
+# the other machines show it as deleted. Before adding a name, check that no
+# repo tracks files by it (git ls-files across the synced trees). Before naming
+# a result file that must travel, check it against this list. A pattern with a
+# slash inside is not supported; treesync refuses it.
+# Include .git (full history), PDFs, PNGs, HTMLs. Exclude only build artifacts
+# and regenerable content.
 
 # OS junk
 .DS_Store
