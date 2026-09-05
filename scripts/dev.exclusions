@@ -65,3 +65,6 @@ tmp/
 
 # Live per-machine session state — churns mid-transfer, meaningless elsewhere
 .watch_cursors/
+
+# Per-machine trash: trash.sh parks superseded files here; never travels
+.trash/
