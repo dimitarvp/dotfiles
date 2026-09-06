@@ -64,6 +64,27 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now tz-update.timer
 sudo systemctl enable tz-update-resume.service
 
+# Memory guard. WSL2 has no host-side protection against a runaway process: a
+# 19 GB beam.smp took the VM down on 2026-09-06 after thrashing the disk swap.
+# earlyoom kills the largest process at 5% free memory AND 5% free swap, before
+# the thrash; zram-tools provides the only swap (half of RAM, compressed).
+# systemd-zram-generator is NOT usable here: systemd-detect-virt reports WSL as
+# a container and the generator exits silently. The disk swap is dropped with
+# `swap=0` in C:\Users\<user>\.wslconfig (Windows side, needs `wsl --shutdown`).
+$INSTALL earlyoom zram-tools
+sudo tee /etc/default/earlyoom >/dev/null <<'GUARDEOF'
+# SIGTERM the largest process at 5% free memory AND 5% free swap; SIGKILL at 2.5%
+EARLYOOM_ARGS="-m 5 -s 5 -r 3600"
+GUARDEOF
+sudo tee /etc/default/zramswap >/dev/null <<'GUARDEOF'
+# the WSL2 kernel ships only the lzo/lzo-rle zram backends (no lz4, no zstd)
+ALGO=lzo-rle
+PERCENT=50
+PRIORITY=100
+GUARDEOF
+sudo systemctl enable earlyoom zramswap
+sudo systemctl restart earlyoom zramswap
+
 # ==== Phase 2: Core bootstrap tools ====
 
 $INSTALL \
