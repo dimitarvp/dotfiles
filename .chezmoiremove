@@ -28,3 +28,8 @@ scripts/sync_claude_from_robeast
 
 # the frozen `mise activate` snapshot: activation is evaluated live now
 .cache/zsh/mise.zsh
+
+# mise reads ~/.mise.toml as a per-directory file: it is invisible from any
+# directory outside $HOME (yt-dlp on s1 died inside /data). The config now
+# lives at ~/.config/mise/config.toml, the global path loaded everywhere.
+.mise.toml

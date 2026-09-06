@@ -89,7 +89,7 @@ Four configs, all templated for per-machine font size. Font: UbuntuMono Nerd Fon
 
 | File | Purpose |
 |------|---------|
-| `dot_mise.toml` | Erlang 27+28, Elixir 1.18+1.19, rebar, converge task |
+| `private_dot_config/mise/config.toml` | Every mise-managed tool, one owner per tool, the converge task |
 | `dot_cargo/config.toml` | Sparse registry, native CPU, mold (Linux), LTO release |
 | `dot_npmrc` | `ignore-scripts=true` |
 | `dot_psqlrc` | Pager off |
