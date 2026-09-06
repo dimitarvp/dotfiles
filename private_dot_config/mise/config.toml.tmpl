@@ -135,6 +135,14 @@ go_set_goroot = false
 # dev fleet and new tool versions are wanted the day they ship. The npm tools
 # keep the 24h per-tool (npm is the one ecosystem with a poisoned-release record).
 minimum_release_age = "0s"
+{{- if eq .chezmoi.os "linux" }}
+# Precompiled OTP builds (Bob, builds.hex.pm) exist for Ubuntu targets only. On
+# Manjaro/Debian mise must be told which target, or it silently compiles OTP
+# from source for hours. ubuntu-24.04 = glibc 2.39 floor, fine on every rolling
+# distro here; the crypto NIF links the local libssl 3.x at runtime (probed
+# 2026-09-06). macOS takes erlef/otp_builds, no setting needed.
+erlang.precompiled_os = "ubuntu-24.04"
+{{- end }}
 
 [tasks.converge]
 description = "Install, upgrade, and prune tools"
