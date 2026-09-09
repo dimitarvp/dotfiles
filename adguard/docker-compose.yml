@@ -1,4 +1,4 @@
-# AdGuard Home blue/green with keepalived VIP — parallel to PiHole (untouched).
+# AdGuard Home blue/green with keepalived VIP — the LAN DNS (PiHole retired 2026-08-23, removed 2026-09-09).
 # Containers live on macvlan (own L2 IPs) because PiHole's docker-proxy owns
 # host 0.0.0.0:53/80/443. Router redirects target the VIPs only.
 # Two macvlans since 2026-08-29: aghnet (net1/cooolbox via enp1s0, VIP .96)

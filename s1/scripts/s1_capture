@@ -1,8 +1,7 @@
 #!/bin/bash
 # s1_capture — nightly capture of s1's configuration into ZFS (misc/s1config),
 # snapshotting only when something actually changed (kopia-style skip).
-# Runs as root via the s1_capture systemd timer, 00:45 nightly, Persistent
-# (must read /etc fully); router fetches run as dimi
+# Runs from root's crontab (must read /etc fully); router fetches run as dimi
 # (his ssh config + dimi_master key). Restore: /data/misc/backups/s1config/RESTORE.md
 set -euo pipefail
 
@@ -24,6 +23,7 @@ zfs list "$DS" >/dev/null 2>&1 || fail "dataset $DS missing"
 mkdir -p "$CUR/etc" "$CUR/home" "$CUR/state" "$CUR/routers/cooolbox" "$CUR/routers/bulsatcom"
 
 CHANGED=""
+MISSED=""
 
 # Checksum-based rsync: mtime-only churn (adjtime and friends) never counts
 # as a change; -O ignores directory-time noise.
@@ -36,7 +36,7 @@ sync_tree() { # src dst [extra rsync args...]
 }
 
 sync_tree /etc/ "$CUR/etc/" --exclude=/mtab --exclude=/adjtime --exclude=/.updated
-for p in adguard pihole scripts .ssh .config .zshrc .zsh_history .tool-versions; do
+for p in adguard scripts .ssh .config .zshrc .zsh_history .tool-versions; do
 	[ -e "/home/dimi/$p" ] && sync_tree "/home/dimi/$p" "$CUR/home/"
 done
 
@@ -70,38 +70,58 @@ manifest crontab_root.txt < <(crontab -l 2>/dev/null)
 manifest docker_ps.txt < <(docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null | sort)
 manifest zpool_status.txt < <(zpool status misc)
 
-# Routers: refetch the binary backup only when the normalized export changed.
+# Routers: best-effort. A router that cannot be reached tonight (ssh hiccup,
+# reboot, upgrade) must never block the snapshot of s1's own config: the
+# previous export and backup stay in place, the miss is logged and written to
+# LAST_RUN, and tomorrow's run retries. The export is replaced only after the
+# binary backup was fetched, so a half-done fetch is retried, not forgotten.
 # Verified 2026-08-29: the '# <date> by RouterOS' line is the ONLY volatile
 # part of back-to-back exports on both routers.
 router() { # name
-	local r=$1 tmp btmp raw="$CUR/routers/$1/export.rsc"
+	local r=$1 tmp btmp raw="$CUR/routers/$1/export.rsc" try
 	tmp=$(mktemp)
-	HOME=/home/dimi runuser -u dimi -- ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 "$r" '/export' 2>/dev/null |
-		rg -v '^\*\* ' >"$tmp" || true
-	[ -s "$tmp" ] || fail "empty export from $r"
+	for try in 1 2 3; do
+		HOME=/home/dimi runuser -u dimi -- ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 "$r" '/export' 2>/dev/null |
+			rg -v '^\*\* ' >"$tmp" || true
+		[ -s "$tmp" ] && break
+		sleep 20
+	done
+	if [ ! -s "$tmp" ]; then
+		rm -f "$tmp"
+		log "WARNING: empty export from $r after 3 tries - previous copy kept"
+		MISSED="${MISSED:+$MISSED,}$r"
+		return 0
+	fi
 	if cmp -s <(rg -v '^# .* by RouterOS' "$tmp") <(rg -v '^# .* by RouterOS' "$raw" 2>/dev/null); then
 		rm -f "$tmp"
-	else
+		return 0
+	fi
+	btmp="/tmp/s1capture_$r.$$.backup"
+	if HOME=/home/dimi runuser -u dimi -- ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new "$r" '/system backup save name=s1capture' >/dev/null 2>&1 &&
+		HOME=/home/dimi runuser -u dimi -- scp -q -o BatchMode=yes -o StrictHostKeyChecking=accept-new "$r:s1capture.backup" "$btmp"; then
 		mv "$tmp" "$raw"
-		btmp="/tmp/s1capture_$r.$$.backup"
-		HOME=/home/dimi runuser -u dimi -- ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new "$r" '/system backup save name=s1capture' >/dev/null 2>&1
-		HOME=/home/dimi runuser -u dimi -- scp -q -o BatchMode=yes -o StrictHostKeyChecking=accept-new "$r:s1capture.backup" "$btmp" || fail "backup fetch from $r"
 		mv "$btmp" "$CUR/routers/$r/config.backup"
 		CHANGED="${CHANGED:+$CHANGED+}router-$r"
+	else
+		rm -f "$tmp" "$btmp"
+		log "WARNING: config backup fetch from $r failed - export not updated, retried tomorrow"
+		MISSED="${MISSED:+$MISSED,}$r"
 	fi
 	return 0
 }
 router cooolbox
 router bulsatcom
 
+status="OK"
+[ -n "$MISSED" ] && status="OK-PARTIAL routers-missed=$MISSED"
 if [ -n "$CHANGED" ]; then
 	snap="auto-$(date +%F_%H%M%S)"
 	zfs snapshot "$DS@$snap"
 	zfs list -H -t snapshot -o name -s creation "$DS" | rg "^$DS@auto-" | head -n -"$KEEP" |
 		while read -r s; do zfs destroy "$s"; done
-	log "changed ($CHANGED) — snapshot $snap"
-	printf '%s OK changed=%s snapshot=%s\n' "$(date -Is)" "$CHANGED" "$snap" >"$ROOT/LAST_RUN"
+	log "changed ($CHANGED) - snapshot $snap${MISSED:+ (routers missed: $MISSED)}"
+	printf '%s %s changed=%s snapshot=%s\n' "$(date -Is)" "$status" "$CHANGED" "$snap" >"$ROOT/LAST_RUN"
 else
-	log "no change — no snapshot"
-	printf '%s OK no-change\n' "$(date -Is)" >"$ROOT/LAST_RUN"
+	log "no change - no snapshot${MISSED:+ (routers missed: $MISSED)}"
+	printf '%s %s no-change\n' "$(date -Is)" "$status" >"$ROOT/LAST_RUN"
 fi

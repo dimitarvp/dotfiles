@@ -5,7 +5,7 @@ move the disks and `zpool import misc`, or from the old (still-alive) machine
 `zfs send -R misc/s1config@<snap> | ssh newbox zfs recv <pool>/s1config`.
 
 The capture layout: `current/etc` (all of /etc), `current/home` (adguard,
-pihole, scripts, .ssh, .config, shell files), `current/state` (package list,
+scripts, .ssh, .config, shell files), `current/state` (package list,
 enabled units, NM profiles, routing, crontabs, docker inventory),
 `current/routers` (both MikroTik exports + binary backups). `LAST_RUN` says
 when the capture last succeeded.
@@ -41,10 +41,8 @@ fresh machine precisely for this; flip it only at cutover.
    blue/green conf + query logs + .env with pinned tags), then at cutover:
    `cd ~/adguard && docker compose up -d`. Sidecar rule: after any agh-*
    recreate, force-recreate its keepalived sidecar.
-7. PiHole tree (`current/home/pihole`) back to ~/pihole — retired but kept as
-   revival insurance; do NOT start it.
-8. Routers (only if a router also died): upload `config.backup` via Winbox
+7. Routers (only if a router also died): upload `config.backup` via Winbox
    (full restore incl. keys) or paste `export.rsc` sections selectively.
-9. Verify battery: dig @192.168.1.96 t.co → 0.0.0.0; dig -b <wan2-ip>
+8. Verify battery: dig @192.168.1.96 t.co → 0.0.0.0; dig -b <wan2-ip>
    @192.168.2.1 t.co → 0.0.0.0; curl --interface <wan2-ip> ifconfig.me →
    bulsatcom public IP; nmcli networking connectivity → full.
