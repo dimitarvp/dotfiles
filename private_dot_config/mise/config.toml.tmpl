@@ -58,7 +58,9 @@ direnv = "latest"
 rclone = "latest"
 gron = "latest"
 xh = "latest"
-lnav = "latest"
+# lnav: upstream ships no x86_64 macOS build (arm64 only) — an actual blocker on the
+# Intel robeast, so this one line is restricted to linux (his rule 2026-09-09).
+lnav = { version = "latest", os = ["linux"] }
 {{- if ne .chezmoi.os "darwin" }}
 "aqua:remoteoss/dexter" = "latest"
 {{- end }}
