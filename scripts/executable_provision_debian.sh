@@ -184,7 +184,7 @@ mise install -y
 $INSTALL \
 	7zip ack aria2 asciidoc atomicparsley \
 	bmon borgbackup btop csvkit \
-	esbuild ffmpeg fio \
+	ffmpeg fio \
 	git-filter-repo git-lfs gnuplot graphviz \
 	htop httrack \
 	jc jnettop lbzip2 \

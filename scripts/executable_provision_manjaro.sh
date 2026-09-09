@@ -168,7 +168,7 @@ $INSTALL \
 	bfg bloaty bmon btop cmatrix csvkit \
 	darkhttpd diff-so-fancy difftastic \
 	docker docker-buildx docker-compose dool duckdb \
-	esbuild ffmpeg fio \
+	ffmpeg fio \
 	git-filter-repo git-lfs glances glow gnuplot graphviz \
 	hey hstr htop httrack imgcat \
 	jc jnettop lbzip2 \
