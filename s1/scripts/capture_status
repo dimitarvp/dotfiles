@@ -1,0 +1,25 @@
+#!/bin/bash
+# capture_status — last night's s1_capture result, surfaced by the update runs.
+# Prints the LAST_RUN line and exits 1 when the status is anything but OK
+# (FAILED, OK-PARTIAL) or when the line is older than 26 hours (the timer did
+# not fire). Nothing is sent anywhere: the update run's summary is the only
+# place this shows up, by Dimi's choice (2026-09-09).
+set -euo pipefail
+
+f=/data/misc/backups/s1config/LAST_RUN
+line=$(sudo -n cat "$f" 2>/dev/null) || {
+	echo "nightly capture: cannot read $f"
+	exit 1
+}
+echo "nightly capture: $line"
+ts=${line%% *}
+status=$(printf '%s' "$line" | awk '{print $2}')
+age=$(($(date +%s) - $(date -d "$ts" +%s)))
+[ "$status" = OK ] || {
+	echo "nightly capture: NOT OK ($status)"
+	exit 1
+}
+[ "$age" -le $((26 * 3600)) ] || {
+	echo "nightly capture: stale, last run $((age / 3600)) h ago"
+	exit 1
+}
