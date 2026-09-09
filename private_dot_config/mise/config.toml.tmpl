@@ -55,6 +55,15 @@ peco = "latest"
 "pipx:jc" = "latest"
 "pipx:glances" = "latest"
 "pipx:visidata" = "latest"
+# sync + backup tools live on servers too (Dimi 2026-09-09): unison for treesync
+# (one release build on every peer; the asset name differs per OS, hence the
+# platform pick) and kopia (single fleet lane, no pacman/AUR/brew copies).
+{{- if eq .chezmoi.os "darwin" }}
+"github:bcpierce00/unison" = { version = "latest", asset_pattern = "unison-*-macos-x86-64.tar.gz" }
+{{- else }}
+"github:bcpierce00/unison" = { version = "latest", asset_pattern = "unison-*-ubuntu-*-x86_64-static.tar.gz" }
+{{- end }}
+"aqua:kopia/kopia" = "latest"
 {{- if ne .role "server" }}
 node = "latest"
 erlang = ["29", "28.5.0", "27"]
@@ -63,21 +72,10 @@ pandoc = "latest"
 rebar = "latest"
 # serena MCP server — python pinned to 3.13 exactly like the old uv lane did
 "pipx:serena-agent" = { version = "latest", uvx_args = "--python 3.13" }
-# unison for wsync — one release build on every sync peer (version parity);
-# ubi cannot pick between the macos/ubuntu assets, the github backend can
-{{- if eq .chezmoi.os "darwin" }}
-"github:bcpierce00/unison" = { version = "latest", asset_pattern = "unison-*-macos-x86-64.tar.gz" }
-{{- else }}
-"github:bcpierce00/unison" = { version = "latest", asset_pattern = "unison-*-ubuntu-*-x86_64-static.tar.gz" }
-{{- end }}
 "aqua:google-antigravity/antigravity-cli" = "latest"
 # neovim from the upstream release builds on every workstation: distro packages lag
 # (Debian sid sat on 0.12.4 for 17 days), brew builds no Intel bottles.
 "aqua:neovim/neovim" = "latest"
-# kopia = checkpoint/backup infra; mise tracks upstream releases directly
-# (Manjaro lags ~2wk, Debian has no package, brew lags days). Single fleet lane —
-# no pacman/AUR/brew copies allowed.
-"aqua:kopia/kopia" = "latest"
 "github:Ataraxy-Labs/inspect" = "latest"
 # npm tools via the mise npm backend, moved off brew-node (prettier's tailwind
 # plugin is NOT here on purpose — it is bin-less and resolves per-project)
