@@ -177,7 +177,7 @@ $INSTALL \
 	pkgfile plumber pngquant poppler procs progress pspg pv \
 	python-pipx python-pygments \
 	qemu-full rclone rename ruby \
-	sc-im scdoc selene shellcheck shfmt smartmontools source-highlight \
+	sc-im scdoc shellcheck shfmt smartmontools source-highlight \
 	streamlink swagger-codegen syncthing \
 	the_silver_searcher tigervnc timeshift timeshift-autosnap-manjaro \
 	tldr tree tree-sitter ttyplot typescript \
