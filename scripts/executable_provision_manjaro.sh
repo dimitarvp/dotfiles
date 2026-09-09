@@ -180,7 +180,7 @@ $INSTALL \
 	sc-im scdoc selene shellcheck shfmt smartmontools source-highlight \
 	streamlink swagger-codegen syncthing \
 	the_silver_searcher tigervnc timeshift timeshift-autosnap-manjaro \
-	timg tldr tree tree-sitter ttyplot typescript \
+	tldr tree tree-sitter ttyplot typescript \
 	ugrep up visidata w3m wget wrk xh xmlstarlet \
 	youtubedr yq yt-dlp zenith zpaq
 

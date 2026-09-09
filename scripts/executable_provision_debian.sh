@@ -196,7 +196,7 @@ $INSTALL \
 	rclone rename ruby ruby-dev \
 	sc-im shellcheck shfmt smartmontools sshpass \
 	syncthing \
-	silversearcher-ag timg tealdeer tree ttyplot \
+	silversearcher-ag tealdeer tree ttyplot \
 	ugrep visidata w3m wget wrk xh xmlstarlet \
 	yq yt-dlp zpaq
 # NOTE: bfg, curlie, darkhttpd, dbmate, duckdb, fx not in Debian repos
