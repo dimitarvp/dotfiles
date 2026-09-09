@@ -181,7 +181,7 @@ $INSTALL \
 	streamlink swagger-codegen syncthing \
 	the_silver_searcher tigervnc timeshift timeshift-autosnap-manjaro \
 	tldr tree tree-sitter ttyplot typescript \
-	ugrep up visidata w3m wget wrk xh xmlstarlet \
+	ugrep up visidata w3m wget wrk xmlstarlet \
 	youtubedr yq yt-dlp zenith zpaq
 
 # ==== Phase 11: AUR packages ====

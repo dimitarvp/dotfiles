@@ -196,7 +196,7 @@ $INSTALL \
 	sc-im shellcheck shfmt smartmontools sshpass \
 	syncthing \
 	silversearcher-ag tealdeer tree ttyplot \
-	ugrep visidata w3m wget wrk xh xmlstarlet \
+	ugrep visidata w3m wget wrk xmlstarlet \
 	yq yt-dlp zpaq
 # NOTE: bfg, curlie, darkhttpd, dbmate, duckdb, fx not in Debian repos
 # curlie, dbmate, fx available via gup_converge (Go tools)
