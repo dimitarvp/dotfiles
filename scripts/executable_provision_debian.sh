@@ -197,7 +197,7 @@ $INSTALL \
 	syncthing \
 	silversearcher-ag tealdeer tree ttyplot \
 	ugrep visidata w3m wget wrk xmlstarlet \
-	yq yt-dlp zpaq
+	yt-dlp zpaq
 # NOTE: bfg, darkhttpd, duckdb not in Debian repos
 # the Go/Rust CLIs (fzf, rclone, lazygit, …) come from mise: one fleet lane
 

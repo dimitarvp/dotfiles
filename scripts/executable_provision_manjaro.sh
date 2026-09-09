@@ -182,7 +182,7 @@ $INSTALL \
 	the_silver_searcher tigervnc timeshift timeshift-autosnap-manjaro \
 	tldr tree tree-sitter ttyplot typescript \
 	ugrep visidata w3m wget wrk xmlstarlet \
-	yq yt-dlp zenith zpaq
+	yt-dlp zenith zpaq
 
 # ==== Phase 11: AUR packages ====
 
