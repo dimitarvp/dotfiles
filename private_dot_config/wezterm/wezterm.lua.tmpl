@@ -43,7 +43,16 @@ config.colors = {
 config.default_cursor_style = 'SteadyBlock'
 
 -- Window
+{{- if eq .chezmoi.os "linux" }}
+-- Linux/Wayland: WezTerm builds since 2026-05 draw their own title bar for
+-- RESIZE (upstream issue #7840) and push the bottom rows off screen. NONE
+-- hides that frame and lets the compositor decorate; a KWin window rule
+-- ("No titlebar and frame", window class containing "wezterm") removes the
+-- compositor's bar. X11 is not an option here (security ruling).
+config.window_decorations = 'NONE'
+{{- else }}
 config.window_decorations = 'RESIZE'
+{{- end }}
 config.window_padding = { left = 0, right = 0, top = 0, bottom = 0 }
 
 -- Tabs
