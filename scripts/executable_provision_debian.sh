@@ -187,7 +187,7 @@ $INSTALL \
 	esbuild ffmpeg fio \
 	git-filter-repo git-lfs gnuplot graphviz \
 	htop httrack \
-	jc jnettop lbzip2 lnav \
+	jc jnettop lbzip2 \
 	lua5.4 luajit luarocks mediainfo miller moreutils multitail \
 	ncdu nmap p7zip-full parallel pdfgrep pigz \
 	pngquant progress pspg pv \

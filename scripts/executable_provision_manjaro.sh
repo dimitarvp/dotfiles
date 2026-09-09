@@ -171,7 +171,7 @@ $INSTALL \
 	esbuild ffmpeg fio fx gdu \
 	git-filter-repo git-lfs glances glow gnuplot graphviz \
 	hey hstr htop httrack imgcat \
-	jc jnettop lazydocker lazygit lbzip2 lnav \
+	jc jnettop lazydocker lazygit lbzip2 \
 	lua luajit luarocks mediainfo miller moreutils multitail \
 	ncdu nmap openapi-generator opensnitch 7zip parallel pdfgrep pigz \
 	pkgfile plumber pngquant poppler procs progress pspg pv \
