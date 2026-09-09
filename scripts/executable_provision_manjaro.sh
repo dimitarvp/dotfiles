@@ -111,7 +111,7 @@ done
 # ==== Phase 3: Core bootstrap tools ====
 
 $INSTALL base-devel make gcc git cmake curl wget zsh vim neovim \
-	chezmoi fzy peco pick \
+	chezmoi fzy pick \
 	pkg-config pkgconf fop unzip xclip wl-clipboard bind \
 	inotify-tools extra/wxwidgets-gtk3 extra/webkit2gtk-4.1 \
 	extra/mold jemalloc jq python-pynvim
@@ -165,28 +165,28 @@ mise install -y
 
 $INSTALL \
 	ack aria2 asciidoc atomicparsley aws-cli-v2 aws-session-manager-plugin \
-	bfg bloaty bmon btop cmatrix csvkit ctop curlie \
-	darkhttpd dbmate diff-so-fancy difftastic dive \
-	docker docker-buildx docker-compose dool duckdb duf \
-	esbuild ffmpeg fio fx gdu \
+	bfg bloaty bmon btop cmatrix csvkit \
+	darkhttpd diff-so-fancy difftastic \
+	docker docker-buildx docker-compose dool duckdb \
+	esbuild ffmpeg fio \
 	git-filter-repo git-lfs glances glow gnuplot graphviz \
 	hey hstr htop httrack imgcat \
-	jc jnettop lazydocker lazygit lbzip2 \
-	lua luajit luarocks mediainfo miller moreutils multitail \
+	jc jnettop lbzip2 \
+	lua luajit luarocks mediainfo moreutils multitail \
 	ncdu nmap openapi-generator opensnitch 7zip parallel pdfgrep pigz \
-	pkgfile plumber pngquant poppler procs progress pspg pv \
+	pkgfile plumber pngquant poppler progress pspg pv \
 	python-pipx python-pygments \
 	qemu-full rename ruby \
 	sc-im scdoc shellcheck shfmt smartmontools source-highlight \
 	streamlink swagger-codegen syncthing \
 	the_silver_searcher tigervnc timeshift timeshift-autosnap-manjaro \
 	tldr tree tree-sitter ttyplot typescript \
-	ugrep up visidata w3m wget wrk xmlstarlet \
-	youtubedr yq yt-dlp zenith zpaq
+	ugrep visidata w3m wget wrk xmlstarlet \
+	yq yt-dlp zenith zpaq
 
 # ==== Phase 11: AUR packages ====
 
-$INSTALL 1password earthly-bin exercism-bin nbfc-linux noti repomix \
+$INSTALL 1password earthly-bin nbfc-linux repomix \
 	slack-desktop sublime-text-4 tabula tailscaledesktop weasis-bin
 
 # Deliberate orphans — installed by hand, intentionally NOT declared here:

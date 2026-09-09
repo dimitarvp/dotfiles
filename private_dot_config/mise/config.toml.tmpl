@@ -61,18 +61,8 @@ xh = "latest"
 # lnav: upstream ships no x86_64 macOS build (arm64 only) — an actual blocker on the
 # Intel robeast, so this one line is restricted to linux (his rule 2026-09-09).
 lnav = { version = "latest", os = ["linux"] }
-{{- if ne .chezmoi.os "darwin" }}
-"aqua:remoteoss/dexter" = "latest"
-{{- end }}
-{{- if eq .chezmoi.os "darwin" }}
-# brew 6 builds no x86_64 bottles anymore; neovim comes from GitHub release builds
-"aqua:neovim/neovim" = "latest"
-# brew exodus (Intel = Homebrew tier 3, every bump compiles): Go/Rust CLIs come
-# from release binaries (aqua/ubi), Python CLIs from uv-managed venvs (pipx
-# backend). Linux keeps its OS-packager copies until the Linux wave.
 lazygit = "latest"
 lazydocker = "latest"
-yq = "latest"
 dive = "latest"
 gdu = "latest"
 duf = "latest"
@@ -87,6 +77,16 @@ peco = "latest"
 "github:akavel/up" = "latest"
 "github:kkdai/youtube" = "latest"
 "github:dalance/procs" = "latest"
+{{- if ne .chezmoi.os "darwin" }}
+"aqua:remoteoss/dexter" = "latest"
+{{- end }}
+{{- if eq .chezmoi.os "darwin" }}
+# brew 6 builds no x86_64 bottles anymore; neovim comes from GitHub release builds
+"aqua:neovim/neovim" = "latest"
+# brew exodus (Intel = Homebrew tier 3, every bump compiles): Go/Rust CLIs come
+# from release binaries (aqua/ubi), Python CLIs from uv-managed venvs (pipx
+# backend). Linux keeps its OS-packager copies until the Linux wave.
+yq = "latest"
 "pipx:csvkit" = "latest"
 "pipx:diffoscope" = "latest"
 "pipx:pgcli" = "latest"

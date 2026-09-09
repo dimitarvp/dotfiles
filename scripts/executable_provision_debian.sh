@@ -188,7 +188,7 @@ $INSTALL \
 	git-filter-repo git-lfs gnuplot graphviz \
 	htop httrack \
 	jc jnettop lbzip2 \
-	lua5.4 luajit luarocks mediainfo miller moreutils multitail \
+	lua5.4 luajit luarocks mediainfo moreutils multitail \
 	ncdu nmap p7zip-full parallel pdfgrep pigz \
 	pngquant progress pspg pv \
 	pipx python3-pygments \
@@ -198,8 +198,8 @@ $INSTALL \
 	silversearcher-ag tealdeer tree ttyplot \
 	ugrep visidata w3m wget wrk xmlstarlet \
 	yq yt-dlp zpaq
-# NOTE: bfg, curlie, darkhttpd, dbmate, duckdb, fx not in Debian repos
-# curlie, dbmate, fx available via gup_converge (Go tools)
+# NOTE: bfg, darkhttpd, duckdb not in Debian repos
+# the Go/Rust CLIs (fzf, rclone, lazygit, …) come from mise: one fleet lane
 
 # Some older TLS peers/tools still need OpenSSL's legacy algorithms provider.
 $INSTALL openssl-provider-legacy
