@@ -89,7 +89,6 @@ sudo systemctl restart earlyoom zramswap
 
 $INSTALL \
 	build-essential make gcc git cmake curl wget zsh vim neovim \
-	\
 	pkg-config libssl-dev libclang-dev libwxgtk3.2-dev libwebkit2gtk-4.1-dev \
 	libncurses-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev \
 	libxml2-dev libxml2-utils unixodbc-dev autoconf m4 xsltproc fop default-jdk \
@@ -193,7 +192,7 @@ $INSTALL \
 	ncdu nmap p7zip-full parallel pdfgrep pigz \
 	pngquant progress pspg pv \
 	pipx python3-pygments \
-	rclone rename ruby ruby-dev \
+	rename ruby ruby-dev \
 	sc-im shellcheck shfmt smartmontools sshpass \
 	syncthing \
 	silversearcher-ag tealdeer tree ttyplot \

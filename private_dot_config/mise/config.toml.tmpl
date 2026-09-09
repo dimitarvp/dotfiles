@@ -55,6 +55,7 @@ rebar = "latest"
 # moved here from the darwin block once its apt/pacman copy was verified and removed.
 fzf = "latest"
 direnv = "latest"
+rclone = "latest"
 {{- if ne .chezmoi.os "darwin" }}
 "aqua:remoteoss/dexter" = "latest"
 {{- end }}
@@ -67,7 +68,6 @@ direnv = "latest"
 lazygit = "latest"
 lazydocker = "latest"
 yq = "latest"
-rclone = "latest"
 dive = "latest"
 gdu = "latest"
 duf = "latest"
