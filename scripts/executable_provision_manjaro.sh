@@ -164,24 +164,24 @@ mise install -y
 # ==== Phase 10: System CLI tools (non-Rust, non-Go — those are handled above) ====
 
 $INSTALL \
-	ack aria2 asciidoc atomicparsley aws-cli-v2 aws-session-manager-plugin \
-	bfg bloaty bmon btop cmatrix csvkit \
+	ack aria2 atomicparsley aws-cli-v2 aws-session-manager-plugin \
+	bfg bloaty bmon btop cmatrix \
 	darkhttpd diff-so-fancy difftastic \
 	docker docker-buildx docker-compose dool duckdb \
 	ffmpeg fio \
-	git-filter-repo git-lfs glances glow gnuplot graphviz \
+	git-lfs glow gnuplot graphviz \
 	hey hstr htop httrack imgcat \
-	jc jnettop lbzip2 \
+	jnettop lbzip2 \
 	lua luajit luarocks mediainfo moreutils multitail \
 	ncdu nmap openapi-generator opensnitch 7zip parallel pdfgrep pigz \
 	pkgfile plumber pngquant poppler progress pspg pv \
 	python-pipx python-pygments \
 	qemu-full rename ruby \
 	sc-im scdoc shellcheck shfmt smartmontools source-highlight \
-	streamlink swagger-codegen syncthing \
+	swagger-codegen syncthing \
 	the_silver_searcher tigervnc timeshift timeshift-autosnap-manjaro \
 	tldr tree tree-sitter ttyplot typescript \
-	ugrep visidata w3m wget wrk xmlstarlet \
+	ugrep w3m wget wrk xmlstarlet \
 	yt-dlp zenith zpaq
 
 # ==== Phase 11: AUR packages ====

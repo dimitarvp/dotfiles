@@ -182,12 +182,12 @@ mise install -y
 # ==== Phase 10: System CLI tools (non-Rust, non-Go) ====
 
 $INSTALL \
-	7zip ack aria2 asciidoc atomicparsley \
-	bmon borgbackup btop csvkit \
+	7zip ack aria2 atomicparsley \
+	bmon borgbackup btop \
 	ffmpeg fio \
-	git-filter-repo git-lfs gnuplot graphviz \
+	git-lfs gnuplot graphviz \
 	htop httrack \
-	jc jnettop lbzip2 \
+	jnettop lbzip2 \
 	lua5.4 luajit luarocks mediainfo moreutils multitail \
 	ncdu nmap p7zip-full parallel pdfgrep pigz \
 	pngquant progress pspg pv \
@@ -196,7 +196,7 @@ $INSTALL \
 	sc-im shellcheck shfmt smartmontools sshpass \
 	syncthing \
 	silversearcher-ag tealdeer tree ttyplot \
-	ugrep visidata w3m wget wrk xmlstarlet \
+	ugrep w3m wget wrk xmlstarlet \
 	yt-dlp zpaq
 # NOTE: bfg, darkhttpd, duckdb not in Debian repos
 # the Go/Rust CLIs (fzf, rclone, lazygit, …) come from mise: one fleet lane
