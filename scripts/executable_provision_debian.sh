@@ -89,7 +89,7 @@ sudo systemctl restart earlyoom zramswap
 
 $INSTALL \
 	build-essential make gcc git cmake curl wget zsh vim neovim \
-	direnv \
+	\
 	pkg-config libssl-dev libclang-dev libwxgtk3.2-dev libwebkit2gtk-4.1-dev \
 	libncurses-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libssh-dev \
 	libxml2-dev libxml2-utils unixodbc-dev autoconf m4 xsltproc fop default-jdk \

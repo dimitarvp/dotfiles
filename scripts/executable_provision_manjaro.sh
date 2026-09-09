@@ -111,7 +111,7 @@ done
 # ==== Phase 3: Core bootstrap tools ====
 
 $INSTALL base-devel make gcc git cmake curl wget zsh vim neovim \
-	chezmoi direnv fzy peco pick \
+	chezmoi fzy peco pick \
 	pkg-config pkgconf fop unzip xclip wl-clipboard bind \
 	inotify-tools extra/wxwidgets-gtk3 extra/webkit2gtk-4.1 \
 	extra/mold jemalloc jq python-pynvim
