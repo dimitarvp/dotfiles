@@ -116,7 +116,7 @@ echo ""
 # 2. Update all installed crates
 echo ">>> Phase 2: Updating all crates to latest..."
 if command -v cargo-install-update &>/dev/null; then
-	if cargo install-update -a; then
+	if cargo install-update -a --cooldown 24h; then
 		echo "[OK] Update completed"
 	else
 		echo "[FAILED] Update had errors"
