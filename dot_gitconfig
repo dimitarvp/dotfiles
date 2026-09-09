@@ -24,6 +24,11 @@
   editor = nvim
   excludesfile = ~/.gitignore
   pager = delta
+  # a synced .git/index must validate on the other machine: compare only
+  # whole-second mtime + size (unison keeps both); inode and ctime differ
+  # on every copy and would make the next git status rewrite the index
+  checkStat = minimal
+  trustctime = false
 [diff]
   algorithm = histogram
   colorMoved = dimmed-zebra # or default
