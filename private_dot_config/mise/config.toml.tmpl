@@ -59,6 +59,9 @@ rebar = "latest"
 "github:bcpierce00/unison" = { version = "latest", asset_pattern = "unison-*-ubuntu-*-x86_64-static.tar.gz" }
 {{- end }}
 "aqua:google-antigravity/antigravity-cli" = "latest"
+# neovim from the upstream release builds on every workstation: distro packages lag
+# (Debian sid sat on 0.12.4 for 17 days), brew builds no Intel bottles.
+"aqua:neovim/neovim" = "latest"
 # kopia = checkpoint/backup infra; mise tracks upstream releases directly
 # (Manjaro lags ~2wk, Debian has no package, brew lags days). Single fleet lane —
 # no pacman/AUR/brew copies allowed.
@@ -79,8 +82,6 @@ rebar = "latest"
 "aqua:remoteoss/dexter" = "latest"
 {{- end }}
 {{- if eq .chezmoi.os "darwin" }}
-# brew 6 builds no x86_64 bottles anymore; neovim comes from GitHub release builds
-"aqua:neovim/neovim" = "latest"
 # brew exodus (Intel = Homebrew tier 3, every bump compiles): Go/Rust CLIs come
 # from release binaries (aqua/ubi), Python CLIs from uv-managed venvs (pipx
 # backend). Linux keeps its OS-packager copies until the Linux wave.
