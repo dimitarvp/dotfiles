@@ -19,6 +19,30 @@ uv = "latest"
 # and its `gh pr edit` fails on the retired Projects (classic) API; Manjaro lags
 # too. One owner per tool: the apt/pacman copies go (provision scripts updated).
 gh = "latest"
+# Go/Rust CLIs: one fleet lane, every machine, no conditional (the Linux wave,
+# 2026-09-09; each tool verified before its apt/pacman copy left).
+fzf = "latest"
+direnv = "latest"
+rclone = "latest"
+gron = "latest"
+xh = "latest"
+yq = "latest"
+lazygit = "latest"
+lazydocker = "latest"
+dive = "latest"
+gdu = "latest"
+duf = "latest"
+fx = "latest"
+ctop = "latest"
+curlie = "latest"
+dbmate = "latest"
+miller = "latest"
+peco = "latest"
+"github:exercism/cli" = "latest"
+"github:variadico/noti" = "latest"
+"github:akavel/up" = "latest"
+"github:kkdai/youtube" = "latest"
+"github:dalance/procs" = "latest"
 {{- if ne .role "server" }}
 node = "latest"
 erlang = ["29", "28.5.0", "27"]
@@ -51,30 +75,6 @@ rebar = "latest"
 # pnpm rides the npm backend on purpose: 11+ ships no darwin/amd64 standalone
 # binary, but the npm dist is pure JS on node — latest lands everywhere
 "npm:pnpm" = { version = "latest", minimum_release_age = "24h" }
-# Go/Rust CLIs, one fleet lane (the Linux wave, started 2026-09-09): each line
-# moved here from the darwin block once its apt/pacman copy was verified and removed.
-fzf = "latest"
-direnv = "latest"
-rclone = "latest"
-gron = "latest"
-xh = "latest"
-yq = "latest"
-lazygit = "latest"
-lazydocker = "latest"
-dive = "latest"
-gdu = "latest"
-duf = "latest"
-fx = "latest"
-ctop = "latest"
-curlie = "latest"
-dbmate = "latest"
-miller = "latest"
-peco = "latest"
-"github:exercism/cli" = "latest"
-"github:variadico/noti" = "latest"
-"github:akavel/up" = "latest"
-"github:kkdai/youtube" = "latest"
-"github:dalance/procs" = "latest"
 {{- if ne .chezmoi.os "darwin" }}
 "aqua:remoteoss/dexter" = "latest"
 {{- end }}
