@@ -43,6 +43,18 @@ peco = "latest"
 "github:akavel/up" = "latest"
 "github:kkdai/youtube" = "latest"
 "github:dalance/procs" = "latest"
+# Python CLIs via the pipx backend on every machine: uv-managed venvs with uv's own
+# interpreters, the distro python3 untouched (his ruling 2026-09-09).
+"pipx:csvkit" = "latest"
+"pipx:diffoscope" = "latest"
+"pipx:pgcli" = "latest"
+"pipx:streamlink" = "latest"
+"pipx:you-get" = "latest"
+"pipx:asciidoc" = "latest"
+"pipx:git-filter-repo" = "latest"
+"pipx:jc" = "latest"
+"pipx:glances" = "latest"
+"pipx:visidata" = "latest"
 {{- if ne .role "server" }}
 node = "latest"
 erlang = ["29", "28.5.0", "27"]
@@ -85,16 +97,6 @@ rebar = "latest"
 # brew exodus (Intel = Homebrew tier 3, every bump compiles): Go/Rust CLIs come
 # from release binaries (aqua/ubi), Python CLIs from uv-managed venvs (pipx
 # backend). Linux keeps its OS-packager copies until the Linux wave.
-"pipx:csvkit" = "latest"
-"pipx:diffoscope" = "latest"
-"pipx:pgcli" = "latest"
-"pipx:streamlink" = "latest"
-"pipx:you-get" = "latest"
-"pipx:asciidoc" = "latest"
-"pipx:git-filter-repo" = "latest"
-"pipx:jc" = "latest"
-"pipx:glances" = "latest"
-"pipx:visidata" = "latest"
 # the interactive python3 (replaces three python.org framework installs;
 # brew's python@3.14 stays a formula dependency, uv brings its own for tools)
 python = "latest"
