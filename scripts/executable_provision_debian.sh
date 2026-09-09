@@ -185,7 +185,7 @@ $INSTALL \
 	7zip ack aria2 asciidoc atomicparsley \
 	bmon borgbackup btop csvkit \
 	esbuild ffmpeg fio \
-	git-filter-repo git-lfs gnuplot graphviz gron \
+	git-filter-repo git-lfs gnuplot graphviz \
 	htop httrack \
 	jc jnettop lbzip2 lnav \
 	lua5.4 luajit luarocks mediainfo miller moreutils multitail \

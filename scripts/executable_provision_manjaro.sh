@@ -169,7 +169,7 @@ $INSTALL \
 	darkhttpd dbmate diff-so-fancy difftastic dive \
 	docker docker-buildx docker-compose dool duckdb duf \
 	esbuild ffmpeg fio fx gdu \
-	git-filter-repo git-lfs glances glow gnuplot graphviz gron \
+	git-filter-repo git-lfs glances glow gnuplot graphviz \
 	hey hstr htop httrack imgcat \
 	jc jnettop lazydocker lazygit lbzip2 lnav \
 	lua luajit luarocks mediainfo miller moreutils multitail \
