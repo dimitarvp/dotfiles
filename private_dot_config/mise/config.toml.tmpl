@@ -51,6 +51,9 @@ rebar = "latest"
 # pnpm rides the npm backend on purpose: 11+ ships no darwin/amd64 standalone
 # binary, but the npm dist is pure JS on node — latest lands everywhere
 "npm:pnpm" = { version = "latest", minimum_release_age = "24h" }
+# Go/Rust CLIs, one fleet lane (the Linux wave, started 2026-09-09): each line
+# moved here from the darwin block once its apt/pacman copy was verified and removed.
+fzf = "latest"
 {{- if ne .chezmoi.os "darwin" }}
 "aqua:remoteoss/dexter" = "latest"
 {{- end }}
@@ -60,7 +63,6 @@ rebar = "latest"
 # brew exodus (Intel = Homebrew tier 3, every bump compiles): Go/Rust CLIs come
 # from release binaries (aqua/ubi), Python CLIs from uv-managed venvs (pipx
 # backend). Linux keeps its OS-packager copies until the Linux wave.
-fzf = "latest"
 lazygit = "latest"
 lazydocker = "latest"
 yq = "latest"
