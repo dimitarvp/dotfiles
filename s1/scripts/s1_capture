@@ -1,8 +1,10 @@
 #!/bin/bash
 # s1_capture — nightly capture of s1's configuration into ZFS (misc/s1config),
 # snapshotting only when something actually changed (kopia-style skip).
-# Runs from root's crontab (must read /etc fully); router fetches run as dimi
-# (his ssh config + dimi_master key). Restore: /data/misc/backups/s1config/RESTORE.md
+# Runs as root from s1_capture.timer (must read /etc fully); router fetches run as
+# dimi (his ssh config + dimi_master key). Restore: /data/misc/backups/s1config/RESTORE.md
+# Base-system tools only (grep, not rg): under systemd root sees the base PATH,
+# and the tool lanes under /home/dimi (cargo, mise) are invisible to it.
 set -euo pipefail
 
 DS=misc/s1config
@@ -16,7 +18,7 @@ fail() {
 	printf '%s FAILED: %s\n' "$(date -Is)" "$*" >"$ROOT/LAST_RUN"
 	exit 1
 }
-trap 'fail "unexpected error at line $LINENO"' ERR
+trap 'fail "unexpected error at line $LINENO: $BASH_COMMAND (exit ${PIPESTATUS[*]})"' ERR
 
 [ "$(id -u)" -eq 0 ] || fail "must run as root"
 zfs list "$DS" >/dev/null 2>&1 || fail "dataset $DS missing"
@@ -82,7 +84,7 @@ router() { # name
 	tmp=$(mktemp)
 	for try in 1 2 3; do
 		HOME=/home/dimi runuser -u dimi -- ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 "$r" '/export' 2>/dev/null |
-			rg -v '^\*\* ' >"$tmp" || true
+			grep -v '^\*\* ' >"$tmp" || true
 		[ -s "$tmp" ] && break
 		sleep 20
 	done
@@ -92,7 +94,7 @@ router() { # name
 		MISSED="${MISSED:+$MISSED,}$r"
 		return 0
 	fi
-	if cmp -s <(rg -v '^# .* by RouterOS' "$tmp") <(rg -v '^# .* by RouterOS' "$raw" 2>/dev/null); then
+	if cmp -s <(grep -v '^# .* by RouterOS' "$tmp") <(grep -v '^# .* by RouterOS' "$raw" 2>/dev/null); then
 		rm -f "$tmp"
 		return 0
 	fi
@@ -117,7 +119,7 @@ status="OK"
 if [ -n "$CHANGED" ]; then
 	snap="auto-$(date +%F_%H%M%S)"
 	zfs snapshot "$DS@$snap"
-	zfs list -H -t snapshot -o name -s creation "$DS" | rg "^$DS@auto-" | head -n -"$KEEP" |
+	zfs list -H -t snapshot -o name -s creation "$DS" | grep "^$DS@auto-" | head -n -"$KEEP" |
 		while read -r s; do zfs destroy "$s"; done
 	log "changed ($CHANGED) - snapshot $snap${MISSED:+ (routers missed: $MISSED)}"
 	printf '%s %s changed=%s snapshot=%s\n' "$(date -Is)" "$status" "$CHANGED" "$snap" >"$ROOT/LAST_RUN"
