@@ -77,6 +77,15 @@ rebar = "latest"
 # (Debian sid sat on 0.12.4 for 17 days), brew builds no Intel bottles.
 "aqua:neovim/neovim" = "latest"
 "github:Ataraxy-Labs/inspect" = "latest"
+# veans — Vikunja's agent CLI, pinned to the release of the vikunja/vikunja image in
+# ~/.config/vikunja/compose.yaml (bump both together). The release carries every
+# vikunja + veans build, hence the explicit asset; the binary inside the zip is
+# versioned (veans-vX-linux-amd64), hence the rename.
+{{- if eq .chezmoi.os "darwin" }}
+"github:go-vikunja/vikunja" = { version = "2.6.0", asset_pattern = "veans-v*-darwin-10.15-amd64-full.zip", rename_exe = "veans" }
+{{- else }}
+"github:go-vikunja/vikunja" = { version = "2.6.0", asset_pattern = "veans-v*-linux-amd64-full.zip", rename_exe = "veans" }
+{{- end }}
 # npm tools via the mise npm backend, moved off brew-node (prettier's tailwind
 # plugin is NOT here on purpose — it is bin-less and resolves per-project)
 # npm tools keep a 24h release delay (see [settings] minimum_release_age)
