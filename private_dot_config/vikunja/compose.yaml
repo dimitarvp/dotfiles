@@ -1,17 +1,19 @@
-# Vikunja — the local issue tracker the strado agent works against through the
-# veans CLI (mise, same release). One container, SQLite inside, no other service,
-# reachable on this host only (127.0.0.1:3456).
+# Vikunja — the strado agent's issue tracker (veans CLI on the workstations),
+# ONE instance on s1 (Dimi 2026-09-12: no two-way sync of SQLite databases).
+# Server-gated in .chezmoiignore: workstations never render this file.
 #
-#   start / refresh:  docker compose -f ~/.config/vikunja/compose.yaml up -d
-#   secret:           ~/.config/vikunja/.env holds VIKUNJA_SERVICE_SECRET=<random>
-#                     (mode 0600, per host, never in git; openssl rand -base64 48)
-#   data:             ~/.local/share/vikunja/db (SQLite) and files (attachments),
-#                     owned by uid 1000 — the container's user
-#   backup:           vikunja_dump (scripts/) writes a dump zip into
-#                     ~/w/pesto/vikunja/dumps; treesync carries it to the hub,
-#                     kopia keeps the history. Restore = vikunja restore <zip>.
-#   users:            docker exec vikunja /app/vikunja/vikunja user create \
-#                       --username NAME --email MAIL --password PASS
+#   URL:      http://vikunja.home.arpa:3456/  (AGH rewrite → 192.168.1.99, this box)
+#   start:    docker compose -f ~/.config/vikunja/compose.yaml up -d
+#   secret:   ~/.config/vikunja/.env — VIKUNJA_SERVICE_SECRET=<random>, 0600, unmanaged
+#             (captured nightly by s1_capture with the rest of ~/.config)
+#   data:     ~/.local/share/vikunja/db (SQLite) + files (attachments) on the root
+#             SSD, never on the USB pool; stage/ = the container's /dumps
+#   backup:   vikunja_dump, nightly from s1_capture → /data/misc/backups/s1config/vikunja;
+#             the dataset snapshot keeps the history. Nothing else, no kopia (his ruling).
+#   restore:  docker compose -f … stop
+#             printf 'Yes, I understand\n\n' | docker compose -f … run --rm -T vikunja restore /dumps/<zip>
+#             docker compose -f … up -d          (same image version as the dump)
+#   users:    docker exec vikunja /app/vikunja/vikunja user create|list|reset-password …
 #
 # The image tag here and the veans version in mise/config.toml move together.
 name: vikunja
@@ -21,13 +23,13 @@ services:
     container_name: vikunja
     env_file: .env
     environment:
-      VIKUNJA_SERVICE_PUBLICURL: http://localhost:3456/
+      VIKUNJA_SERVICE_PUBLICURL: http://vikunja.home.arpa:3456/
       VIKUNJA_DATABASE_PATH: /db/vikunja.db
       VIKUNJA_SERVICE_ENABLEREGISTRATION: "false"
     ports:
-      - "127.0.0.1:3456:3456"
+      - "192.168.1.99:3456:3456"
     volumes:
       - ${HOME}/.local/share/vikunja/db:/db
       - ${HOME}/.local/share/vikunja/files:/app/vikunja/files
-      - ${HOME}/w/pesto/vikunja/dumps:/dumps
+      - ${HOME}/.local/share/vikunja/stage:/dumps
     restart: unless-stopped

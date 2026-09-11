@@ -1,48 +1,80 @@
 #!/usr/bin/env bash
-# vikunja_dump — back up the local Vikunja (docker container "vikunja").
+# vikunja_dump — nightly backup of Vikunja (docker container "vikunja" on s1).
 #
-# `vikunja dump` inside the container writes ONE zip: every database table as
-# JSON, the attachments, VERSION, and the VIKUNJA_* environment (that includes
-# the service secret). The zip lands in $DUMPS/tmp first and is renamed into
-# $DUMPS when it passed an integrity test — a "tmp" dir never travels
-# (dev.exclusions, backup.exclusions), so treesync and kopia only ever see
-# complete dumps. The newest $KEEP dumps stay on disk; the hub's kopia keeps
-# the older history.
-#
-# Runs from the update lane on the host that runs the container (update_all +
-# update.taskfile.yml), or by hand. Fails loud when the container is missing or
-# stopped: a stopped tracker is not a backed-up tracker.
-# Restore: vikunja restore <zip> inside a container of the SAME version.
+# `vikunja dump` inside the container writes ONE zip (every table as JSON, the
+# attachments, VERSION, the VIKUNJA_* environment including the service secret,
+# kept in the zip by Dimi's ruling 2026-09-12) into $STAGE, the container's
+# /dumps bind mount on the root SSD. The zip's data entries are fingerprinted and
+# compared with the newest dump in $DUMPS: identical → the new zip is dropped and
+# the script exits 3 (no change); different → the zip moves into $DUMPS (inside
+# the ZFS dataset misc/s1config, snapshotted by s1_capture when anything changed)
+# and the script exits 0. The newest $KEEP zips stay in $DUMPS; the dataset
+# snapshots keep the older ones. Any failure exits 1 with the reason on stderr.
+# Base-system tools only: runs as root from s1_capture (systemd, base PATH).
+# Restore: `vikunja restore <zip>` in a container of the SAME image version,
+# two lines on stdin (the confirmation + Enter) — recipe in compose.yaml.
 
 set -uo pipefail
 
-CONTAINER=vikunja
-DUMPS="$HOME/w/pesto/vikunja/dumps"
-KEEP=14
+CONTAINER=${CONTAINER:-vikunja}
+STAGE=${STAGE:-/home/dimi/.local/share/vikunja/stage} # = /dumps inside the container
+DUMPS=${DUMPS:-/data/misc/backups/s1config/vikunja}
+KEEP=${KEEP:-14}
 
 die() {
 	echo "vikunja_dump: $*" >&2
 	exit 1
 }
 
+# zip reading: unzip where installed, else bsdtar (libarchive, always on Arch)
+if command -v unzip >/dev/null 2>&1; then
+	zip_test() { unzip -tq "$1" >/dev/null 2>&1; }
+	zip_list() { unzip -Z1 "$1"; }
+	zip_cat() { unzip -p "$1" "$2"; }
+elif command -v bsdtar >/dev/null 2>&1; then
+	zip_test() { bsdtar -tf "$1" >/dev/null 2>&1; }
+	zip_list() { bsdtar -tf "$1"; }
+	zip_cat() { bsdtar -xOf "$1" "$2"; }
+else
+	die "neither unzip nor bsdtar found"
+fi
+
+# Content fingerprint over the data entries (tables + attachments), sorted by
+# name: the zip bytes differ on every run (entry times, Go map order), the data
+# usually does not.
+fingerprint() { # zip
+	local z=$1 e
+	zip_list "$z" | grep -E '^(database|files)/' | LC_ALL=C sort | while IFS= read -r e; do
+		printf '%s ' "$e"
+		zip_cat "$z" "$e" | sha256sum | cut -d' ' -f1
+	done | sha256sum | cut -d' ' -f1
+}
+
 state=$(docker inspect -f '{{.State.Running}}' "$CONTAINER" 2>/dev/null) ||
 	die "no container named $CONTAINER on this host"
 [[ $state == true ]] || die "container $CONTAINER is not running (running=$state)"
+mkdir -p "$STAGE" "$DUMPS" || die "cannot create $STAGE or $DUMPS"
 
-mkdir -p "$DUMPS/tmp" || die "cannot create $DUMPS/tmp"
 name="vikunja-dump_$(date -u +%Y%m%dT%H%M%SZ).zip"
-
-# /dumps is the bind mount of $DUMPS; the container runs as uid 1000 (= dimi)
-out=$(docker exec "$CONTAINER" /app/vikunja/vikunja dump --path /dumps/tmp --filename "$name" 2>&1) || {
+out=$(docker exec "$CONTAINER" /app/vikunja/vikunja dump --path /dumps --filename "$name" 2>&1) || {
 	echo "$out" >&2
 	die "vikunja dump failed inside the container"
 }
-[[ -s "$DUMPS/tmp/$name" ]] || die "dump file missing or empty: $DUMPS/tmp/$name"
-unzip -tq "$DUMPS/tmp/$name" >/dev/null 2>&1 || die "dump zip fails its integrity test: $DUMPS/tmp/$name"
-unzip -Z1 "$DUMPS/tmp/$name" | grep -q '^database/' || die "dump holds no database tables: $DUMPS/tmp/$name"
-mv "$DUMPS/tmp/$name" "$DUMPS/$name" || die "cannot move the dump into place"
+new="$STAGE/$name"
+[[ -s $new ]] || die "dump file missing or empty: $new"
+zip_test "$new" || die "dump zip fails its integrity test: $new"
+zip_list "$new" | grep -q '^database/' || die "dump holds no database tables: $new"
 
-# retention: names carry a UTC timestamp, so reverse name order = newest first
+# newest existing dump = last by name (the names carry a UTC timestamp)
+prev=$(ls -1 "$DUMPS"/vikunja-dump_*.zip 2>/dev/null | tail -n 1)
+if [[ -n $prev ]] && [[ $(fingerprint "$new") == "$(fingerprint "$prev")" ]]; then
+	rm -f "$new"
+	echo "vikunja dump: no change since $(basename "$prev")"
+	exit 3
+fi
+
+# across filesystems mv is copy+delete; s1_capture snapshots only after this returns
+mv "$new" "$DUMPS/$name" || die "cannot move the dump into $DUMPS"
 while IFS= read -r old; do
 	[[ -n $old ]] && rm -f -- "$old"
 done < <(ls -1r "$DUMPS"/vikunja-dump_*.zip 2>/dev/null | tail -n +$((KEEP + 1)))

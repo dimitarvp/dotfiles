@@ -15,3 +15,8 @@ scripts/extract_safari_bookmarks
 {{ if not .adblock }}
 adguard
 {{ end }}
+
+{{ if ne .role "server" }}
+.config/vikunja
+scripts/vikunja_dump
+{{ end }}

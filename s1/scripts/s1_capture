@@ -114,8 +114,28 @@ router() { # name
 router cooolbox
 router bulsatcom
 
+# Vikunja (the strado agent's issue tracker, docker on this box): one dump zip
+# into $ROOT/vikunja when its data changed (exit 3 = unchanged, nothing written).
+# Best-effort like the routers: a failed dump never blocks the snapshot of s1's
+# own config — it is logged, marked in LAST_RUN (OK-PARTIAL → capture_status
+# exits 1 in the update run) and retried tomorrow.
+VIKUNJA_FAILED=""
+rc=0
+out=$(/home/dimi/scripts/vikunja_dump 2>&1) || rc=$?
+case $rc in
+0) CHANGED="${CHANGED:+$CHANGED+}vikunja" ;;
+3) ;;
+*)
+	log "WARNING: vikunja dump failed (exit $rc): $out"
+	VIKUNJA_FAILED=1
+	;;
+esac
+
+PARTIAL=""
+[ -n "$MISSED" ] && PARTIAL="routers-missed=$MISSED"
+[ -n "$VIKUNJA_FAILED" ] && PARTIAL="${PARTIAL:+$PARTIAL }vikunja-dump-failed"
 status="OK"
-[ -n "$MISSED" ] && status="OK-PARTIAL routers-missed=$MISSED"
+[ -n "$PARTIAL" ] && status="OK-PARTIAL $PARTIAL"
 if [ -n "$CHANGED" ]; then
 	snap="auto-$(date +%F_%H%M%S)"
 	zfs snapshot "$DS@$snap"
