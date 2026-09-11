@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# vikunja_dump — back up the local Vikunja (docker container "vikunja").
+#
+# `vikunja dump` inside the container writes ONE zip: every database table as
+# JSON, the attachments, VERSION, and the VIKUNJA_* environment (that includes
+# the service secret). The zip lands in $DUMPS/tmp first and is renamed into
+# $DUMPS when it passed an integrity test — a "tmp" dir never travels
+# (dev.exclusions, backup.exclusions), so treesync and kopia only ever see
+# complete dumps. The newest $KEEP dumps stay on disk; the hub's kopia keeps
+# the older history.
+#
+# Runs from the update lane on the host that runs the container (update_all +
+# update.taskfile.yml), or by hand. Fails loud when the container is missing or
+# stopped: a stopped tracker is not a backed-up tracker.
+# Restore: vikunja restore <zip> inside a container of the SAME version.
+
+set -uo pipefail
+
+CONTAINER=vikunja
+DUMPS="$HOME/w/pesto/vikunja/dumps"
+KEEP=14
+
+die() {
+	echo "vikunja_dump: $*" >&2
+	exit 1
+}
+
+state=$(docker inspect -f '{{.State.Running}}' "$CONTAINER" 2>/dev/null) ||
+	die "no container named $CONTAINER on this host"
+[[ $state == true ]] || die "container $CONTAINER is not running (running=$state)"
+
+mkdir -p "$DUMPS/tmp" || die "cannot create $DUMPS/tmp"
+name="vikunja-dump_$(date -u +%Y%m%dT%H%M%SZ).zip"
+
+# /dumps is the bind mount of $DUMPS; the container runs as uid 1000 (= dimi)
+out=$(docker exec "$CONTAINER" /app/vikunja/vikunja dump --path /dumps/tmp --filename "$name" 2>&1) || {
+	echo "$out" >&2
+	die "vikunja dump failed inside the container"
+}
+[[ -s "$DUMPS/tmp/$name" ]] || die "dump file missing or empty: $DUMPS/tmp/$name"
+unzip -tq "$DUMPS/tmp/$name" >/dev/null 2>&1 || die "dump zip fails its integrity test: $DUMPS/tmp/$name"
+unzip -Z1 "$DUMPS/tmp/$name" | grep -q '^database/' || die "dump holds no database tables: $DUMPS/tmp/$name"
+mv "$DUMPS/tmp/$name" "$DUMPS/$name" || die "cannot move the dump into place"
+
+# retention: names carry a UTC timestamp, so reverse name order = newest first
+while IFS= read -r old; do
+	[[ -n $old ]] && rm -f -- "$old"
+done < <(ls -1r "$DUMPS"/vikunja-dump_*.zip 2>/dev/null | tail -n +$((KEEP + 1)))
+
+kept=$(ls -1 "$DUMPS"/vikunja-dump_*.zip 2>/dev/null | wc -l | tr -d ' ')
+echo "vikunja dump: $name ($(du -h "$DUMPS/$name" | cut -f1)) · $kept kept"
