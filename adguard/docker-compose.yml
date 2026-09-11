@@ -60,6 +60,13 @@ services:
     restart: unless-stopped
     network_mode: service:agh-blue
     cap_add: [NET_ADMIN, NET_RAW, NET_BROADCAST]
+    # keepalived runs as PID 1 and keeps its pid files under /run; on the writable
+    # layer they survive an in-place restart (dockerd restart, reboot, docker
+    # restart), the fresh PID 1 then reads "daemon is already running", exits 0 and
+    # the restart policy loops forever (keepalived-blue, 2026-09-09..12). A tmpfs is
+    # empty on every start.
+    tmpfs:
+      - /run
     volumes:
       - ./keepalived/blue.conf:/etc/keepalived/keepalived.conf:ro
     depends_on: [agh-blue]
@@ -78,6 +85,13 @@ services:
     restart: unless-stopped
     network_mode: service:agh-green
     cap_add: [NET_ADMIN, NET_RAW, NET_BROADCAST]
+    # keepalived runs as PID 1 and keeps its pid files under /run; on the writable
+    # layer they survive an in-place restart (dockerd restart, reboot, docker
+    # restart), the fresh PID 1 then reads "daemon is already running", exits 0 and
+    # the restart policy loops forever (keepalived-blue, 2026-09-09..12). A tmpfs is
+    # empty on every start.
+    tmpfs:
+      - /run
     volumes:
       - ./keepalived/green.conf:/etc/keepalived/keepalived.conf:ro
     depends_on: [agh-green]
