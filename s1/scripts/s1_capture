@@ -131,9 +131,20 @@ case $rc in
 	;;
 esac
 
+# Container health: a container stuck in "restarting" (a crash or pid-file loop)
+# or reporting "unhealthy" degrades a service silently — the AGH VIP failover hid
+# keepalived-blue's restart loop for 2.5 days (2026-09-09..12). Marked in LAST_RUN
+# so capture_status exits 1 in the next update run.
+BAD_CONTAINERS=$({
+	docker ps -a --filter status=restarting --format '{{.Names}}(restarting)'
+	docker ps -a --filter health=unhealthy --format '{{.Names}}(unhealthy)'
+} 2>/dev/null | sort -u | paste -sd, -)
+[ -n "$BAD_CONTAINERS" ] && log "WARNING: containers not healthy: $BAD_CONTAINERS"
+
 PARTIAL=""
 [ -n "$MISSED" ] && PARTIAL="routers-missed=$MISSED"
 [ -n "$VIKUNJA_FAILED" ] && PARTIAL="${PARTIAL:+$PARTIAL }vikunja-dump-failed"
+[ -n "$BAD_CONTAINERS" ] && PARTIAL="${PARTIAL:+$PARTIAL }containers=$BAD_CONTAINERS"
 status="OK"
 [ -n "$PARTIAL" ] && status="OK-PARTIAL $PARTIAL"
 if [ -n "$CHANGED" ]; then
