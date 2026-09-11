@@ -33,10 +33,3 @@ scripts/sync_claude_from_robeast
 # directory outside $HOME (yt-dlp on s1 died inside /data). The config now
 # lives at ~/.config/mise/config.toml, the global path loaded everywhere.
 .mise.toml
-
-# vikunja moved to s1 on 2026-09-12 (one instance, server-gated); the copies a
-# workstation applied on that day go on apply. The unmanaged .env stays.
-{{ if ne .role "server" -}}
-.config/vikunja/compose.yaml
-scripts/vikunja_dump
-{{ end -}}
