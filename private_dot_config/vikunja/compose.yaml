@@ -26,6 +26,9 @@ services:
       VIKUNJA_SERVICE_PUBLICURL: http://vikunja.home.arpa:3456/
       VIKUNJA_DATABASE_PATH: /db/vikunja.db
       VIKUNJA_SERVICE_ENABLEREGISTRATION: "false"
+      # browsers may open the short name too: CORS allows only localhost and the
+      # public URL by default (the public URL is appended to this list by Vikunja)
+      VIKUNJA_CORS_ORIGINS: http://vikunja:3456
     ports:
       - "192.168.1.99:3456:3456"
     volumes:
