@@ -42,3 +42,8 @@ go/bin/usql
 # points at ~/.gitignore (chezmoi-managed). The one line this stray held (.serena)
 # lives in ~/.gitignore now.
 .config/git/ignore
+
+# Grune's similarity tester, hand-built binaries in ~/.local/bin (the-wsl-box +
+# the-laptop): retired on Dimi's word 2026-09-15, not needed for now
+.local/bin/sim_text
+.local/bin/sim_c
