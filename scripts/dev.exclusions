@@ -68,3 +68,8 @@ tmp/
 
 # Per-machine trash: trash.sh parks superseded files here; never travels
 .trash/
+
+# Serena's per-project state (project.yml, memories, cache): per machine, never
+# travels. The oraios/serena clone under ~/kod tracks its own .serena/ — those
+# copies simply stop moving, nothing is deleted.
+.serena/

@@ -4,5 +4,6 @@
 .envrc
 .jj
 .lexical
+.serena
 .tool-versions
 node_modules
