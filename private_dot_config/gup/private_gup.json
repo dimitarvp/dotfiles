@@ -242,12 +242,6 @@
       "channel": "latest"
     },
     {
-      "name": "usql",
-      "import_path": "github.com/xo/usql",
-      "version": "v0.21.1",
-      "channel": "latest"
-    },
-    {
       "name": "xq",
       "import_path": "github.com/sibprogrammer/xq",
       "version": "v1.4.0",

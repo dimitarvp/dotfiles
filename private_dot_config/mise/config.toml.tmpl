@@ -43,6 +43,12 @@ peco = "latest"
 "github:akavel/up" = "latest"
 "github:kkdai/youtube" = "latest"
 "github:dalance/procs" = "latest"
+# usql — the psql-style shell for any DB, from the upstream release builds (every
+# driver compiled in; a `go install` build carries the base driver set only). It
+# left the gup lane 2026-09-15: since 0.21.5 usql's go.mod has an `exclude`
+# directive and Go refuses `go install pkg@version` for such modules (xo/usql#590).
+# matching_regex keeps the usql-* archives and drops the usql_static-* twins.
+"github:xo/usql" = { version = "latest", matching_regex = "^usql-" }
 # Python CLIs via the pipx backend on every machine: uv-managed venvs with uv's own
 # interpreters, the distro python3 untouched (his ruling 2026-09-09).
 "pipx:csvkit" = "latest"

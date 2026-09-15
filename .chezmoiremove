@@ -33,3 +33,7 @@ scripts/sync_claude_from_the-mac
 # directory outside $HOME (yt-dlp on the-server died inside /data). The config now
 # lives at ~/.config/mise/config.toml, the global path loaded everywhere.
 .mise.toml
+
+# usql moved to the mise github: lane 2026-09-15 (Go refuses `go install` of its
+# module since 0.21.5); the gup-built binary must go before gup_converge trips on it
+go/bin/usql
