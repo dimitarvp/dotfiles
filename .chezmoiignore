@@ -1,4 +1,6 @@
 README.md
+AGENTS.md
+CLAUDE.md
 the-server
 
 {{ if ne .chezmoi.os "darwin" }}
