@@ -30,4 +30,5 @@ scripts/vikunja_dump
 .local/share/etc-reference
 scripts/s1_capture
 scripts/capture_status
+scripts/s1_health
 {{ end }}
