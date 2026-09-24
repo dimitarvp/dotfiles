@@ -1,0 +1,35 @@
+{{ if and (hasKey . "etc_reference") .etc_reference -}}
+#!/bin/bash
+# Deploys the server's /etc pieces from the decrypted reference tree that
+# chezmoi writes to ~/.local/share/etc-reference. Re-runs whenever the
+# encrypted sources change (their hashes are baked in below).
+# capture service:    {{ include "dot_local/share/private_etc-reference/etc/systemd/system/encrypted_private_s1_capture.service.age" | sha256sum }}
+# capture timer:      {{ include "dot_local/share/private_etc-reference/etc/systemd/system/encrypted_private_s1_capture.timer.age" | sha256sum }}
+# panic sysctl:       {{ include "dot_local/share/private_etc-reference/etc/sysctl.d/encrypted_private_90-panic-reboot.conf.age" | sha256sum }}
+# wan1:               {{ include "dot_local/share/private_etc-reference/etc/NetworkManager/system-connections/encrypted_private_wan1.nmconnection.age" | sha256sum }}
+# wan2:               {{ include "dot_local/share/private_etc-reference/etc/NetworkManager/system-connections/encrypted_private_wan2.nmconnection.age" | sha256sum }}
+# aghshim:            {{ include "dot_local/share/private_etc-reference/etc/NetworkManager/system-connections/encrypted_private_aghshim.nmconnection.age" | sha256sum }}
+# 25-failover:        {{ include "dot_local/share/private_etc-reference/etc/NetworkManager/conf.d/encrypted_private_25-failover.conf.age" | sha256sum }}
+# 90-no-auto-default: {{ include "dot_local/share/private_etc-reference/etc/NetworkManager/conf.d/encrypted_private_90-no-auto-default-wan2.conf.age" | sha256sum }}
+# rt_tables wan2:     {{ include "dot_local/share/private_etc-reference/etc/iproute2/rt_tables.d/encrypted_private_wan2.conf.age" | sha256sum }}
+set -euo pipefail
+SRC="$HOME/.local/share/etc-reference/etc"
+sudo install -m 0644 "$SRC/systemd/system/s1_capture.service" "$SRC/systemd/system/s1_capture.timer" /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now s1_capture.timer
+sudo install -m 0644 "$SRC/sysctl.d/90-panic-reboot.conf" /etc/sysctl.d/
+sudo sysctl -q -p /etc/sysctl.d/90-panic-reboot.conf
+# Network files are STAGED only — deliberately no NM restart/reload here
+# (lifeline config on a remote box); changes take effect at the next
+# deliberate reload or boot.
+sudo install -m 0600 "$SRC/NetworkManager/system-connections/wan1.nmconnection" \
+	"$SRC/NetworkManager/system-connections/wan2.nmconnection" \
+	"$SRC/NetworkManager/system-connections/aghshim.nmconnection" /etc/NetworkManager/system-connections/
+sudo install -m 0644 "$SRC/NetworkManager/conf.d/25-failover.conf" \
+	"$SRC/NetworkManager/conf.d/90-no-auto-default-wan2.conf" /etc/NetworkManager/conf.d/
+sudo install -m 0644 "$SRC/iproute2/rt_tables.d/wan2.conf" /etc/iproute2/rt_tables.d/
+echo "server /etc pieces deployed; capture timer: $(systemctl is-active s1_capture.timer); network files staged (no NM reload)"
+{{ else -}}
+#!/bin/bash
+: # deployer for the server reference tree — no-op on this machine
+{{ end -}}

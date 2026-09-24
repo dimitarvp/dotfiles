@@ -1,7 +1,6 @@
 README.md
 AGENTS.md
 CLAUDE.md
-the-server
 
 {{ if ne .chezmoi.os "darwin" }}
 scripts/extract_safari_bookmarks
@@ -25,4 +24,10 @@ scripts/vikunja_dump
 
 {{ if or (eq .chezmoi.os "darwin") (eq .role "server") }}
 .config/systemd
+{{ end }}
+
+{{ if not (and (hasKey . "etc_reference") .etc_reference) }}
+.local/share/etc-reference
+scripts/s1_capture
+scripts/capture_status
 {{ end }}
