@@ -1,0 +1,7 @@
+[Unit]
+Description=Refresh the Claude usage-limits cache (~/.cache/claude_usage_limits.json) without a status-line render
+ConditionPathExists=%h/.claude/.credentials.json
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "echo '{}' | %h/.claude/statusline.sh >/dev/null"

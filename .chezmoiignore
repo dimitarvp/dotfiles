@@ -20,3 +20,7 @@ adguard
 .config/vikunja
 scripts/vikunja_dump
 {{ end }}
+
+{{ if or (eq .chezmoi.os "darwin") (eq .role "server") }}
+.config/systemd
+{{ end }}

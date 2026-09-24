@@ -1,0 +1,14 @@
+{{ if and (ne .chezmoi.os "darwin") (ne .role "server") -}}
+#!/bin/bash
+# Arms the user timer that refreshes the Claude usage-limits cache.
+# Re-runs whenever the unit files change (their hashes are baked in below).
+# service: {{ include "private_dot_config/systemd/user/claude-usage-refresh.service" | sha256sum }}
+# timer:   {{ include "private_dot_config/systemd/user/claude-usage-refresh.timer" | sha256sum }}
+set -euo pipefail
+systemctl --user daemon-reload
+systemctl --user enable --now claude-usage-refresh.timer
+echo "claude-usage-refresh.timer: $(systemctl --user is-active claude-usage-refresh.timer)"
+{{ else -}}
+#!/bin/bash
+: # Linux-workstation-only timer — no-op on this machine
+{{ end -}}
