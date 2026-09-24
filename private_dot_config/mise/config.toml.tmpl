@@ -98,9 +98,11 @@ rebar = "latest"
 "npm:prettier" = { version = "latest", minimum_release_age = "24h" }
 "npm:@redocly/cli" = { version = "latest", minimum_release_age = "24h" }
 "npm:http-server" = { version = "latest", minimum_release_age = "24h" }
-# pnpm rides the npm backend on purpose: 11+ ships no darwin/amd64 standalone
-# binary, but the npm dist is pure JS on node — latest lands everywhere
-"npm:pnpm" = { version = "latest", minimum_release_age = "24h" }
+# pnpm 12 ships a native binary per platform (@pnpm/exe.*) and swaps it in for
+# its placeholder bin from an install script. mise's embedded installer (aube)
+# blocks install scripts unless allowed, and its bin shim then runs the shell
+# placeholder under node and dies; allow_builds lets that one script run.
+"npm:pnpm" = { version = "latest", minimum_release_age = "24h", allow_builds = true }
 {{- if ne .chezmoi.os "darwin" }}
 "aqua:remoteoss/dexter" = "latest"
 {{- end }}
