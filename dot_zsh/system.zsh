@@ -4,7 +4,7 @@ export EDITOR=nvim
 export VISUAL=nvim
 
 # Terminals set this locally but SSH doesn't forward it; pin it so headless
-# / remote shells (the-server, the-wsl-box) advertise truecolor support to apps too.
+# / remote shells advertise truecolor support to apps too.
 : ${COLORTERM:=truecolor}
 export COLORTERM
 

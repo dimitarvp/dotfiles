@@ -8,19 +8,10 @@ openobserve-v*.tar.gz
 scripts/inspect_rustic_snapshot
 scripts/rustic_backup.exclusions
 
-# one-way workdir mirror scripts retired 2026-09-01: wsync/unison owns the
-# lane, all three machines migrated
-scripts/sync_to_the-mac
-scripts/sync_from_the-mac
 # brew-only PATH guards for ruby/openjdk — both tools left brew (mise owns any
 # future ruby/java, and mise activate handles PATH)
 .zsh/languages/ruby.zsh
 .zsh/languages/java.zsh
-
-# rsync-era claude sync mirrors: klodsync + the sync_to/sync_from pair own the
-# lane; the source files left the repo, the applied copies go on apply
-scripts/sync_claude_to_the-mac
-scripts/sync_claude_from_the-mac
 
 # unison: mise (github:bcpierce00/unison) is the one owner; the chezmoi
 # external that also delivered it is gone, the applied copy goes on apply
@@ -30,7 +21,7 @@ scripts/sync_claude_from_the-mac
 .cache/zsh/mise.zsh
 
 # mise reads ~/.mise.toml as a per-directory file: it is invisible from any
-# directory outside $HOME (yt-dlp on the-server died inside /data). The config now
+# directory outside $HOME (yt-dlp on the server died inside /data). The config now
 # lives at ~/.config/mise/config.toml, the global path loaded everywhere.
 .mise.toml
 
@@ -43,7 +34,7 @@ go/bin/usql
 # lives in ~/.gitignore now.
 .config/git/ignore
 
-# Grune's similarity tester, hand-built binaries in ~/.local/bin (the-wsl-box +
-# the-laptop): retired on Dimi's word 2026-09-15, not needed for now
+# Grune's similarity tester, hand-built binaries in ~/.local/bin (two Linux
+# boxes): retired on Dimi's word 2026-09-15, not needed for now
 .local/bin/sim_text
 .local/bin/sim_c

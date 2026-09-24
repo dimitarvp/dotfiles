@@ -1,21 +1,21 @@
 [tools]
 # servers stay lean: go only (for gup-managed tools); everything else is
-# dev-stack (erlang source builds etc. — hours on the-server's i3)
+# dev-stack (erlang source builds etc. — hours on the server's i3)
 go = "latest"
 # go-task runs the update taskfiles (update_via_gotask) on every machine,
 # servers included
 "aqua:go-task/task" = "latest"
-# yt-dlp everywhere (the-server included): the standalone release build via the github
+# yt-dlp everywhere (the server included): the standalone release build via the github
 # backend replaces the root-owned /usr/local/bin copies and the OS packages
 yt-dlp = "latest"
 # uv everywhere, mise-managed: the engine behind every pipx: entry (mise hands
 # its own uv to the backend), and the interactive uv. The installer/pipx copies
-# it replaced were never updated by any lane (the-mac sat on 0.9.26 for months).
+# it replaced were never updated by any lane (the mac sat on 0.9.26 for months).
 uv = "latest"
 # gallery-dl everywhere via the pipx backend. Its GitHub releases carry no
 # binaries anymore — the old curl-the-.bin task fetched a 404 page.
 "pipx:gallery-dl" = "latest"
-# gh everywhere (the-server included): the Debian package is 2.46 (upstream March 2024)
+# gh everywhere (the server included): the Debian package is 2.46 (upstream March 2024)
 # and its `gh pr edit` fails on the retired Projects (classic) API; Manjaro lags
 # too. One owner per tool: the apt/pacman copies go (provision scripts updated).
 gh = "latest"
@@ -145,7 +145,7 @@ AGY_CLI_DISABLE_AUTO_UPDATE = "1"
 idiomatic_version_file_enable_tools = ["node"]
 # do NOT export GOROOT: a stale exported value (shell predating a go-version
 # prune) poisons child processes incl. mise's own post-install `go version`
-# check (how the-mac's 1.27 upgrade blew up). go self-derives GOROOT.
+# check (how the mac's 1.27 upgrade blew up). go self-derives GOROOT.
 go_set_goroot = false
 # mise's own default is a 24h "supply-chain" delay on new versions; this is a
 # dev fleet and new tool versions are wanted the day they ship. The npm tools

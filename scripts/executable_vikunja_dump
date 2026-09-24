@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# vikunja_dump — nightly backup of Vikunja (docker container "vikunja" on the-server).
+# vikunja_dump — nightly backup of Vikunja (docker container "vikunja" on the server).
 #
 # `vikunja dump` inside the container writes ONE zip (every table as JSON, the
 # attachments, VERSION, the VIKUNJA_* environment including the service secret,
