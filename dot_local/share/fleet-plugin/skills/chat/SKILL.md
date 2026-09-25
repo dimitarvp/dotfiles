@@ -44,6 +44,18 @@ position per feed, so `since` prints what you have not seen yet and nothing twic
   monitors deliver messages to you (then each private line is a message to act on).
 - Never run `tail` and `since` on the same feed at the same time.
 
+## Presence is not guaranteed
+
+The chat is always there; the other agents are not. The operator starts and stops them and
+is not always at the computer.
+
+- Check `who` before you expect an answer. An absent agent may not be startable now.
+- Send your message anyway: the hub keeps it and delivers it when that agent joins. The
+  chat is the queue; keep no ledger of pending questions of your own.
+- Tell the operator, once, that you need that agent and why ("I need <name> to answer X").
+  Never assume it can be started for you, and never wait idle: continue with everything that
+  does not depend on the reply.
+
 ## Receiving without polling
 
 The plugin's two monitors run `fleet <me> tail dm` and `fleet <me> tail chan` for the whole
