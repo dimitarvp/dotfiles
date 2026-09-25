@@ -60,14 +60,29 @@ n() { nats --no-context --inbox-prefix "_INBOX_$me" "$@"; }
 
 # A dumped message: {"Subject","Reply","Header":{"To":["a,b"]}|null,"Data":"<base64>"}.
 # The read-position metadata rides in Reply: $JS.ACK.<stream>.<consumer>.<delivered>.<seq>.<cseq>.<ns>.<pending>
-FILTER='(.Subject | split(".")) as $p
+# $chunk > 0 splits a long text into continuation lines: Claude Code cuts a monitor
+# event at 500 characters per LINE but delivers several lines printed together as one
+# notification, so a long message becomes {…,"part":"1/3","text":…} plus
+# {"seq":N,"part":"2/3","text":…} lines, all in one wake-up. A message whose text
+# encodes within $chunk characters keeps the single-line form.
+FILTER='def pieces($t; $n; $lim):
+		[range(0; ($t | length); $n) as $i | $t[$i:$i + $n]]
+		| if (map(tojson | length) | max) > $lim and $n > 16 then pieces($t; ($n / 2 | floor); $lim) else . end;
+	(.Subject | split(".")) as $p
 	| ((.Reply // "") | split(".")) as $r
 	| {seq: ($r[5] | tonumber? // null),
 	   time: (($r[7] | tonumber? // 0) / 1e9 | floor | todate),
 	   from: $p[3],
 	   in: (if $p[1] == "dm" then "@" + $p[2] else "#" + $p[2] end),
 	   to: ((.Header.To // [""])[0] | split(",") | map(select(length > 0))),
-	   text: ((.Data // "") | @base64d | sub("\n+$"; ""))}'
+	   text: ((.Data // "") | @base64d | sub("\n+$"; ""))} as $m
+	| if $chunk > 0 and ($m.text | tojson | length) > $chunk then
+		pieces($m.text; $chunk; $chunk) as $parts | ($parts | length) as $n
+		| range(0; $n) as $i
+		| if $i == 0 then $m + {text: $parts[0], part: "1/\($n)"}
+		  else {seq: $m.seq, part: "\($i + 1)/\($n)", text: $parts[$i]} end
+	  else $m end'
+CHUNK=320 # characters of encoded text per line; the first line's envelope stays under 180
 
 spool_of() { # feed → the spool directory, created
 	local d=${XDG_CACHE_HOME:-$HOME/.cache}/fleet/$me/$1
@@ -76,11 +91,11 @@ spool_of() { # feed → the spool directory, created
 	print -- "$d"
 }
 
-drain() { # print the spooled messages of a directory in stream order, then delete them
-	local f
+drain() { # dir [chunk]: print the spooled messages in stream order, then delete them
+	local f chunk=${2:-0}
 	for f in "$1"/<->.json(N.n); do
 		# own room lines are skipped (the room feed carries every sender, me included)
-		if jq -c --arg me "$me" "$FILTER"' | select(.from != $me or (.in | startswith("@")))' "$f" 2>/dev/null; then
+		if jq -c --arg me "$me" --argjson chunk "$chunk" "$FILTER"' | select(.part != null or .from != $me or (.in | startswith("@")))' "$f" 2>/dev/null; then
 			rm -f -- "$f"
 		elif [[ -z $f(#qNms-5) ]]; then # older than 5 s and still unreadable: not a write in progress
 			print -u2 -- "fleet: unreadable spool file set aside: $f.bad"
@@ -177,7 +192,7 @@ tail)
 		sleep 5
 	done) &
 	while :; do
-		drain "$spool"
+		drain "$spool" "$CHUNK"
 		sleep 0.3
 	done
 	;;
