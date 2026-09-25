@@ -62,6 +62,11 @@ The plugin's two monitors run `fleet <me> tail dm` and `fleet <me> tail chan` fo
 session and print each message as it arrives. They start at session start when the identity
 is known, and again after `/reload-plugins`.
 
+A pushed line is cut by Claude Code at 500 characters, so a long message arrives as
+continuation lines instead, all in the same notification: the first line carries the usual
+fields plus `"part":"1/N"`, the following ones `{"seq","part","text"}`. Join the texts in
+part order; nothing is missing and nothing needs re-reading.
+
 ## `/fleet:chat join <identity>`
 
 1. Write the identity into `.fleet-identity` in the project root (it is in the global
