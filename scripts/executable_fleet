@@ -168,6 +168,10 @@ ask)
 tail)
 	feed=$(feed_of "${1:-}")
 	spool=$(spool_of "$feed")
+	# one tail per identity and feed on this machine: a plugin reload starts the
+	# monitors again, and two readers would split the feed
+	exec {lockfd}>"$spool/.lock"
+	flock -n "$lockfd" || die "another 'fleet $me tail $feed' already runs on this machine (lock $spool/.lock)"
 	# kill the whole tree under this process (subshell, shim, nats), not only
 	# the direct children
 	killtree() {
