@@ -1,0 +1,53 @@
+#!/bin/zsh
+# rust_analyzer_link — ONE rust-analyzer for every consumer: the project's weekly
+# release, installed by mise (tool `rust-analyzer`, aqua backend).
+#
+# rustup's stable toolchain gets a bin/rust-analyzer symlink to the mise shim,
+# so `rustup which rust-analyzer`, the ~/.cargo/bin proxy and a plain PATH lookup
+# all run the same binary. That is what keeps Serena on it: its Rust resolver
+# asks rustup first and, when rustup has no rust-analyzer, installs the stable
+# component itself (a snapshot cut with each Rust release, weeks behind), then
+# uses that. With the link in place rustup "has" one, so Serena runs the weekly
+# build, and a stray `rustup component add rust-analyzer` fails on the file
+# conflict instead of replacing the link (Dimi 2026-09-25: "I really don't want
+# two tools to fight"; the clean fix is a path setting in Serena upstream).
+#
+# Idempotent and silent when nothing changes. Runs after every chezmoi apply
+# (run_after_rustup-converge) and from update_all after rustup and mise converge.
+set -e -u -o pipefail
+
+shim="$HOME/.local/share/mise/shims/rust-analyzer"
+
+command -v rustup >/dev/null 2>&1 || exit 0 # no Rust toolchain on this machine
+if [[ ! -e "$shim" ]]; then
+	print -u2 -- "rust_analyzer_link: mise has not installed rust-analyzer yet (run: mise install rust-analyzer); link deferred"
+	exit 0
+fi
+
+if rustup component list --installed 2>/dev/null | grep -q '^rust-analyzer'; then
+	print -- "rust_analyzer_link: removing the rustup rust-analyzer component (the fleet runs the weekly release)"
+	rustup component remove rust-analyzer
+fi
+
+for tc in "$HOME"/.rustup/toolchains/stable-*(N/); do
+	[[ -d "$tc/bin" ]] || continue
+	link="$tc/bin/rust-analyzer"
+	if [[ -L "$link" && "$(readlink "$link")" == "$shim" ]]; then
+		continue
+	fi
+	if [[ -e "$link" && ! -L "$link" ]]; then
+		print -u2 -- "rust_analyzer_link: $link is a real file and not the rustup component; refusing to replace it"
+		exit 1
+	fi
+	ln -sfn "$shim" "$link"
+	print -- "rust_analyzer_link: $link -> $shim"
+done
+
+# The proof, loud when it fails: rustup must now resolve to the link.
+case "$(rustup which rust-analyzer 2>/dev/null)" in
+"$HOME"/.rustup/toolchains/stable-*/bin/rust-analyzer) ;;
+*)
+	print -u2 -- "rust_analyzer_link: rustup which rust-analyzer does not resolve to the toolchain link"
+	exit 1
+	;;
+esac

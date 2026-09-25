@@ -1,0 +1,40 @@
+{{ if ne .role "server" -}}
+#!/usr/bin/env bash
+# rustup converge — the fleet's Rust toolchain pieces, declared here and added
+# where missing on every chezmoi apply (a run_after script: it runs each time,
+# so it must stay quick and quiet when nothing changes). Components and compile
+# targets only: the WASM targets are for compiling, no runtime or bundler.
+#
+# rust-analyzer is deliberately NOT a rustup component on this fleet. Dimi
+# (2026-09-25) wants the project's newest weekly release, always, for every
+# consumer (the command line, nvim, Serena): mise installs it and
+# ~/scripts/rust_analyzer_link, called last, links it into rustup's stable
+# toolchain and removes any stable component left behind. See that script.
+set -euo pipefail
+
+command -v rustup >/dev/null 2>&1 || {
+	echo "rustup converge: rustup is missing on this machine (install the Rust toolchain first)" >&2
+	exit 1
+}
+
+components=(rust-src clippy rustfmt)
+targets=(wasm32-unknown-unknown wasm32-wasip1 wasm32-wasip2)
+
+installed=$(rustup component list --installed)
+for c in "${components[@]}"; do
+	grep -qE "^${c}(-|$)" <<<"$installed" || {
+		echo "rustup converge: adding component $c"
+		rustup component add "$c"
+	}
+done
+
+installed=$(rustup target list --installed)
+for t in "${targets[@]}"; do
+	grep -qx "$t" <<<"$installed" || {
+		echo "rustup converge: adding target $t"
+		rustup target add "$t"
+	}
+done
+
+exec "$HOME/scripts/rust_analyzer_link"
+{{ end -}}
