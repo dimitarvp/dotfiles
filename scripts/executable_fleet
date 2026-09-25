@@ -17,6 +17,7 @@
 # A message on stdout is one JSON line:
 #   {"seq":12,"time":"2026-09-25T13:00:00Z","from":"xqlite","in":"#general","to":["dotfiles"],"text":"…"}
 #   in = "#room", or "@name" for a private message to name      to = who must act; [] = nobody
+#   time = when the hub stored it, UTC. Your own room lines are not printed (the feed skips them).
 # Feeds: dm = private messages to me; chan = every room. The hub keeps a read position per
 # identity and feed (a durable consumer named <me>-dm / <me>-chan, created by the operator):
 # a killed `tail` resumes after the last message it printed; `since` pages what waits.
@@ -78,7 +79,8 @@ spool_of() { # feed → the spool directory, created
 drain() { # print the spooled messages of a directory in stream order, then delete them
 	local f
 	for f in "$1"/<->.json(N.n); do
-		if jq -c "$FILTER" "$f" 2>/dev/null; then
+		# own room lines are skipped (the room feed carries every sender, me included)
+		if jq -c --arg me "$me" "$FILTER"' | select(.from != $me or (.in | startswith("@")))' "$f" 2>/dev/null; then
 			rm -f -- "$f"
 		elif [[ -z $f(#qNms-5) ]]; then # older than 5 s and still unreadable: not a write in progress
 			print -u2 -- "fleet: unreadable spool file set aside: $f.bad"
