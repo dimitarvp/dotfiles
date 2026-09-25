@@ -5,9 +5,12 @@
 
 typeset -U path # nested shells re-source this file; keep entries unique
 path=(
+  # ~/.local/bin ahead of ~/.cargo/bin on purpose (Dimi 2026-09-25): rustup keeps
+  # a proxy for every tool name there, rust-analyzer included, and the fleet's
+  # rust-analyzer is the weekly release installed by mise, linked from ~/.local/bin.
+  $HOME/.local/bin
   $HOME/.cargo/bin
   $HOME/go/bin
-  $HOME/.local/bin
   $HOME/bin
   $HOME/scripts
   $path

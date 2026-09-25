@@ -12,6 +12,7 @@ scripts/extract_safari_bookmarks
 .aws
 .ssh/pesto-aws-proxy.pem
 .local/bin/probex
+.local/bin/rust-analyzer
 {{ end }}
 
 {{ if not .adblock }}

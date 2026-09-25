@@ -79,6 +79,11 @@ pandoc = "latest"
 rebar = "latest"
 # serena MCP server — python pinned to 3.13 exactly like the old uv lane did
 "pipx:serena-agent" = { version = "latest", uvx_args = "--python 3.13" }
+# rust-analyzer: the project's WEEKLY release, never the rustup stable component
+# (a snapshot cut with each Rust release, up to six weeks behind) and not the
+# nightly (Dimi 2026-09-25). ~/.local/bin/rust-analyzer links to its shim, ahead
+# of the rustup proxy on PATH; the rustup converge script removes the component.
+rust-analyzer = "latest"
 "aqua:google-antigravity/antigravity-cli" = "latest"
 # neovim from the upstream release builds on every workstation: distro packages lag
 # (Debian sid sat on 0.12.4 for 17 days), brew builds no Intel bottles.

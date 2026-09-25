@@ -1,0 +1,43 @@
+{{ if ne .role "server" -}}
+#!/usr/bin/env bash
+# rustup converge — the fleet's Rust toolchain pieces, declared here and added
+# where missing; chezmoi runs this on every apply after this file's content
+# changed. Components and compile targets only (the WASM targets are for
+# compiling, no runtime or bundler is part of this).
+#
+# rust-analyzer is deliberately NOT a rustup component on this fleet: the
+# stable component is a snapshot cut with each Rust release and trails the
+# project's weekly releases by up to six weeks. Dimi (2026-09-25) wants the
+# newest weekly release, always, so mise installs it (tool `rust-analyzer`,
+# aqua backend) and ~/.local/bin/rust-analyzer links to its shim, ahead of the
+# rustup proxy on PATH. A stable component left behind is removed here.
+set -euo pipefail
+
+command -v rustup >/dev/null 2>&1 || {
+	echo "rustup converge: rustup is missing on this machine (install the Rust toolchain first)" >&2
+	exit 1
+}
+
+components=(rust-src clippy rustfmt)
+targets=(wasm32-unknown-unknown wasm32-wasip1 wasm32-wasip2)
+
+installed=$(rustup component list --installed)
+for c in "${components[@]}"; do
+	grep -qE "^${c}(-|$)" <<<"$installed" || {
+		echo "rustup converge: adding component $c"
+		rustup component add "$c"
+	}
+done
+if grep -qE '^rust-analyzer(-|$)' <<<"$installed"; then
+	echo "rustup converge: removing the rust-analyzer component (the weekly release via mise is the fleet's)"
+	rustup component remove rust-analyzer
+fi
+
+installed=$(rustup target list --installed)
+for t in "${targets[@]}"; do
+	grep -qx "$t" <<<"$installed" || {
+		echo "rustup converge: adding target $t"
+		rustup target add "$t"
+	}
+done
+{{ end -}}
