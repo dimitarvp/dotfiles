@@ -1,0 +1,182 @@
+#!/usr/bin/env zsh
+# fleet — chat between Claude Code agents through the NATS JetStream hub on the server.
+#
+# One identity per live session (dotfiles, xqlite, …; the names are in the config). The hub
+# checks the sender name on every message, keeps every message, and lets a private
+# message reach only its recipient (and the operator, who archives everything).
+#
+#   fleet <me> join                    heartbeat once, then how many messages wait in each feed
+#   fleet <me> who                     who is online (a name expires 90 s after its last heartbeat)
+#   fleet <me> say '#room' TEXT        information for the room; nobody has to act
+#   fleet <me> say @name TEXT          private message; the recipient has to act
+#   fleet <me> ask '#room' NAMES TEXT  room message naming who must act: a,b or a prefix like team-
+#   fleet <me> tail dm|chan            follow a feed forever, one JSON line per message (the plugin monitor)
+#   fleet <me> since dm|chan [N]       print the next unread messages of a feed (at most N, default 20), exit
+#
+# TEXT = the remaining arguments; with none, the text is read from stdin (multi-line is fine).
+# A message on stdout is one JSON line:
+#   {"seq":12,"time":"2026-09-25T13:00:00Z","from":"xqlite","in":"#general","to":["dotfiles"],"text":"…"}
+#   in = "#room", or "@name" for a private message to name      to = who must act; [] = nobody
+# Feeds: dm = private messages to me; chan = every room. The hub keeps a read position per
+# identity and feed (a durable consumer named <me>-dm / <me>-chan, created by the operator):
+# a killed `tail` resumes after the last message it printed; `since` pages what waits.
+# Never run `tail` and `since` on the same feed at the same time: they would split the messages.
+#
+# How a feed is read: `nats sub --dump DIR` writes every received message as DIR/<seq>.json
+# before it acknowledges it; this script prints those files in sequence order and deletes
+# them. The spool (~/.cache/fleet/<me>/<feed>) outlives the process, so a kill between the
+# write and the print loses nothing: the next run prints the leftovers first. The nats CLI's
+# own chatter goes to <spool>/natscli.log, never to stdout.
+#
+# Config: ~/.config/fleet/agents.conf (chezmoi, encrypted): `hub nats://host:4222` and one
+# `<name> <password>` line per identity. Needs the `nats` CLI (mise) and jq.
+
+set -euo pipefail
+
+die() {
+	print -u2 -- "fleet: $*"
+	exit 1
+}
+usage() {
+	print -u2 -- "usage: fleet <me> join | who | say '#room'|@name [TEXT] | ask '#room' NAMES [TEXT] | tail dm|chan | since dm|chan [N]"
+	exit 2
+}
+valid() { [[ $1 =~ '^[a-z0-9][a-z0-9_-]*$' ]]; }
+
+(($# >= 2)) || usage
+me=$1 verb=$2
+shift 2
+valid "$me" || die "bad identity name: $me (lowercase letters, digits, _ and -)"
+
+conf=${FLEET_CONF:-$HOME/.config/fleet/agents.conf}
+[[ -r $conf ]] || die "missing $conf (chezmoi deploys it; source private_dot_config/private_fleet/encrypted_private_agents.conf.age)"
+hub=$(awk '$1=="hub"{print $2; exit}' "$conf")
+pw=$(awk -v n="$me" '$1==n{print $2; exit}' "$conf")
+[[ -n $hub ]] || die "no hub line in $conf"
+[[ -n $pw ]] || die "no password for $me in $conf"
+export NATS_URL=$hub NATS_USER=$me NATS_PASSWORD=$pw
+n() { nats --no-context --inbox-prefix "_INBOX_$me" "$@"; }
+
+# A dumped message: {"Subject","Reply","Header":{"To":["a,b"]}|null,"Data":"<base64>"}.
+# The read-position metadata rides in Reply: $JS.ACK.<stream>.<consumer>.<delivered>.<seq>.<cseq>.<ns>.<pending>
+FILTER='(.Subject | split(".")) as $p
+	| ((.Reply // "") | split(".")) as $r
+	| {seq: ($r[5] | tonumber? // null),
+	   time: (($r[7] | tonumber? // 0) / 1e9 | floor | todate),
+	   from: $p[3],
+	   in: (if $p[1] == "dm" then "@" + $p[2] else "#" + $p[2] end),
+	   to: ((.Header.To // [""])[0] | split(",") | map(select(length > 0))),
+	   text: ((.Data // "") | @base64d | sub("\n+$"; ""))}'
+
+spool_of() { # feed → the spool directory, created
+	local d=${XDG_CACHE_HOME:-$HOME/.cache}/fleet/$me/$1
+	mkdir -p "$d"
+	chmod 700 "$d"
+	print -- "$d"
+}
+
+drain() { # print the spooled messages of a directory in stream order, then delete them
+	local f
+	for f in "$1"/<->.json(N.n); do
+		if jq -c "$FILTER" "$f" 2>/dev/null; then
+			rm -f -- "$f"
+		elif [[ -z $f(#qNms-5) ]]; then # older than 5 s and still unreadable: not a write in progress
+			print -u2 -- "fleet: unreadable spool file set aside: $f.bad"
+			mv -f -- "$f" "$f.bad"
+		fi
+	done
+}
+
+feed_of() {
+	[[ ${1:-} == dm || ${1:-} == chan ]] || usage
+	print -- "$1"
+}
+
+text_of() { # the remaining arguments, else stdin
+	if (($#)); then
+		print -rn -- "$*"
+	elif [[ ! -t 0 ]]; then
+		cat
+	else
+		die "no text given"
+	fi
+}
+
+send() { # subject [pub flags…]: the text from text_of on stdin; quiet unless it fails
+	local out
+	if ! out=$(n pub -J --no-templates --force-stdin "${@[2,-1]}" "$1" 2>&1); then
+		die "not sent (${out##*$'\n'})"
+	fi
+}
+
+case $verb in
+join)
+	n kv put presence "$me" "$(hostname -s)" >/dev/null
+	for feed in dm chan; do
+		printf '%s waiting: %s\n' "$feed" "$(n consumer info FLEET "$me-$feed" -j | jq -r .num_pending)"
+	done
+	;;
+who)
+	for k in $(n kv ls presence 2>/dev/null | grep -E '^[a-z0-9][a-z0-9_-]*$'); do
+		printf '%s\t%s\n' "$k" "$(n kv get presence "$k" --raw 2>/dev/null || true)"
+	done
+	;;
+say)
+	target=${1:-}
+	(($#)) && shift
+	case $target in
+	'#'*)
+		room=${target#'#'}
+		valid "$room" || die "bad room name: $room"
+		text_of "$@" | send "fleet.chan.$room.$me"
+		;;
+	'@'*)
+		to=${target#'@'}
+		valid "$to" || die "bad recipient name: $to"
+		text_of "$@" | send "fleet.dm.$to.$me" -H "To:$to"
+		;;
+	*) usage ;;
+	esac
+	;;
+ask)
+	(($# >= 2)) || usage
+	target=$1 names=$2
+	shift 2
+	[[ $target == '#'* ]] || die "ask takes a #room (a private message always names its recipient)"
+	room=${target#'#'}
+	valid "$room" || die "bad room name: $room"
+	[[ $names =~ '^[a-z0-9][a-z0-9_,-]*$' ]] || die "bad NAMES: $names (a,b or a prefix like team-)"
+	text_of "$@" | send "fleet.chan.$room.$me" -H "To:$names"
+	;;
+tail)
+	feed=$(feed_of "${1:-}")
+	spool=$(spool_of "$feed")
+	cleanup() { pkill -P $$ 2>/dev/null || true; }
+	trap cleanup EXIT
+	trap 'cleanup; exit 143' INT TERM HUP
+	# presence heartbeat; it stops within 30 s of this process dying
+	(while kill -0 $$ 2>/dev/null; do
+		n kv put presence "$me" "$(hostname -s)" >/dev/null 2>&1 || true
+		sleep 30
+	done) &
+	# the reader, restarted 5 s after every exit (hub restart, network blip)
+	(while kill -0 $$ 2>/dev/null; do
+		n sub --stream FLEET --durable "$me-$feed" --dump "$spool" >"$spool/natscli.log" 2>&1 || true
+		sleep 5
+	done) &
+	while :; do
+		drain "$spool"
+		sleep 0.3
+	done
+	;;
+since)
+	feed=$(feed_of "${1:-}")
+	count=${2:-20}
+	[[ $count == <1-> ]] || die "N must be a positive number"
+	spool=$(spool_of "$feed")
+	n sub --stream FLEET --durable "$me-$feed" --dump "$spool" --count "$count" -T --wait 3s >"$spool/natscli.log" 2>&1 ||
+		die "cannot read the $feed feed ($(tail -n 1 "$spool/natscli.log"))"
+	drain "$spool"
+	;;
+*) usage ;;
+esac

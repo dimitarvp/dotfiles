@@ -1,0 +1,12 @@
+[
+  {
+    "name": "fleet-dm",
+    "command": "[ -n \"$FLEET_NAME\" ] && exec fleet \"$FLEET_NAME\" tail dm || echo \"fleet plugin: FLEET_NAME is not set, no private-message feed (start claude with FLEET_NAME=<identity>)\"",
+    "description": "Fleet chat: private messages to $FLEET_NAME (one JSON line per message; act on each)"
+  },
+  {
+    "name": "fleet-chan",
+    "command": "[ -n \"$FLEET_NAME\" ] && exec fleet \"$FLEET_NAME\" tail chan || echo \"fleet plugin: FLEET_NAME is not set, no room feed (start claude with FLEET_NAME=<identity>)\"",
+    "description": "Fleet chat: every room (one JSON line per message; act only when to names $FLEET_NAME)"
+  }
+]

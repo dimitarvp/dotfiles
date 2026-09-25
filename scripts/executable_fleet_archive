@@ -1,0 +1,104 @@
+#!/usr/bin/env zsh
+# fleet_archive — every fleet chat message into a git repository on the server, forever.
+#
+# Runs as the user from the systemd user timer fleet-archive.timer (every 15 minutes).
+# It reads the FLEET stream as the admin user from the last archived sequence number to
+# the newest (`nats sub --dump DIR`: one JSON file per message, straight from the stream,
+# no read position kept on the hub), appends one JSON line per message to
+# <archive>/<YYYY-MM>/<YYYY-MM-DD>.jsonl (the UTC day of the hub's receive time) and
+# commits when anything changed. A line:
+#   {"seq":12,"time":"2026-09-25T13:00:00Z","from":"xqlite","in":"#general","to":["dotfiles"],"text":"…"}
+# Repeats are harmless: a day file is de-duplicated by seq before it is written, and the
+# saved position (.seq) is the highest sequence number actually written. Loud on stderr
+# and exit 1 when the archive directory is missing, the hub does not answer, or the
+# stream already dropped messages the archive never saw (a gap).
+# The archive holds every private message: the directory is the operator's alone (0700).
+#
+# Config: ~/.config/fleet/admin.conf (chezmoi, encrypted, server only): `admin <password>`
+# and `archive <directory>` (the git repository, inside the snapshotted backup dataset).
+# Needs the `nats` CLI (mise, on the unit's PATH), jq and git.
+
+set -euo pipefail
+
+CONF=${FLEET_ADMIN_CONF:-$HOME/.config/fleet/admin.conf}
+HUB=${FLEET_HUB:-nats://127.0.0.1:4222}
+
+die() {
+	print -u2 -- "fleet_archive: $*"
+	exit 1
+}
+
+[[ -r $CONF ]] || die "missing $CONF (chezmoi deploys it on the server; source private_dot_config/private_fleet/encrypted_private_admin.conf.age)"
+pw=$(awk '$1=="admin"{print $2; exit}' "$CONF")
+[[ -n $pw ]] || die "no admin line in $CONF"
+ARCHIVE=${FLEET_ARCHIVE:-$(awk '$1=="archive"{print $2; exit}' "$CONF")}
+[[ -n $ARCHIVE ]] || die "no archive line in $CONF"
+[[ -d $ARCHIVE && -w $ARCHIVE ]] || die "archive directory missing or not writable: $ARCHIVE (as root: install -d -o $USER -g $USER -m 700 $ARCHIVE; the parent needs mode 711)"
+export NATS_URL=$HUB NATS_USER=admin NATS_PASSWORD=$pw
+n() { nats --no-context --inbox-prefix _INBOX_admin "$@"; }
+
+# the same rendering as the fleet wrapper; the metadata rides in Reply:
+# $JS.ACK.<stream>.<consumer>.<delivered>.<seq>.<cseq>.<ns>.<pending>
+FILTER='(.Subject | split(".")) as $p
+	| ((.Reply // "") | split(".")) as $r
+	| {seq: ($r[5] | tonumber? // null),
+	   time: (($r[7] | tonumber? // 0) / 1e9 | floor | todate),
+	   from: $p[3],
+	   in: (if $p[1] == "dm" then "@" + $p[2] else "#" + $p[2] end),
+	   to: ((.Header.To // [""])[0] | split(",") | map(select(length > 0))),
+	   text: ((.Data // "") | @base64d | sub("\n+$"; ""))}'
+
+cd "$ARCHIVE"
+[[ -d .git ]] || git init -q
+last=$(cat .seq 2>/dev/null || echo 0)
+[[ $last == <0-> ]] || die ".seq holds garbage: $last"
+
+info=$(n stream info FLEET -j) || die "the hub does not answer (stream FLEET)"
+top=$(jq -r .state.last_seq <<<"$info")
+first=$(jq -r .state.first_seq <<<"$info")
+if ((top <= last)); then
+	echo "fleet archive: nothing new (archived up to seq $last)"
+	exit 0
+fi
+start=$((last + 1))
+if ((first > start)); then
+	print -u2 -- "fleet_archive: GAP — the stream dropped seq $start..$((first - 1)) before they were archived"
+	start=$first
+fi
+
+tmpd=$(mktemp -d)
+trap 'rm -rf "$tmpd"' EXIT
+n sub --stream FLEET --start-sequence "$start" --dump "$tmpd" --count $((top - start + 1)) -T --wait 5s >"$tmpd/natscli.log" 2>&1 || true
+files=("$tmpd"/<->.json(N.n))
+((${#files})) || die "expected seq $start..$top but received nothing ($(tail -n 1 "$tmpd/natscli.log"))"
+jq -c "$FILTER" "${files[@]}" >"$tmpd/batch.jsonl"
+got=${#files}
+
+changed=()
+for day in $(jq -r '.time[0:10]' "$tmpd/batch.jsonl" | sort -u); do
+	month=${day[1,7]}
+	f=$month/$day.jsonl
+	mkdir -p "$month"
+	# existing lines + new lines, one per seq, in stream order
+	{
+		[[ -f $f ]] && cat "$f"
+		jq -c "select(.time[0:10] == \"$day\")" "$tmpd/batch.jsonl"
+	} |
+		jq -sc 'unique_by(.seq) | sort_by(.seq) | .[]' >"$f.new"
+	if [[ -f $f ]] && cmp -s "$f" "$f.new"; then
+		rm -f "$f.new"
+	else
+		mv "$f.new" "$f"
+		changed+=("$f")
+	fi
+done
+
+newest=$(jq -r '.seq' "$tmpd/batch.jsonl" | sort -n | tail -n 1)
+echo "$newest" >.seq
+git add -- .seq "${changed[@]}"
+if git diff --cached --quiet; then
+	echo "fleet archive: $got message(s) re-read, nothing new on disk (seq $newest)"
+	exit 0
+fi
+git -c commit.gpgsign=false commit -q -m "messages up to seq $newest"
+echo "fleet archive: $got message(s), seq $start..$newest, ${#changed[@]} day file(s) committed"

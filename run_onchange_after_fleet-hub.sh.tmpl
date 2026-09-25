@@ -1,0 +1,45 @@
+{{ if eq .role "server" -}}
+#!/bin/bash
+# Arms the fleet chat hub on the server: the NATS user service and the 15-minute
+# archive timer. Re-runs whenever one of its pieces changes (hashes baked in below).
+# The user manager needs lingering (a chezmoi apply over ssh has no login session,
+# so XDG_RUNTIME_DIR is set by hand). A changed nats.conf is reloaded live (HUP).
+# nats.conf: {{ include "private_dot_config/nats/encrypted_private_nats.conf.age" | sha256sum }}
+# service:   {{ include "private_dot_config/systemd/user/fleet-nats.service" | sha256sum }}
+# archive:   {{ include "private_dot_config/systemd/user/fleet-archive.service" | sha256sum }}
+# timer:     {{ include "private_dot_config/systemd/user/fleet-archive.timer" | sha256sum }}
+# archiver:  {{ include "scripts/executable_fleet_archive" | sha256sum }}
+set -euo pipefail
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+shim=$HOME/.local/share/mise/shims/nats-server
+[[ -x $shim ]] || mise reshim >/dev/null 2>&1 || true
+[[ -x $shim ]] || {
+	echo "fleet hub: $shim is missing — run 'mise install' (the tools are in the mise config), then 'chezmoi apply' again" >&2
+	exit 1
+}
+if [[ $(loginctl show-user "$USER" -p Linger --value 2>/dev/null || true) != yes ]]; then
+	sudo loginctl enable-linger "$USER"
+	for _ in $(seq 1 20); do
+		[[ -S $XDG_RUNTIME_DIR/systemd/private ]] && break
+		sleep 0.5
+	done
+fi
+[[ -S $XDG_RUNTIME_DIR/systemd/private ]] || {
+	echo "fleet hub: no user manager socket under $XDG_RUNTIME_DIR" >&2
+	exit 1
+}
+# the JetStream store directory named in nats.conf (store_dir: "…")
+store=$(awk -F'"' '/store_dir/ {print $2; exit}' "$HOME/.config/nats/nats.conf")
+[[ -n $store ]] || {
+	echo "fleet hub: no store_dir in ~/.config/nats/nats.conf" >&2
+	exit 1
+}
+mkdir -p "$store"
+systemctl --user daemon-reload
+systemctl --user enable --now fleet-nats.service fleet-archive.timer
+systemctl --user reload-or-restart fleet-nats.service
+echo "fleet hub: nats $(systemctl --user is-active fleet-nats.service), archive timer $(systemctl --user is-active fleet-archive.timer)"
+{{ else -}}
+#!/bin/bash
+: # fleet chat hub — server only, no-op on this machine
+{{ end -}}

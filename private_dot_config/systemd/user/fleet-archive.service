@@ -1,0 +1,8 @@
+[Unit]
+Description=Archive the fleet chat stream into git (every message, forever)
+After=fleet-nats.service
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.cargo/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/scripts/fleet_archive

@@ -1,0 +1,11 @@
+[Unit]
+Description=NATS JetStream hub for the fleet agent chat (port 4222)
+
+[Service]
+ExecStart=%h/.local/share/mise/shims/nats-server -c %h/.config/nats/nats.conf
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

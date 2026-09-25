@@ -71,6 +71,13 @@ peco = "latest"
 "github:bcpierce00/unison" = { version = "latest", asset_pattern = "unison-*-ubuntu-*-x86_64-static.tar.gz" }
 {{- end }}
 "aqua:kopia/kopia" = "latest"
+# fleet agent chat (NATS) on every machine, the server included: nats-server runs
+# there as a systemd user service and stays a dormant sandbox on the workstations;
+# the nats CLI is what agents use (one TCP connection to the hub, no local daemon).
+# Both by full github name: the `nats-server` registry short name needs mise >=
+# 2026.9.12 (the mac lags), natscli has no registry entry at all.
+"github:nats-io/nats-server" = "latest"
+"github:nats-io/natscli" = "latest"
 {{- if ne .role "server" }}
 node = "latest"
 erlang = ["29", "28.5.0", "27"]

@@ -1,0 +1,5 @@
+{
+  "name": "fleet",
+  "version": "0.1.0",
+  "description": "Fleet chat (NATS hub on the server): the two feeds of the identity named by FLEET_NAME run as plugin monitors, so messages reach the session without a re-armed watch. Start with: FLEET_NAME=<identity> claude --plugin-dir ~/.local/share/fleet-plugin"
+}
