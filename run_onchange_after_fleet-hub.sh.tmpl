@@ -3,7 +3,7 @@
 # Arms the fleet chat hub on the server: the NATS user service and the 15-minute
 # archive timer. Re-runs whenever one of its pieces changes (hashes baked in below).
 # The user manager needs lingering (a chezmoi apply over ssh has no login session,
-# so XDG_RUNTIME_DIR is set by hand). A changed nats.conf is reloaded live (HUP).
+# so XDG_RUNTIME_DIR is set by hand). A changed piece restarts the hub.
 # nats.conf: {{ include "private_dot_config/nats/encrypted_private_nats.conf.age" | sha256sum }}
 # service:   {{ include "private_dot_config/systemd/user/fleet-nats.service" | sha256sum }}
 # archive:   {{ include "private_dot_config/systemd/user/fleet-archive.service" | sha256sum }}
@@ -36,8 +36,11 @@ store=$(awk -F'"' '/store_dir/ {print $2; exit}' "$HOME/.config/nats/nats.conf")
 }
 mkdir -p "$store"
 systemctl --user daemon-reload
-systemctl --user enable --now fleet-nats.service fleet-archive.timer
-systemctl --user reload-or-restart fleet-nats.service
+systemctl --user enable fleet-nats.service fleet-archive.timer
+# a restart, not a reload: it picks up unit and config changes alike, and a HUP
+# sent right after a fresh start would kill the server before its handler is up
+systemctl --user restart fleet-nats.service
+systemctl --user start fleet-archive.timer
 echo "fleet hub: nats $(systemctl --user is-active fleet-nats.service), archive timer $(systemctl --user is-active fleet-archive.timer)"
 {{ else -}}
 #!/bin/bash
