@@ -1,0 +1,110 @@
+#!/usr/bin/perl
+# flock — the fleet's stand-in for util-linux flock(1) on macOS, which ships
+# none. Deployed by chezmoi on darwin only (Linux keeps util-linux). It takes
+# the same kernel lock, flock(2), so a lock dies with its holder exactly as on
+# Linux, and it returns the same exit codes for the modes the fleet's scripts
+# use:
+#
+#   flock [-s|-x] [-n] [-w SECS] FD             lock a descriptor the caller
+#                                                opened (exec 9>file; flock -n 9)
+#   flock -u FD                                  release it
+#   flock [-s|-x] [-n] [-w SECS] [-E RC] FILE|DIR CMD [ARGS...]
+#                                                run CMD while holding the lock
+#
+# Exit: 0 locked (or CMD's own status), 1 the lock is held elsewhere (-n, or -w
+# ran out; -E RC changes that code), 64 an option this file does not implement.
+# Anything outside the list above is refused by name, on purpose: this is a
+# subset, and a silent difference from util-linux would be worse than a loud one.
+use strict;
+use warnings;
+use Fcntl qw(:flock O_RDONLY O_RDWR O_CREAT);
+
+my $usage = "usage: flock [-s|-x] [-n] [-w SECS] [-u] FD | flock [-s|-x] [-n] [-w SECS] [-E RC] FILE|DIR CMD [ARGS...]\n";
+my ( $shared, $nonblock, $wait, $unlock, $conflict_rc ) = ( 0, 0, undef, 0, 1 );
+
+sub refuse { print STDERR "flock: $_[0]\n$usage"; exit 64 }
+
+while (@ARGV) {
+    my $a = $ARGV[0];
+    last unless $a =~ /^-/;
+    shift @ARGV;
+    if    ( $a eq '-s' || $a eq '--shared' )    { $shared   = 1 }
+    elsif ( $a eq '-x' || $a eq '--exclusive' ) { $shared   = 0 }
+    elsif ( $a eq '-n' || $a eq '--nonblock' || $a eq '--nb' ) { $nonblock = 1 }
+    elsif ( $a eq '-u' || $a eq '--unlock' )    { $unlock   = 1 }
+    elsif ( $a eq '-w' || $a eq '--wait' || $a eq '--timeout' ) {
+        $wait = shift @ARGV;
+        refuse("-w needs a number of seconds") unless defined $wait && $wait =~ /^\d+(\.\d+)?$/;
+    }
+    elsif ( $a =~ /^(?:-w|--wait=|--timeout=)(\d+(?:\.\d+)?)$/ ) { $wait = $1 }
+    elsif ( $a eq '-E' || $a eq '--conflict-exit-code' ) {
+        $conflict_rc = shift @ARGV;
+        refuse("-E needs an exit code") unless defined $conflict_rc && $conflict_rc =~ /^\d+$/;
+    }
+    elsif ( $a =~ /^(?:-E|--conflict-exit-code=)(\d+)$/ ) { $conflict_rc = $1 }
+    elsif ( $a eq '-V' || $a eq '--version' ) {
+        print "flock: the fleet's perl stand-in for util-linux flock on macOS (modes: -s -x -n -w -u -E; FD, or FILE|DIR CMD)\n";
+        exit 0;
+    }
+    elsif ( $a eq '-h' || $a eq '--help' ) { print $usage; exit 0 }
+    elsif ( $a eq '--' ) { last }
+    else { refuse("option $a is not implemented by this stand-in (it covers -s -x -n -w -u -E)") }
+}
+
+refuse("no descriptor or file given") unless @ARGV;
+
+# take FH — the lock operation the options describe; true when it succeeded.
+sub take {
+    my ($fh) = @_;
+    if ($unlock) { flock( $fh, LOCK_UN ) or die "flock: unlock failed: $!\n"; return 1 }
+    my $op = $shared ? LOCK_SH : LOCK_EX;
+    return flock( $fh, $op | LOCK_NB ) if $nonblock;
+    if ( defined $wait ) {
+        require Time::HiRes;
+        my $got = eval {
+            local $SIG{ALRM} = sub { die "flock-timeout\n" };
+            Time::HiRes::alarm($wait);
+            my $r = flock( $fh, $op );
+            Time::HiRes::alarm(0);
+            $r;
+        };
+        return 0 if !defined $got && $@ eq "flock-timeout\n";
+        die "flock: $@" if $@;
+        return $got;
+    }
+    return flock( $fh, $op );
+}
+
+if ( @ARGV == 1 && $ARGV[0] =~ /^\d+$/ ) {
+    # Descriptor mode: the caller's fd is reopened without a dup, so the lock
+    # sits on the caller's open file description and outlives this process,
+    # exactly like util-linux `flock -n 9`.
+    my $fd = $ARGV[0];
+    my $fh;
+    open( $fh, '<&=', $fd ) or open( $fh, '>>&=', $fd )
+        or do { print STDERR "flock: cannot use file descriptor $fd: $!\n"; exit 1 };
+    if ( take($fh) ) { exit 0 }
+    exit $conflict_rc if $nonblock || defined $wait;
+    print STDERR "flock: lock on descriptor $fd failed: $!\n";
+    exit 1;
+}
+
+refuse("-u takes a descriptor, not a file") if $unlock;
+my $path = shift @ARGV;
+refuse("no command given after $path") unless @ARGV;
+my $fh;
+if ( -d $path ) {
+    sysopen( $fh, $path, O_RDONLY ) or do { print STDERR "flock: cannot open $path: $!\n"; exit 1 };
+}
+else {
+    sysopen( $fh, $path, O_RDWR | O_CREAT ) or sysopen( $fh, $path, O_RDONLY )
+        or do { print STDERR "flock: cannot open $path: $!\n"; exit 1 };
+}
+unless ( take($fh) ) {
+    exit $conflict_rc if $nonblock || defined $wait;
+    print STDERR "flock: lock on $path failed: $!\n";
+    exit 1;
+}
+my $status = system(@ARGV);
+if ( $status == -1 ) { print STDERR "flock: cannot run $ARGV[0]: $!\n"; exit 127 }
+exit( ( $status & 127 ) ? 128 + ( $status & 127 ) : $status >> 8 );

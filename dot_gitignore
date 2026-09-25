@@ -1,4 +1,5 @@
 .DS_Store
+.dexter
 .elixir-ls
 .elixir_ls
 .envrc

@@ -5,6 +5,7 @@ CLAUDE.md
 {{ if ne .chezmoi.os "darwin" }}
 scripts/extract_safari_bookmarks
 .zprofile
+.local/bin/flock
 {{ end }}
 
 {{ if eq .role "server" }}

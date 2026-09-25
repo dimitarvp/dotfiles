@@ -73,3 +73,8 @@ tmp/
 # travels. The oraios/serena clone under ~/kod tracks its own .serena/ — those
 # copies simply stop moving, nothing is deleted.
 .serena/
+
+# dexter's per-repo symbol index (.dexter/dexter.db) stores the absolute paths
+# of the machine that built it, so a synced copy answers with the other
+# machine's paths. Per machine: `dexter init --force` rebuilds it in seconds.
+.dexter/
