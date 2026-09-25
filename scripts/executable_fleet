@@ -151,7 +151,17 @@ ask)
 tail)
 	feed=$(feed_of "${1:-}")
 	spool=$(spool_of "$feed")
-	cleanup() { pkill -P $$ 2>/dev/null || true; }
+	# kill the whole tree under this process (subshell, shim, nats), not only
+	# the direct children
+	killtree() {
+		local c
+		for c in $(pgrep -P "$1" 2>/dev/null); do killtree "$c"; done
+		kill "$1" 2>/dev/null || true
+	}
+	cleanup() {
+		local c
+		for c in $(pgrep -P $$ 2>/dev/null); do killtree "$c"; done
+	}
 	trap cleanup EXIT
 	trap 'cleanup; exit 143' INT TERM HUP
 	# presence heartbeat; it stops within 30 s of this process dying
