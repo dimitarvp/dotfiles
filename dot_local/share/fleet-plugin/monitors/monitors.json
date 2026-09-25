@@ -1,12 +1,12 @@
 [
   {
     "name": "fleet-dm",
-    "command": "[ -n \"$FLEET_NAME\" ] && exec fleet \"$FLEET_NAME\" tail dm || echo \"fleet plugin: FLEET_NAME is not set, no private-message feed (start claude with FLEET_NAME=<identity>)\"",
-    "description": "Fleet chat: private messages to $FLEET_NAME (one JSON line per message; act on each)"
+    "command": "id=$FLEET_NAME; [ -n \"$id\" ] || id=$(cat \"${CLAUDE_PROJECT_DIR}/.fleet-identity\" 2>/dev/null); [ -n \"$id\" ] && exec fleet \"$id\" tail dm || echo \"fleet plugin: no identity (FLEET_NAME unset, no .fleet-identity in the project root): no private-message feed\"",
+    "description": "Fleet chat: private messages to this session's identity (one JSON line per message; act on each)"
   },
   {
     "name": "fleet-chan",
-    "command": "[ -n \"$FLEET_NAME\" ] && exec fleet \"$FLEET_NAME\" tail chan || echo \"fleet plugin: FLEET_NAME is not set, no room feed (start claude with FLEET_NAME=<identity>)\"",
-    "description": "Fleet chat: every room (one JSON line per message; act only when to names $FLEET_NAME)"
+    "command": "id=$FLEET_NAME; [ -n \"$id\" ] || id=$(cat \"${CLAUDE_PROJECT_DIR}/.fleet-identity\" 2>/dev/null); [ -n \"$id\" ] && exec fleet \"$id\" tail chan || echo \"fleet plugin: no identity (FLEET_NAME unset, no .fleet-identity in the project root): no room feed\"",
+    "description": "Fleet chat: every room (one JSON line per message; act only when `to` names this session's identity)"
   }
 ]

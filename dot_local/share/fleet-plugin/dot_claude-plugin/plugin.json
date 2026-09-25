@@ -1,5 +1,5 @@
 {
   "name": "fleet",
-  "version": "0.1.0",
-  "description": "Fleet chat (NATS hub on the server): the two feeds of the identity named by FLEET_NAME run as plugin monitors, so messages reach the session without a re-armed watch. Start with: FLEET_NAME=<identity> claude --plugin-dir ~/.local/share/fleet-plugin"
+  "version": "0.2.0",
+  "description": "Fleet chat (NATS hub on the server): the /fleet:chat skill teaches the vocabulary, the two monitors deliver this session's feeds. Identity = FLEET_NAME or .fleet-identity in the project root."
 }

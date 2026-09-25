@@ -8,3 +8,6 @@
 .serena
 .tool-versions
 node_modules
+
+# fleet chat: the per-project identity file (one word), never committed
+.fleet-identity
