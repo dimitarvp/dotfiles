@@ -21,6 +21,7 @@ rustflags=["-C", "target-cpu=native", "-C", "link-arg=-fuse-ld=mold"]
 [profile.dev]
 split-debuginfo = "unpacked" # macOS-specific debug build acceleration.
 strip = "debuginfo"
+panic = "unwind" # Never abort globally: NIF crates (xqlite) need unwinding panics so Rustler can catch them.
 
 [profile.release]
 strip = "symbols" # `debuginfo` only strips debug symbols; `symbols` strips all symbol information.
@@ -28,4 +29,4 @@ lto = true # Turn on link time optimization.
 codegen-units = 1 # Reduce LTO units to 1 for maximum binary size reduction.
 opt-level = 3 # Optimize for speed (not binary size).
 # opt-level = "z"  # Optimize for size (speed does not suffer much but it does somewhat).
-panic = "abort"
+panic = "unwind" # Never abort globally: NIF crates (xqlite) need unwinding panics so Rustler can catch them.
