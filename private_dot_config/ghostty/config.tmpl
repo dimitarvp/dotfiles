@@ -54,6 +54,13 @@ palette = 15=#f8f8f2
 # Scrollback (10 million lines - clear manually with Super+K)
 scrollback-limit = 10000000
 
+# Mouse wheel on macOS: scroll exactly the lines macOS reports per wheel event,
+# as WezTerm does. Ghostty's default multiplies discrete wheel events by 3.
+# Linux keeps the default: a wheel notch reports 1 there and 3 lines is the norm.
+{{- if eq .chezmoi.os "darwin" }}
+mouse-scroll-multiplier = discrete:1
+{{- end }}
+
 # Copy on select
 copy-on-select = clipboard
 
