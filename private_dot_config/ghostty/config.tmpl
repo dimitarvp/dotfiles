@@ -54,12 +54,12 @@ palette = 15=#f8f8f2
 # Scrollback (10 million lines - clear manually with Super+K)
 scrollback-limit = 10000000
 
-# Mouse wheel on macOS: scroll exactly the lines macOS reports per wheel event,
-# as WezTerm does. Ghostty's default multiplies discrete wheel events by 3.
-# Linux keeps the default: a wheel notch reports 1 there and 3 lines is the norm.
-{{- if eq .chezmoi.os "darwin" }}
-mouse-scroll-multiplier = discrete:1
-{{- end }}
+# Mouse wheel and trackpad, every OS and device: scroll what the OS reports, as
+# WezTerm does. Ghostty's defaults: discrete:3 = three times each wheel notch;
+# precision:1 with Ghostty's own 2x on macOS = one line per cell height of finger
+# travel, while WezTerm scrolls one line per 15 points. precision = font size / 15
+# equals WezTerm on a 2x display (this font's line height is exactly 1 em).
+mouse-scroll-multiplier = precision:{{ printf "%.4f" (divf (index . "ghostty_font_size" | default 18) 15.0) }},discrete:1
 
 # Copy on select
 copy-on-select = clipboard
