@@ -2,6 +2,8 @@
 #
 # gup_converge - Converge gup-managed Go tools to match the config
 #
+# 0. Build the locally built tools from their source directories
+#    (~/.config/gup/local_sources, one directory per line)
 # 1. Install only missing tools (compare gup list vs gup.json)
 # 2. Update all installed tools to latest
 # 3. Prune tools not in config
@@ -16,6 +18,7 @@
 set -uo pipefail
 
 declare -a install_failures=()
+declare -a local_failures=()
 update_failed=false
 prune_failed=false
 
@@ -34,18 +37,49 @@ echo "=== gup_converge ==="
 echo "Config: $CONFIG_FILE"
 echo ""
 
+# 0. Locally built tools. gup cannot fetch them (see below), so each one is
+# built from its source directory with `go install .`, which does nothing when
+# the installed binary is current: a toolchain bump or a new machine needs no
+# build by hand. The directories are listed in LOCAL_SOURCES, one per line (the
+# file is kept encrypted in the repo: the paths are private). A directory that
+# does not exist on this machine is named and skipped. This phase runs first,
+# so that a tool built here for the first time is already known as local when
+# the prune phase looks at what is installed.
+LOCAL_SOURCES="${HOME}/.config/gup/local_sources"
+if [[ -f "$LOCAL_SOURCES" ]]; then
+	echo ">>> Phase 0: Building the local tools..."
+	while IFS= read -r dir; do
+		dir="${dir%%#*}"
+		dir="${dir#"${dir%%[![:space:]]*}"}"
+		dir="${dir%"${dir##*[![:space:]]}"}"
+		[[ -z "$dir" ]] && continue
+		dir="${dir/#\~/$HOME}"
+		if [[ ! -d "$dir" ]]; then
+			echo "[SKIP] $dir (not on this machine)"
+			continue
+		fi
+		echo "[BUILD] $dir"
+		if ! (cd "$dir" && go install .); then
+			echo "[FAILED] $dir"
+			local_failures+=("$dir")
+		fi
+	done <"$LOCAL_SOURCES"
+	echo ""
+fi
+
 # Get sorted list of installed tool names
 installed=$(gup list 2>/dev/null | awk -F: '{gsub(/^[ \t]+|[ \t]+$/, "", $1); print $1}' | sort)
 
 # Locally built tools: a module path whose first element has no dot (e.g. "ccctx",
 # built with `go install .` from ~/kod/ccctx) is not fetchable — `go install
 # ccctx@latest` is impossible by Go's own rules — so gup can neither update nor
-# reinstall it. Leave such tools alone: skip them in update, protect them from prune.
+# reinstall it. gup leaves such tools alone: they are skipped in update and
+# protected from prune; phase 0 above is what rebuilds them.
 local_tools=("${(@f)$(gup list --json 2>/dev/null |
 	jq -r '.[] | select(.import_path | split("/")[0] | test("\\.") | not) | .name' | sort)}")
 local_tools=(${local_tools:#}) # drop the empty element a no-match yields
 if (( ${#local_tools} )); then
-	echo "Local (not fetchable, left alone): ${local_tools[*]}"
+	echo "Local (not fetchable, left alone by gup): ${local_tools[*]}"
 	echo ""
 fi
 
@@ -103,8 +137,9 @@ echo ""
 
 # NOTE: do NOT auto-export here. If gup update fails, the config would be
 # overwritten with only surviving tools. Run gup_export manually instead.
-if (( ${#install_failures[@]} )) || [[ "$update_failed" == true ]] || [[ "$prune_failed" == true ]]; then
+if (( ${#install_failures[@]} )) || (( ${#local_failures[@]} )) || [[ "$update_failed" == true ]] || [[ "$prune_failed" == true ]]; then
 	echo "=== FAILURES ==="
+	(( ${#local_failures[@]} )) && printf 'local build: %s\n' "${local_failures[@]}"
 	(( ${#install_failures[@]} )) && printf 'install: %s\n' "${install_failures[@]}"
 	[[ "$update_failed" == true ]] && echo "update phase had errors"
 	[[ "$prune_failed" == true ]] && echo "prune had errors"
