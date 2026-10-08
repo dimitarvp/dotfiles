@@ -2,7 +2,7 @@ available_cpu_cores=$(getconf _NPROCESSORS_ONLN)
 
 source $HOME/.zsh/secrets.zsh
 
-source $HOME/.zsh/os.zsh  # OS detection helpers (is_macos, is_linux, HOMEBREW_PREFIX)
+source $HOME/.zsh/os.zsh # OS detection helpers (is_macos, is_linux, HOMEBREW_PREFIX)
 source $HOME/.zsh/zsh.zsh
 source $HOME/.zsh/package_managers.zsh
 source $HOME/.zsh/cache.zsh
@@ -27,11 +27,10 @@ source $HOME/.zsh/languages/rust.zsh
 source $HOME/.zsh/languages/ocaml.zsh
 source $HOME/.zsh/languages/python.zsh
 
-source $HOME/.zsh/programs/direnv.zsh
 source $HOME/.zsh/programs/docker.zsh
 source $HOME/.zsh/programs/git.zsh
 source $HOME/.zsh/programs/pspg.zsh
 source $HOME/.zsh/programs/mise.zsh
+source $HOME/.zsh/programs/direnv.zsh # after mise: see the note in the file
 
 source $HOME/.zsh/prompt.zsh
-
