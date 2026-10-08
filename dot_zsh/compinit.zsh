@@ -14,25 +14,13 @@ if [[ -x "$_rustup" ]]; then
   fi
 fi
 
-# The dump (the command → completion-function table) is rebuilt from scratch
-# once a day and used as is (-C) in between. -C alone never rescans fpath, so
-# completion files that arrive later stay unregistered until something deletes
-# the dump: by 2026-10-09 the March dump had outlived a zsh upgrade and lacked
-# ~150 commands (age, zstd, 7z, npm, tldr, the zsh 5.9.2 set). The rebuild
-# costs ~0.5 s on the mac, ~0.2 s on the Linux boxes, once a day. -u: should
-# compaudit ever flag a group-writable fpath directory, it would prompt and
-# block the shell start; use the directories anyway. The glob (N.mh-24)
-# matches the dump only when it was modified within the last 24 hours.
-autoload -Uz compinit
-_dump="$HOME/.cache/zsh/.zcompdump-${HOST}"
-_dump_fresh=("$_dump"(N.mh-24))
-if (($#_dump_fresh)); then
-  compinit -C -d "$_dump"
-else
-  rm -f -- "$_dump"
-  compinit -u -d "$_dump"
-fi
-unset _dump _dump_fresh
+# -C uses the dump (the command → completion-function table) as is, no fpath
+# rescan and no compaudit (~25 ms saved per shell), and builds it only when the
+# file is missing. New tools bring new completion files, so the update scripts
+# (update_all, update_via_gotask) delete the dump at the end of every run; the
+# next shell rebuilds it once (~0.5 s). A tool installed by hand outside those
+# scripts gets its completion after `rm ~/.cache/zsh/.zcompdump-*`.
+autoload -Uz compinit && compinit -C -d "$HOME/.cache/zsh/.zcompdump-${HOST}"
 
 # Colored man pages (was: oh-my-zsh colored-man-pages plugin).
 export LESS_TERMCAP_mb=$'\e[1;31m'  # begin blink
