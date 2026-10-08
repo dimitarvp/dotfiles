@@ -38,3 +38,17 @@ go/bin/usql
 # boxes): retired on Dimi's word 2026-09-15, not needed for now
 .local/bin/sim_text
 .local/bin/sim_c
+
+# the cached `mise direnv` snippet (the use_mise function for .envrc files): the
+# command is deprecated upstream (removal announced for mise 2027.10) and no
+# .envrc on the fleet uses `use mise`; mise activate alone is the integration
+.cache/zsh/mise_direnv.zsh
+
+# the cached `rustc --print sysroot` behind RUST_SRC_PATH: keyed on the rustup
+# proxy's mtime, it kept the brew sysroot after rust moved to rustup (a dead
+# path in every shell). rust-analyzer finds the sources through the installed
+# rust-src component; the variable is not needed
+.cache/zsh/rustc_sysroot
+
+# the cached starship init: the prompt is rendered in-process since the switch
+.cache/zsh/starship.zsh

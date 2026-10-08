@@ -4,4 +4,3 @@
 # made there took explorer.exe off every new wt tab's PATH and xdg-open stopped
 # reaching the Windows browser (2026-09-03). Costs a few ms per shell.
 eval "$(mise activate zsh)"
-_cache_eval mise_direnv mise direnv
