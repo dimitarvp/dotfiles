@@ -110,11 +110,11 @@ rust-analyzer = "latest"
 "npm:prettier" = { version = "latest", minimum_release_age = "24h" }
 "npm:@redocly/cli" = { version = "latest", minimum_release_age = "24h" }
 "npm:http-server" = { version = "latest", minimum_release_age = "24h" }
-# pnpm 12 ships a native binary per platform (@pnpm/exe.*) and swaps it in for
-# its placeholder bin from an install script. mise's embedded installer (aube)
-# blocks install scripts unless allowed, and its bin shim then runs the shell
-# placeholder under node and dies; allow_builds lets that one script run.
-"npm:pnpm" = { version = "latest", minimum_release_age = "24h", allow_builds = true }
+# pnpm: the standalone release binary (aqua registry, node bundled, no install
+# script). The npm package is a placeholder that an install script swaps for the
+# native binary; mise's embedded installer never ran that script even with
+# allow_builds = true, so every `pnpm` call died in a SyntaxError (2026-10-09).
+pnpm = { version = "latest", minimum_release_age = "24h" }
 {{- if ne .chezmoi.os "darwin" }}
 "aqua:remoteoss/dexter" = "latest"
 {{- end }}
