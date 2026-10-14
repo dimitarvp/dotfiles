@@ -43,6 +43,9 @@ peco = "latest"
 "github:akavel/up" = "latest"
 "github:kkdai/youtube" = "latest"
 "github:dalance/procs" = "latest"
+# cs — boyter's ranked grep (lexical, no index, 0.1 s): the exact-sweep searcher of the
+# code-intel test drive, fleet-wide on his word 2026-10-14; upstream release builds.
+"github:boyter/cs" = "latest"
 # usql — the psql-style shell for any DB, from the upstream release builds (every
 # driver compiled in; a `go install` build carries the base driver set only). It
 # left the gup lane 2026-09-15: since 0.21.5 usql's go.mod has an `exclude`
@@ -62,6 +65,9 @@ peco = "latest"
 "pipx:glances" = "latest"
 "pipx:visidata" = "latest"
 "pipx:harlequin" = "latest" # SQL IDE TUI; sqlite + duckdb adapters built in, -r = read-only
+# semble — meaning search over code and Markdown (static embeddings on the CPU, one 33 MB
+# model download on first use, no server): the other searcher of the test drive, 2026-10-14.
+"pipx:semble" = "latest"
 # sync + backup tools live on servers too (Dimi 2026-09-09): unison for treesync
 # (one release build on every peer; the asset name differs per OS, hence the
 # platform pick) and kopia (single fleet lane, no pacman/AUR/brew copies).
