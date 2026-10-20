@@ -20,7 +20,7 @@ input=$(cat)
 	IFS= read -r r7
 	IFS= read -r ctx_used
 	IFS= read -r ctx_size
-	IFS= read -r ctx_pct
+	IFS= read -r ctx_pct_cc
 	IFS= read -r session_id
 } < <(jq -r '
 	.workspace.current_dir // .cwd // "?",
@@ -35,6 +35,18 @@ input=$(cat)
 	(.context_window.used_percentage         | if type == "number" then round | tostring else "" end),
 	(.session_id // "")
 ' <<<"$input")
+
+# Context ceiling. Claude Code force-compacts 34,000 tokens below the model
+# window (966k on a 1M window), so the window itself is never reachable: the ctx
+# segment counts against the ceiling. Verify the constant against the
+# "Autocompact buffer" row of /context. Claude Code's own used_percentage (against
+# the full window) is kept apart for the ccctx sensor file below.
+CTX_HEADROOM=34000
+ctx_max="" ctx_pct=""
+if [ -n "$ctx_size" ] && [ "$ctx_size" -gt "$CTX_HEADROOM" ]; then
+	ctx_max=$((ctx_size - CTX_HEADROOM))
+	ctx_pct=$(((ctx_used * 100 + ctx_max / 2) / ctx_max))
+fi
 
 # GNU vs BSD date/stat. On the mac, brew coreutils' gnubin dir shadows both
 # names in PATH with GNU-flavored ones whose -r/-f mean something else — so
@@ -75,7 +87,7 @@ get_token() {
 }
 
 file_age() { # seconds since mtime of $1; missing file reads as very old
-	printf '%s' $(( $(date +%s) - $(stat_mtime "$1") ))
+	printf '%s' $(($(date +%s) - $(stat_mtime "$1")))
 }
 
 fetch_usage() {
@@ -120,7 +132,7 @@ fmt_day_hm() { # "Today 17:00" / "Tomorrow 09:30", else "7 Jul 14:00"
 	hm=$(epoch_fmt "$ts" %H:%M)
 	if [ "$day" = "$(date +%Y-%m-%d)" ]; then
 		printf 'Today %s' "$hm"
-	elif [ "$day" = "$(epoch_fmt $(( $(date +%s) + 86400 )) %Y-%m-%d)" ]; then
+	elif [ "$day" = "$(epoch_fmt $(($(date +%s) + 86400)) %Y-%m-%d)" ]; then
 		printf 'Tomorrow %s' "$hm"
 	else
 		fmt_date_hm "$ts"
@@ -141,47 +153,52 @@ RED="${ESC}[1;38;5;196m"
 
 # model chip: white on family color
 case $model in
-	fable-5*) model_c="${ESC}[1;38;5;231;48;5;28m" ;;  # grass green
-	*opus*)   model_c="${ESC}[1;38;5;231;48;5;166m" ;; # orange
-	*)        model_c="${ESC}[1;38;5;231;48;5;31m" ;;  # cyan
+fable-5*) model_c="${ESC}[1;38;5;231;48;5;28m" ;; # grass green
+*opus*) model_c="${ESC}[1;38;5;231;48;5;166m" ;;  # orange
+*) model_c="${ESC}[1;38;5;231;48;5;31m" ;;        # cyan
 esac
 
 # effort heat ramp: low → max
 case $effort in
-	max)    effort_c=$RED ;;
-	xhigh)  effort_c=$ORN ;;
-	high)   effort_c=$YEL ;;
-	medium) effort_c="${ESC}[38;5;76m" ;;
-	low)    effort_c="${ESC}[38;5;75m" ;;
-	*)      effort_c="" ;;
+max) effort_c=$RED ;;
+xhigh) effort_c=$ORN ;;
+high) effort_c=$YEL ;;
+medium) effort_c="${ESC}[38;5;76m" ;;
+low) effort_c="${ESC}[38;5;75m" ;;
+*) effort_c="" ;;
 esac
 
 pct_c() { # threshold color for $1 (integer %)
-	if [ "$1" -ge 80 ]; then printf '%s' "$RED"
-	elif [ "$1" -ge 50 ]; then printf '%s' "$YEL"
+	if [ "$1" -ge 80 ]; then
+		printf '%s' "$RED"
+	elif [ "$1" -ge 50 ]; then
+		printf '%s' "$YEL"
 	else printf '%s' "$GRN"; fi
 }
 
 ctx_c() { # context pressure: <50 green, <70 yellow, <85 orange, ≥85 red
-	if [ "$1" -ge 85 ]; then printf '%s' "$RED"
-	elif [ "$1" -ge 70 ]; then printf '%s' "$ORN"
-	elif [ "$1" -ge 50 ]; then printf '%s' "$YEL"
+	if [ "$1" -ge 85 ]; then
+		printf '%s' "$RED"
+	elif [ "$1" -ge 70 ]; then
+		printf '%s' "$ORN"
+	elif [ "$1" -ge 50 ]; then
+		printf '%s' "$YEL"
 	else printf '%s' "$GRN"; fi
 }
 
 hm_tok() { # humanize token count: 330472 → 330k, 1000000 → 1.0m
 	if [ "$1" -ge 1000000 ]; then
-		local d=$(( ($1 * 10 + 500000) / 1000000 ))
-		printf '%d.%dm' $(( d / 10 )) $(( d % 10 ))
+		local d=$((($1 * 10 + 500000) / 1000000))
+		printf '%d.%dm' $((d / 10)) $((d % 10))
 	else
-		printf '%dk' $(( ($1 + 500) / 1000 ))
+		printf '%dk' $((($1 + 500) / 1000))
 	fi
 }
 
 parts=("${DIM}${dir}${RST}" "${model_c} ${model} ${RST}")
 [ -n "$effort" ] && parts+=("${effort_c}${effort}${RST}")
-if [ -n "$ctx_pct" ] && [ -n "$ctx_size" ]; then
-	parts+=("$(hm_tok "$ctx_used") / $(hm_tok "$ctx_size") $(ctx_c "$ctx_pct")(${ctx_pct}%)${RST}")
+if [ -n "$ctx_pct_cc" ] && [ -n "$ctx_max" ]; then
+	parts+=("$(hm_tok "$ctx_used") / $(hm_tok "$ctx_max") $(ctx_c "$ctx_pct")(${ctx_pct}%)${RST}")
 fi
 if [ -n "$p5" ]; then
 	seg="$(pct_c "$p5")5h ${p5}%${RST}"
@@ -221,7 +238,7 @@ publish_ctx_sensor() {
 	[ -d "$dir" ] || mkdir -p "$dir" 2>/dev/null || return 0
 	tmp=$(mktemp "${dir}/.${session_id}.XXXXXX" 2>/dev/null) || return 0
 	if printf '{"window":%s,"used":%s,"pct":%s,"model":"%s","ts":%s}\n' \
-		"$ctx_size" "${ctx_used:-0}" "${ctx_pct:-0}" "$model_id" "$(date +%s)" >"$tmp" 2>/dev/null &&
+		"$ctx_size" "${ctx_used:-0}" "${ctx_pct_cc:-0}" "$model_id" "$(date +%s)" >"$tmp" 2>/dev/null &&
 		mv -f "$tmp" "${dir}/${session_id}.json" 2>/dev/null; then
 		return 0
 	fi
