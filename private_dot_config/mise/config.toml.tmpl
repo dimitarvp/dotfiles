@@ -177,7 +177,8 @@ erlang.precompiled_os = "ubuntu-24.04"
 {{- end }}
 
 [tasks.converge]
-description = "Install, upgrade, and prune tools"
+description = "Update mise itself, then install, upgrade, and prune tools"
+# mise's own binary is the vendor release (never the cargo crate): self-update first.
 # http:* installs are symlinks into ~/.local/share/mise/http-tarballs/<sha256>/;
 # prune removes the symlink only, so orphaned content is reaped afterwards.
-run = "mise install && mise upgrade && mise prune -y && mise_reap_http_tarballs"
+run = "mise self-update -y --no-plugins && mise install && mise upgrade && mise prune -y && mise_reap_http_tarballs"
