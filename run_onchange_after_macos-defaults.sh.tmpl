@@ -1,0 +1,16 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# macOS interface defaults that remove the animations Reduce Motion leaves alone (window zoom and
+# resize, Dock auto-hide delay and launch bounce); re-applied whenever this file changes.
+set -euo pipefail
+defaults write NSGlobalDomain NSAutomaticWindowAnimationsEnabled -bool false
+defaults write NSGlobalDomain NSWindowResizeTime -float 0.001
+defaults write com.apple.dock autohide-delay -float 0
+defaults write com.apple.dock autohide-time-modifier -float 0
+defaults write com.apple.dock launchanim -bool false
+killall Dock
+echo "macos-defaults: window animations off, Dock delays zero"
+{{ else -}}
+#!/bin/bash
+: # macOS-only interface defaults — no-op on this machine
+{{ end -}}
