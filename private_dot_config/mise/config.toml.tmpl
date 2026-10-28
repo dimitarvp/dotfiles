@@ -123,7 +123,6 @@ pnpm = { version = "latest", minimum_release_age = "24h" }
 shellcheck = "latest"
 jq = "latest"
 aws-cli = "latest"
-btop = "latest"
 duckdb = "latest"
 git-lfs = "latest"
 cmake = "latest"
@@ -131,6 +130,9 @@ ruby = "latest"
 lua = "latest"
 tlrc = "latest"
 "npm:diff-so-fancy" = { version = "latest", minimum_release_age = "24h" }
+# zenith: the terminal system monitor, from its GitHub release tarballs (the crates.io
+# package of that name is an unrelated 2019 upload)
+"github:bvaisvil/zenith" = "latest"
 # AtomicParsley: yt-dlp embeds mp4 covers with it (his yt-dlp config prefers it); the
 # release zips carry no architecture in their names, so the asset is named per OS
 {{- if eq .chezmoi.os "darwin" }}
@@ -142,6 +144,8 @@ tlrc = "latest"
 "aqua:remoteoss/dexter" = "latest"
 # mold: the linker dot_cargo/config.toml names for Linux builds; mold has no macOS build
 mold = "latest"
+# btop: upstream ships Linux binaries only (no macOS or BSD builds); brew keeps it on the Mac
+btop = "latest"
 {{- end }}
 {{- if eq .chezmoi.os "darwin" }}
 # brew exodus (Intel = Homebrew tier 3, every bump compiles): Go/Rust CLIs come
