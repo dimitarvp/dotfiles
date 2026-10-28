@@ -119,8 +119,29 @@ rust-analyzer = "latest"
 # native binary; mise's embedded installer never ran that script even with
 # allow_builds = true, so every `pnpm` call died in a SyntaxError (2026-10-09).
 pnpm = { version = "latest", minimum_release_age = "24h" }
+# developer CLIs moved off brew/pacman/apt onto the mise lane (one owner per tool)
+shellcheck = "latest"
+jq = "latest"
+aws-cli = "latest"
+btop = "latest"
+duckdb = "latest"
+git-lfs = "latest"
+cmake = "latest"
+ruby = "latest"
+lua = "latest"
+tlrc = "latest"
+"npm:diff-so-fancy" = { version = "latest", minimum_release_age = "24h" }
+# AtomicParsley: yt-dlp embeds mp4 covers with it (his yt-dlp config prefers it); the
+# release zips carry no architecture in their names, so the asset is named per OS
+{{- if eq .chezmoi.os "darwin" }}
+"github:wez/atomicparsley" = { version = "latest", asset_pattern = "AtomicParsleyMacOS.zip" }
+{{- else }}
+"github:wez/atomicparsley" = { version = "latest", asset_pattern = "AtomicParsleyLinux.zip" }
+{{- end }}
 {{- if ne .chezmoi.os "darwin" }}
 "aqua:remoteoss/dexter" = "latest"
+# mold: the linker dot_cargo/config.toml names for Linux builds; mold has no macOS build
+mold = "latest"
 {{- end }}
 {{- if eq .chezmoi.os "darwin" }}
 # brew exodus (Intel = Homebrew tier 3, every bump compiles): Go/Rust CLIs come
