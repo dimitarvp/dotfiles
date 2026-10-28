@@ -57,8 +57,8 @@
     },
     {
       "name": "glow",
-      "import_path": "github.com/charmbracelet/glow/v2",
-      "version": "v2.1.1",
+      "import_path": "charm.land/glow/v3",
+      "version": "v3.0.0",
       "channel": "latest"
     },
     {
