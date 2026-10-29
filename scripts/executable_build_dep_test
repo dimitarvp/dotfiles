@@ -1,0 +1,292 @@
+#!/usr/bin/env bash
+# build_dep_test: acceptance test for build_dep. The cases are escape tests:
+# a hostile install script must not read secrets, write outside its package
+# directory or see the caller's environment, and build_dep must refuse to run
+# without a terminal, without a typed yes, without an allowlist entry (pnpm)
+# or without the cage engine.
+#
+# Usage: build_dep_test [--network]
+#   --network  also builds better-sqlite3 from the registry in a scratch pnpm project
+# Scratch goes under $BUILD_DEP_TEST_TMP, else $TMPDIR, else /tmp; removed when every case passes.
+set -uo pipefail
+
+NETWORK=0
+case ${1:-} in
+--network) NETWORK=1 ;;
+"") ;;
+*)
+	echo "usage: build_dep_test [--network]" >&2
+	exit 2
+	;;
+esac
+
+HERE=$(cd "$(dirname "$0")" && pwd -P)
+if [ -x "$HERE/build_dep" ]; then BUILD_DEP=$HERE/build_dep; else BUILD_DEP=$HERE/executable_build_dep; fi
+SCRIPT_BIN=$(command -v script) || {
+	echo "script(1) is required for the terminal cases" >&2
+	exit 2
+}
+OS=$(uname -s)
+REAL_HOME=$HOME
+LOG_FILE=${XDG_STATE_HOME:-$REAL_HOME/.local/state}/build_dep/log.jsonl
+ROOT=$(mktemp -d "${BUILD_DEP_TEST_TMP:-${TMPDIR:-/tmp}}/build_dep_test.XXXXXX")
+ROOT=$(cd "$ROOT" && pwd -P)
+
+# the fleet lock, so the test does not depend on the machine's shell environment
+export npm_config_ignore_scripts=true
+export PNPM_CONFIG_IGNORE_SCRIPTS=true
+# dummy secrets: the hostile package must not see them
+export GITHUB_TOKEN=dummy-token-for-the-test
+export AWS_SECRET_ACCESS_KEY=dummy-secret-for-the-test
+export COPYFILE_DISABLE=1
+
+PASS=0
+FAIL=0
+pass() {
+	PASS=$((PASS + 1))
+	printf 'PASS %s\n' "$1"
+}
+fail() {
+	FAIL=$((FAIL + 1))
+	printf 'FAIL %s\n' "$1"
+}
+check() { # $1 label, $2... a command whose status is the verdict
+	if "${@:2}" >/dev/null 2>&1; then pass "$1"; else fail "$1"; fi
+}
+file_has() { grep -qE -- "$2" "$1"; }
+file_lacks() { ! grep -qE -- "$2" "$1"; }
+first_line_starts() { head -1 "$1" 2>/dev/null | grep -q "^$2"; }
+rc_in() { # $1 rc, $2... accepted values
+	local v
+	for v in "${@:2}"; do [ "$1" = "$v" ] && return 0; done
+	return 1
+}
+log_lines() { if [ -f "$LOG_FILE" ]; then wc -l <"$LOG_FILE" | tr -d ' '; else echo 0; fi; }
+log_last_is() { # $1 package, $2 outcome
+	[ -f "$LOG_FILE" ] && tail -1 "$LOG_FILE" | jq -e --arg p "$1" --arg o "$2" '.package == $p and .outcome == $o' >/dev/null
+}
+tgit() { GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -c user.name=build_dep_test -c user.email=build_dep_test@localhost -c commit.gpgsign=false "$@"; }
+
+# ---------------------------------------------------------------- fixtures
+
+make_tarball() { # $1 name, $2 script file, $3 script source
+	local stage=$ROOT/stage_$1
+	mkdir -p "$stage/package"
+	printf '{"name":"%s","version":"1.0.0","scripts":{"postinstall":"node %s"}}\n' "$1" "$2" >"$stage/package/package.json"
+	printf '%s\n' "$3" >"$stage/package/$2"
+	tar -czf "$ROOT/$1.tgz" -C "$stage" package
+}
+
+make_tarball benign postinstall.js 'require("fs").writeFileSync(require("path").join(__dirname, "marker"), "built\n");'
+
+# The hostile postinstall records every attempt inside its own directory, so the test can read the
+# verdicts from outside. It targets the real home (baked in) because HOME inside the cage is scratch.
+make_tarball hostile hostile.js "$(
+	cat <<EOF
+const fs = require("fs"), path = require("path");
+const home = ${REAL_HOME@Q};
+const project = process.env.INIT_CWD || "";
+const out = (n, s) => fs.writeFileSync(path.join(__dirname, n), s);
+try { out("ssh_listing.txt", fs.readdirSync(home + "/.ssh").join("\n") + "\n"); } catch (e) { out("ssh_listing.txt", "ERROR: " + e.message + "\n"); }
+try { fs.writeFileSync(home + "/build_dep_escape", "escaped\n"); out("home_write.txt", "OK\n"); } catch (e) { out("home_write.txt", "ERROR: " + e.message + "\n"); }
+try { fs.writeFileSync(path.join(project, "escape_marker"), "escaped\n"); out("project_write.txt", "target=" + project + "\nOK\n"); } catch (e) { out("project_write.txt", "target=" + project + "\nERROR: " + e.message + "\n"); }
+out("env.txt", JSON.stringify(process.env, null, 1) + "\n");
+EOF
+)"
+
+make_project() { # $1 dir, $2 pm, $3 package, $4 allowlisted (yes/no); a git checkout with node_modules ignored
+	local dir=$1 pm=$2 pkg=$3 allow=$4
+	mkdir -p "$dir"
+	cp "$ROOT/$pkg.tgz" "$dir/"
+	printf '{"name":"proj","version":"1.0.0","private":true,"dependencies":{"%s":"file:%s.tgz"}}\n' "$pkg" "$pkg" >"$dir/package.json"
+	if [ "$pm" = pnpm ] && [ "$allow" = yes ]; then
+		printf 'allowBuilds:\n  "%s@file:%s.tgz": true\n' "$pkg" "$pkg" >"$dir/pnpm-workspace.yaml"
+	fi
+	printf 'node_modules\n' >"$dir/.gitignore"
+	if [ "$pm" = pnpm ]; then
+		(cd "$dir" && pnpm install --silent) >"$dir.install.log" 2>&1
+	else
+		(cd "$dir" && npm install --no-audit --no-fund --silent) >"$dir.install.log" 2>&1
+	fi
+	tgit -C "$dir" init -q -b main
+	tgit -C "$dir" add -A
+	tgit -C "$dir" commit -q -m init
+	[ -e "$dir/node_modules/$pkg/marker" ] && fail "fixture $dir: the install ran the postinstall; the fleet lock is not in force"
+}
+
+pkg_dir() { (cd "$1/node_modules/$2" && pwd -P); }
+
+make_project "$ROOT/pb" pnpm benign yes
+make_project "$ROOT/pn" pnpm benign no
+make_project "$ROOT/nb" npm benign -
+make_project "$ROOT/ph" pnpm hostile yes
+make_project "$ROOT/nh" npm hostile -
+make_project "$ROOT/pe" pnpm benign yes
+
+# ---------------------------------------------------------------- a terminal for the real runs
+
+pty_exec() { # $1 typescript file, $2 cwd, $3... command; runs it on a pty, returns its exit code
+	local ts=$1 dir=$2
+	shift 2
+	case $OS in
+	Darwin) (cd "$dir" && "$SCRIPT_BIN" -q -t 0 "$ts" "$@" >/dev/null) ;;
+	*) (cd "$dir" && "$SCRIPT_BIN" -q -f -e -c "$(printf '%q ' "$@")" "$ts" >/dev/null) ;;
+	esac
+}
+
+run_pty() { # $1 answer ("" feeds nothing), $2 typescript file, $3 cwd, $4... command
+	local answer=$1 ts=$2 dir=$3
+	shift 3
+	rm -f "$ts"
+	if [ -z "$answer" ]; then
+		pty_exec "$ts" "$dir" "$@" </dev/null
+		return
+	fi
+	# script(1) discards input that arrives before the child opens the pty, so the answer waits for the prompt
+	(
+		for _ in $(seq 1 600); do
+			grep -q 'Type yes:' "$ts" 2>/dev/null && break
+			sleep 0.1
+		done
+		printf '%s\n' "$answer"
+	) 2>/dev/null | pty_exec "$ts" "$dir" "$@"
+}
+
+# ---------------------------------------------------------------- T1 --dry-run without a terminal
+
+out=$ROOT/t1_pb.out
+(cd "$ROOT/pb" && "$BUILD_DEP" --dry-run benign </dev/null >"$out" 2>&1)
+check "T1 pnpm allowlisted: --dry-run exits 0" test "$?" = 0
+check "T1 pnpm allowlisted: inspection shows the postinstall verbatim" file_has "$out" 'postinstall: node postinstall\.js'
+check "T1 pnpm allowlisted: inspection shows the lockfile integrity" file_has "$out" 'integrity: +sha512-'
+check "T1 pnpm allowlisted: inspection shows the script file hash" file_has "$out" 'postinstall\.js +[0-9]+ bytes +sha256 [0-9a-f]{64}'
+(cd "$ROOT/pb" && "$BUILD_DEP" --dry-run --json benign </dev/null >"$out.json" 2>/dev/null)
+check "T1 pnpm allowlisted: --json is one object with allowlisted true" jq -e '.pm == "pnpm" and .packages[0].allowlisted == true and .packages[0].files[0].path == "postinstall.js"' "$out.json"
+check "T1 pnpm allowlisted: --dry-run built nothing" test ! -e "$(pkg_dir "$ROOT/pb" benign)/marker"
+
+out=$ROOT/t1_pn.out
+(cd "$ROOT/pn" && "$BUILD_DEP" --dry-run benign </dev/null >"$out" 2>&1)
+check "T1 pnpm not allowlisted: --dry-run exits 4" test "$?" = 4
+check "T1 pnpm not allowlisted: prints the allowBuilds line to add" file_has "$out" '"benign@file:benign\.tgz": true'
+(cd "$ROOT/pn" && "$BUILD_DEP" --dry-run --json benign </dev/null >"$out.json" 2>/dev/null)
+check "T1 pnpm not allowlisted: --json says allowlisted false, exit 4" jq -e '.packages[0].allowlisted == false and .packages[0].exit == 4' "$out.json"
+
+out=$ROOT/t1_nb.out
+(cd "$ROOT/nb" && "$BUILD_DEP" --dry-run --json benign </dev/null >"$out" 2>/dev/null)
+check "T1 npm: --dry-run exits 0" test "$?" = 0
+check "T1 npm: --json says pm npm and no allowlist" jq -e '.pm == "npm" and .packages[0].allowlisted == null' "$out"
+
+# ---------------------------------------------------------------- T2 a real run without a terminal
+
+for p in pb nb; do
+	(cd "$ROOT/$p" && "$BUILD_DEP" benign </dev/null >"$ROOT/t2_$p.out" 2>&1)
+	check "T2 $p: real run without a terminal exits 3" test "$?" = 3
+	check "T2 $p: nothing built" test ! -e "$(pkg_dir "$ROOT/$p" benign)/marker"
+done
+
+# ---------------------------------------------------------------- T3 the operator answers no
+
+before=$(log_lines)
+run_pty no "$ROOT/t3.ts" "$ROOT/pb" "$BUILD_DEP" benign
+check "T3 pnpm: answering no exits 5" test "$?" = 5
+check "T3 pnpm: nothing built" test ! -e "$(pkg_dir "$ROOT/pb" benign)/marker"
+check "T3 pnpm: one log line, outcome declined" test "$(log_lines)" = $((before + 1))
+check "T3 pnpm: the log line names the package and the decline" log_last_is benign declined
+
+# ---------------------------------------------------------------- T4 the benign package
+
+for p in pb nb; do
+	before=$(log_lines)
+	run_pty yes "$ROOT/t4_$p.ts" "$ROOT/$p" "$BUILD_DEP" benign
+	check "T4 $p: build exits 0" test "$?" = 0
+	check "T4 $p: the marker exists inside the package directory" test -f "$(pkg_dir "$ROOT/$p" benign)/marker"
+	check "T4 $p: one log line appended" test "$(log_lines)" = $((before + 1))
+	check "T4 $p: the log line says benign built" log_last_is benign built
+	check "T4 $p: git status is clean" test -z "$(tgit -C "$ROOT/$p" status --porcelain)"
+done
+
+# ---------------------------------------------------------------- T5 the hostile package
+
+ssh_names=()
+if [ -d "$REAL_HOME/.ssh" ]; then
+	while IFS= read -r n; do [ -n "$n" ] && ssh_names+=("$n"); done < <(ls -A "$REAL_HOME/.ssh")
+fi
+no_ssh_names() { # $1 listing file: no line equals a real entry of ~/.ssh
+	local n
+	for n in "${ssh_names[@]}"; do grep -qxF -- "$n" "$1" && return 1; done
+	return 0
+}
+rm -f "$REAL_HOME/build_dep_escape"
+for p in ph nh; do
+	proj=$ROOT/$p
+	hostile=$(pkg_dir "$proj" hostile)
+	run_pty yes "$ROOT/t5_$p.ts" "$proj" "$BUILD_DEP" hostile
+	rc=$?
+	check "T5 $p: the run reached the build (exit 0 or 1)" rc_in "$rc" 0 1
+	check "T5 $p: the hostile script ran and recorded its attempts" test -f "$hostile/env.txt"
+	check "T5 $p: no file written into the real home" test ! -e "$REAL_HOME/build_dep_escape"
+	check "T5 $p: the home write was refused" first_line_starts "$hostile/home_write.txt" 'ERROR:'
+	check "T5 $p: no escape_marker in the project root" test ! -e "$proj/escape_marker"
+	check "T5 $p: the project write targeted this project" file_has "$hostile/project_write.txt" "^target=$proj\$"
+	check "T5 $p: the project write was refused" file_has "$hostile/project_write.txt" '^ERROR:'
+	check "T5 $p: listing ~/.ssh failed with a permission error" file_has "$hostile/ssh_listing.txt" '^ERROR:.*(EPERM|EACCES|ENOENT|not permitted|permission denied)'
+	check "T5 $p: the ~/.ssh listing holds no file names" no_ssh_names "$hostile/ssh_listing.txt"
+	check "T5 $p: the environment holds no GITHUB_TOKEN value" file_lacks "$hostile/env.txt" 'dummy-token-for-the-test'
+	check "T5 $p: the environment holds no AWS secret value" file_lacks "$hostile/env.txt" 'dummy-secret-for-the-test'
+	check "T5 $p: the environment HOME is not the real home" file_lacks "$hostile/env.txt" "\"HOME\": \"$REAL_HOME\""
+done
+rm -f "$REAL_HOME/build_dep_escape"
+
+# ---------------------------------------------------------------- T7 the cage engine hidden from PATH
+
+case $OS in
+Darwin) engine=sandbox-exec ;;
+*) engine=bwrap ;;
+esac
+hidden_path=""
+i=0
+IFS=: read -r -a path_parts <<<"$PATH"
+for part in "${path_parts[@]}"; do
+	if [ -x "$part/$engine" ]; then
+		i=$((i + 1))
+		fake=$ROOT/fakebin$i
+		mkdir -p "$fake"
+		for f in "$part"/*; do
+			[ "$(basename "$f")" = "$engine" ] || ln -s "$f" "$fake/$(basename "$f")"
+		done
+		part=$fake
+	fi
+	hidden_path="${hidden_path:+$hidden_path:}$part"
+done
+PATH=$hidden_path run_pty "" "$ROOT/t7.ts" "$ROOT/pe" "$BUILD_DEP" benign
+check "T7 hidden engine: build_dep exits 1" test "$?" = 1
+check "T7 hidden engine: the refusal names $engine" file_has "$ROOT/t7.ts" "$engine"
+check "T7 hidden engine: nothing built" test ! -e "$(pkg_dir "$ROOT/pe" benign)/marker"
+
+# ---------------------------------------------------------------- T6 a real native package from the registry
+
+if [ "$NETWORK" = 1 ]; then
+	proj=$ROOT/net
+	mkdir -p "$proj"
+	printf '{"name":"net","version":"1.0.0","private":true}\n' >"$proj/package.json"
+	printf 'allowBuilds:\n  better-sqlite3: true\n' >"$proj/pnpm-workspace.yaml"
+	# 12.x still builds at install time (prebuild-install, else node-gyp); 13.x ships its binaries in the tarball
+	(cd "$proj" && pnpm add better-sqlite3@12 --silent) >"$proj.add.log" 2>&1
+	check "T6: pnpm add better-sqlite3@12 succeeded" test "$?" = 0
+	sqlite_loads() { (cd "$proj" && node -e "require('better-sqlite3')(':memory:')"); }
+	sqlite_fails() { ! sqlite_loads; }
+	check "T6: the binding is missing before build_dep" sqlite_fails
+	run_pty yes "$ROOT/t6.ts" "$proj" "$BUILD_DEP" better-sqlite3
+	check "T6: build_dep better-sqlite3 exits 0" test "$?" = 0
+	check "T6: the binding loads after build_dep" sqlite_loads
+fi
+
+# ---------------------------------------------------------------- summary
+
+printf 'SUMMARY: %d passed, %d failed\n' "$PASS" "$FAIL"
+if [ "$FAIL" = 0 ]; then
+	rm -rf "$ROOT"
+	exit 0
+fi
+printf 'scratch kept for inspection: %s\n' "$ROOT"
+exit 1

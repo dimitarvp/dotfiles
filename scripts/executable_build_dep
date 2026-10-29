@@ -1,0 +1,458 @@
+#!/usr/bin/env bash
+# build_dep: the one sanctioned way to run a dependency's install scripts.
+#
+# Usage: build_dep [--dry-run] [--json] <package>...
+# Run it inside the project directory that holds the lockfile.
+#
+# Exit codes: 0 built, 1 the build failed or no cage engine, 2 usage,
+# 3 no terminal, 4 not allowlisted (pnpm projects), 5 the operator did not type yes.
+#
+# Every package becomes one JSON record. The human report, the --json output
+# and the log line are three renderings of that record.
+set -euo pipefail
+
+DRY_RUN=0
+JSON=0
+PKGS=()
+RECORDS=()
+PM=""
+PM_BIN=""
+NODE_BIN=""
+PROJECT=""
+PNPM_CONFIG=""
+SCRATCH=""
+REAL_HOME=${HOME:?HOME is not set}
+LOG_FILE=${XDG_STATE_HOME:-$REAL_HOME/.local/state}/build_dep/log.jsonl
+NODE_GYP_CACHE=$REAL_HOME/.cache/node-gyp
+PNPM_LOCK_DIR=/tmp/pnpm-store-operation-locks-$(id -u)
+OS=$(uname -s)
+
+usage() {
+	cat >&2 <<'EOF'
+usage: build_dep [--dry-run] [--json] <package>...
+  Run inside the project directory holding pnpm-lock.yaml or package-lock.json.
+  --dry-run  print the inspection only, no terminal needed
+  --json     one JSON object for the run instead of the human report
+exit codes: 0 built, 1 build failed or no cage engine, 2 usage, 3 no terminal,
+            4 package not allowlisted (pnpm), 5 operator did not type yes
+EOF
+}
+
+die() { # $1 exit code, $2 message
+	printf 'build_dep: %s\n' "$2" >&2
+	exit "$1"
+}
+
+say() { # human-mode line on stdout; json-mode line on stderr
+	if [ "$JSON" = 1 ]; then printf '%s\n' "$*" >&2; else printf '%s\n' "$*"; fi
+}
+
+trap 'if [ -n "$SCRATCH" ]; then rm -rf "$SCRATCH"; fi' EXIT
+
+sha256() {
+	if command -v sha256sum >/dev/null 2>&1; then
+		sha256sum -- "$1" | cut -d' ' -f1
+	else
+		shasum -a 256 -- "$1" | cut -d' ' -f1
+	fi
+}
+
+realdir() { (cd "$1" 2>/dev/null && pwd -P); }
+
+# ---------------------------------------------------------------- arguments
+
+while [ $# -gt 0 ]; do
+	case $1 in
+	--dry-run) DRY_RUN=1 ;;
+	--json) JSON=1 ;;
+	-h | --help)
+		usage
+		exit 0
+		;;
+	--)
+		shift
+		break
+		;;
+	-*)
+		usage
+		die 2 "unknown option $1"
+		;;
+	*) PKGS+=("$1") ;;
+	esac
+	shift
+done
+PKGS+=("$@")
+if [ ${#PKGS[@]} -eq 0 ]; then
+	usage
+	exit 2
+fi
+
+# ---------------------------------------------------------------- project
+
+PROJECT=$(pwd -P)
+if [ -f pnpm-lock.yaml ] && [ -f package-lock.json ]; then
+	die 2 "both pnpm-lock.yaml and package-lock.json are here; one lockfile decides the package manager"
+elif [ -f pnpm-lock.yaml ]; then
+	PM=pnpm
+elif [ -f package-lock.json ]; then
+	PM=npm
+else
+	die 2 "no pnpm-lock.yaml or package-lock.json in $PROJECT; run build_dep inside the project directory"
+fi
+PM_BIN=$(command -v "$PM" 2>/dev/null) || die 2 "$PM is not on PATH"
+NODE_BIN=$(command -v node 2>/dev/null) || die 2 "node is not on PATH"
+for name in "${PKGS[@]}"; do
+	[ -d "node_modules/$name" ] || die 2 "$name is not installed under node_modules; run the normal $PM install first"
+	[ -f "node_modules/$name/package.json" ] || die 2 "node_modules/$name has no package.json"
+done
+if [ "$PM" = pnpm ]; then
+	PNPM_CONFIG=$(pnpm config list --json 2>/dev/null) || PNPM_CONFIG='{}'
+fi
+
+# ---------------------------------------------------------------- preflight for a real run
+
+cage_engine() { # prints the engine binary, fails when the OS has none on PATH
+	case $OS in
+	Darwin) command -v sandbox-exec ;;
+	Linux) command -v bwrap ;;
+	*) return 1 ;;
+	esac
+}
+
+if [ "$DRY_RUN" = 0 ]; then
+	if ! { [ -t 0 ] && [ -t 1 ] && { : </dev/tty; } 2>/dev/null; }; then
+		die 3 "a real run needs a terminal on stdin and stdout; use --dry-run for the inspection alone"
+	fi
+	cage_engine >/dev/null || case $OS in
+	Darwin) die 1 "sandbox-exec is not on PATH; refusing to build outside the cage" ;;
+	Linux) die 1 "bwrap (bubblewrap) is not on PATH; refusing to build outside the cage" ;;
+	*) die 1 "no cage engine for $OS; refusing to build outside the cage" ;;
+	esac
+fi
+
+# ---------------------------------------------------------------- inspection
+
+lock_facts_npm() { # $1 name, $2 version -> {integrity, resolution}
+	jq -c --arg name "$1" --arg v "$2" '
+		[.packages // {} | to_entries[]
+		 | select(.key == "node_modules/" + $name or (.key | endswith("/node_modules/" + $name)))]
+		| (map(select(.value.version == $v)) + .) | .[0].value // {}
+		| {integrity: (.integrity // "none in lockfile"), resolution: (.resolved // "unknown")}' package-lock.json
+}
+
+lock_facts_pnpm() { # $1 name, $2 version, $3 real package dir -> {integrity, resolution}
+	local prefix enc res
+	prefix=${3%/node_modules/"$1"}
+	enc=$(basename "$prefix")
+	res=$(awk -v name="$1" -v version="$2" -v enc="$enc" '
+		function encode(k,  e) { e = k; gsub(/[\/:]/, "+", e); gsub(/\(/, "_", e); gsub(/\)/, "", e); return e }
+		/^packages:/ { inpk = 1; next }
+		/^[^ ]/ { inpk = 0 }
+		inpk && /^  [^ ]/ {
+			key = $0; sub(/^  /, "", key); sub(/:[ \t]*$/, "", key)
+			gsub(/^['"'"'"]|['"'"'"]$/, "", key)
+			score = 0
+			if (encode(key) == enc) score = 2
+			else if (key == name "@" version || index(key, name "@" version "(") == 1) score = 1
+			if (score > best) { best = score; cur = 1; res = "" } else cur = 0
+			next
+		}
+		inpk && cur && /^    resolution:/ { res = $0; sub(/^    resolution: */, "", res) }
+		END { print res }' pnpm-lock.yaml)
+	local integrity resolution
+	integrity=$(printf '%s' "$res" | { grep -oE 'integrity: *[^,}]*' || true; } | sed 's/^integrity: *//')
+	resolution=$(printf '%s' "$res" | { grep -oE '(tarball|repo|directory): *[^,}]*' || true; } | sed -n '1s/^[a-z]*: *//p')
+	if [ -z "$res" ]; then
+		integrity="unknown (no lockfile entry found)"
+		resolution="unknown"
+	fi
+	jq -nc --arg i "${integrity:-none in lockfile}" --arg r "${resolution:-registry}" '{integrity: $i, resolution: $r}'
+}
+
+published_date() { # $1 name, $2 version, $3 resolution -> ISO date, "local" or "unknown"
+	case $3 in
+	file:* | link:* | /* | ./* | ../* | workspace:*)
+		printf 'local'
+		return
+		;;
+	esac
+	local t
+	t=$(npm view "$1@$2" time --json --fetch-retries=1 --fetch-timeout=20000 2>/dev/null | jq -r --arg v "$2" '.[$v] // empty' 2>/dev/null) || t=""
+	printf '%s' "${t:-unknown}"
+}
+
+script_files() { # $1 package dir, $2 scripts JSON -> [{path,size,sha256}]
+	local tok out="[]"
+	while IFS= read -r tok; do
+		[ -n "$tok" ] || continue
+		tok=${tok#./}
+		[ -f "$1/$tok" ] || continue
+		out=$(jq -c --arg p "$tok" --argjson s "$(wc -c <"$1/$tok" | tr -d ' ')" --arg h "$(sha256 "$1/$tok")" \
+			'. + [{path: $p, size: $s, sha256: $h}]' <<<"$out")
+	done < <(jq -r '.[]' <<<"$2" | tr -s "[:space:];&|()<>\"'\`" '\n' | { grep -E '\.(js|cjs|mjs|sh|py)$' || true; } | sort -u)
+	printf '%s' "$out"
+}
+
+# URLs, IPv4 literals and domain-shaped words with a common top-level domain. Two-letter endings
+# that read as JavaScript member names (at, in, to, me, us, co, so, be, it, no) stay out: noise.
+HOST_TLDS='com|org|net|io|dev|sh|ai|app|cloud|xyz|info|tech|edu|gov|biz|pro|site|online|zone|network|systems|tools|cn|ru|de|uk|eu|jp|fr|nl|ch|se|es|au|ca|cz|pl|dk|fi'
+host_strings() { # $1 package dir, $2 files JSON -> [hosts]
+	local f
+	{
+		while IFS= read -r f; do
+			[ -n "$f" ] || continue
+			grep -aoE '[A-Za-z][A-Za-z0-9+.-]*://[^[:space:]"'"'"'<>()`]+' "$1/$f" || true
+			grep -aoE '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' "$1/$f" || true
+			grep -aoiE '\b([a-z0-9-]+\.)+('"$HOST_TLDS"')\b' "$1/$f" || true
+		done < <(jq -r '.[].path' <<<"$2")
+	} | sort -u | jq -Rnc '[inputs]'
+}
+
+allowlist_verdict() { # $1 name, $2 version -> {allowlisted, allowlist_key}
+	if [ "$PM" = npm ]; then
+		printf '{"allowlisted": null, "allowlist_key": null}'
+		return
+	fi
+	local spec
+	spec=$(jq -r --arg n "$1" '(.dependencies // {})[$n] // (.devDependencies // {})[$n] // (.optionalDependencies // {})[$n] // empty' package.json)
+	jq -nc --arg n "$1" --arg v "$2" --arg spec "$spec" --argjson cfg "$PNPM_CONFIG" '
+		($cfg.allowBuilds // {}) as $ab
+		| ($cfg.onlyBuiltDependencies // []) as $only
+		| ([$n] + (if $spec != "" then [$n + "@" + $spec] else [] end) + [$n + "@" + $v]) as $keys
+		| (($keys | map($ab[.] == true) | any) or ($only | index($n) != null)) as $ok
+		| ($keys | map(select($ab[.] == true)) | .[0]) as $hit
+		| (if ($spec | startswith("file:")) then $n + "@" + $spec else $n end) as $suggest
+		| {allowlisted: $ok, allowlist_key: (if $ok then ($hit // $n) else $suggest end)}'
+}
+
+inspect() { # $1 name -> one JSON record
+	local name=$1 dir version scripts lock published age files hosts verdict binding
+	dir=$(realdir "node_modules/$name")
+	version=$(jq -r '.version // "0.0.0"' "$dir/package.json")
+	scripts=$(jq -c '(.scripts // {}) | {preinstall, install, postinstall} | with_entries(select(.value != null))' "$dir/package.json")
+	if [ "$PM" = pnpm ]; then lock=$(lock_facts_pnpm "$name" "$version" "$dir"); else lock=$(lock_facts_npm "$name" "$version"); fi
+	published=$(published_date "$name" "$version" "$(jq -r .resolution <<<"$lock")")
+	age=null
+	case $published in
+	local | unknown) ;;
+	*) age=$(jq -n --arg p "$published" '(($p | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601) as $t | (now - $t) / 86400 | floor)' 2>/dev/null) || age=null ;;
+	esac
+	files=$(script_files "$dir" "$scripts")
+	hosts=$(host_strings "$dir" "$files")
+	verdict=$(allowlist_verdict "$name" "$version")
+	binding=false
+	if [ -f "$dir/binding.gyp" ] && jq -e '.gypfile != false' "$dir/package.json" >/dev/null; then binding=true; fi
+	jq -nc --arg name "$name" --arg version "$version" --arg dir "$dir" --arg published "$published" \
+		--argjson age "$age" --argjson scripts "$scripts" --argjson lock "$lock" --argjson files "$files" \
+		--argjson hosts "$hosts" --argjson verdict "$verdict" --argjson binding "$binding" '
+		{name: $name, version: $version, dir: $dir, integrity: $lock.integrity, resolution: $lock.resolution,
+		 published: $published, age_days: $age, scripts: $scripts, binding_gyp: $binding, files: $files,
+		 hosts: $hosts, allowlisted: $verdict.allowlisted, allowlist_key: $verdict.allowlist_key,
+		 outcome: (if $verdict.allowlisted == false then "not-allowlisted" else "inspected" end),
+		 exit: (if $verdict.allowlisted == false then 4 else 0 end)}'
+}
+
+render() { # $1 record -> human report
+	jq -r '
+		def pub: if .published == "local" then "local package, no registry date"
+			elif .published == "unknown" then "unknown (registry lookup failed)"
+			else .published + " (\(.age_days) days ago)" + (if .age_days < 7 then "   WARNING: published less than 7 days ago" else "" end) end;
+		def allow: if .allowlisted == null then "not applicable (npm project)"
+			elif .allowlisted then "yes (\(.allowlist_key))"
+			else "NO. Add this to pnpm-workspace.yaml in the project:\n    allowBuilds:\n      \"\(.allowlist_key)\": true" end;
+		def age: if .published == "local" then "local" elif .published == "unknown" then "unknown date" else "\(.age_days) days old" end;
+		"== \(.name)@\(.version)",
+		"  directory:   \(.dir)",
+		"  integrity:   \(.integrity)",
+		"  resolution:  \(.resolution)",
+		"  published:   \(pub)",
+		"  scripts:" + (if (.scripts | length) == 0 then " none declared" + (if .binding_gyp then " (binding.gyp present: node-gyp rebuild runs by default)" else "" end) else "" end),
+		(.scripts | to_entries[] | "    \(.key): \(.value)"),
+		"  files:" + (if (.files | length) == 0 then " none referenced by the scripts" else "" end),
+		(.files[] | "    \(.path)  \(.size) bytes  sha256 \(.sha256)"),
+		"  hosts:" + (if (.hosts | length) == 0 then " none found in those files" else "" end),
+		(.hosts[] | "    \(.)"),
+		"  allowlist:   \(allow)",
+		"  summary:     \(.name)@\(.version), \(age), \(.scripts | length) install script(s), \(.files | length) file(s), \(.hosts | length) host(s), " +
+			(if .allowlisted == null then "no allowlist in npm projects" elif .allowlisted then "allowlisted" else "NOT allowlisted" end)
+	' <<<"$1"
+}
+
+for name in "${PKGS[@]}"; do
+	RECORDS+=("$(inspect "$name")")
+done
+
+# ---------------------------------------------------------------- the cage
+
+sbpl_str() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
+re_escape() { printf '%s' "$1" | sed 's/[][\.*^$+?(){}|]/\\&/g; s/"/\\"/g'; }
+
+# Write paths outside the package directory, measured on macOS 15 with pnpm 12.16.1 and npm 11.20
+# (a cage with only the package directory writable, sandbox denials read from the system log):
+#   pnpm: node_modules/.modules.yaml (rewritten in place),
+#         node_modules/.pnpm/lock.yaml via node_modules/.pnpm/.lock.yaml.<pid>.<n>.tmp and a rename,
+#         node_modules/.pnpm/node_modules/<dep> symlinks (the package's hoisted dependencies, re-created),
+#         /tmp/pnpm-store-operation-locks-<uid>/ (lock files, outside TMPDIR).
+#         Denied and tolerated: <project>/_tmp_<pid>_<hex> temp files and
+#         node_modules/.pnpm/.pacquet-dir-clone-probe-* probes; the content store is never written.
+#   npm:  nothing.
+cage_run() { # $1 real package dir, $2... the build command; runs in $PROJECT with a scrubbed environment
+	local pkgdir=$1
+	shift
+	local path
+	path="/usr/bin:/bin:/usr/sbin:/sbin:$(dirname "$NODE_BIN")"
+	[ "$(dirname "$PM_BIN")" = "$(dirname "$NODE_BIN")" ] || path="$path:$(dirname "$PM_BIN")"
+	mkdir -p "$SCRATCH/home/.cache" "$SCRATCH/home/Library/Caches" "$SCRATCH/tmp" "$SCRATCH/npm-cache" "$NODE_GYP_CACHE"
+	# node-gyp keeps its headers under ~/.cache/node-gyp (Linux) or ~/Library/Caches/node-gyp (macOS);
+	# with HOME pointing at scratch, both names lead to the real cache, the one $HOME path the cage may write.
+	[ -L "$SCRATCH/home/.cache/node-gyp" ] || ln -s "$NODE_GYP_CACHE" "$SCRATCH/home/.cache/node-gyp"
+	[ -L "$SCRATCH/home/Library/Caches/node-gyp" ] || ln -s "$NODE_GYP_CACHE" "$SCRATCH/home/Library/Caches/node-gyp"
+	local -a env=(/usr/bin/env -i "PATH=$path" "HOME=$SCRATCH/home" "TMPDIR=$SCRATCH/tmp" "npm_config_cache=$SCRATCH/npm-cache")
+	local nm=$PROJECT/node_modules
+	case $OS in
+	Darwin)
+		local lockdir_real allow
+		lockdir_real=$(realdir "$(dirname "$PNPM_LOCK_DIR")")/$(basename "$PNPM_LOCK_DIR")
+		allow="(subpath \"$(sbpl_str "$pkgdir")\") (subpath \"$(sbpl_str "$SCRATCH")\") (subpath \"$(sbpl_str "$NODE_GYP_CACHE")\")"
+		if [ "$PM" = pnpm ]; then
+			allow="$allow (literal \"$(sbpl_str "$nm/.modules.yaml")\") (literal \"$(sbpl_str "$nm/.pnpm/lock.yaml")\")"
+			allow="$allow (regex #\"^$(re_escape "$nm")/\\.pnpm/\\.lock\\.yaml\\.[0-9]+\\.[0-9]+\\.tmp$\")"
+			allow="$allow (subpath \"$(sbpl_str "$nm/.pnpm/node_modules")\") (subpath \"$(sbpl_str "$lockdir_real")\")"
+		fi
+		allow="$allow (literal \"/dev/null\") (literal \"/dev/tty\") (regex #\"^/dev/ttys[0-9]+$\") (literal \"/dev/dtracehelper\")"
+		local deny="" p
+		for p in .ssh .aws .gnupg .zsh/secrets.zsh .config/gh .claude .npmrc .config/pnpm Library/Preferences/pnpm \
+			.config/fleet .config/nats .netrc .docker .kube; do
+			deny="$deny (subpath \"$(sbpl_str "$REAL_HOME/$p")\")"
+		done
+		local profile="(version 1) (allow default) (deny file-write*) (allow file-write* $allow) (deny file-read* $deny)"
+		(cd "$PROJECT" && "${env[@]}" sandbox-exec -p "$profile" "$@")
+		;;
+	Linux)
+		# Untested here (no bwrap on macOS); written per the design, to be proven on a Linux machine.
+		local -a bw=(bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs "$REAL_HOME")
+		local d
+		for d in "$REAL_HOME/.local/share/mise" "$(dirname "$NODE_BIN")" "$(dirname "$PM_BIN")"; do
+			case $d in "$REAL_HOME"/*) [ -d "$d" ] && bw+=(--ro-bind "$d" "$d") ;; esac
+		done
+		if [ "$PM" = pnpm ]; then
+			local store
+			store=$(pnpm store path 2>/dev/null || true)
+			[ -n "$store" ] && [ -d "$store" ] && bw+=(--ro-bind "$store" "$store")
+		fi
+		bw+=(--ro-bind "$PROJECT" "$PROJECT")
+		if [ "$PM" = pnpm ]; then
+			# .modules.yaml is rewritten in place (a file bind works); .pnpm/lock.yaml is replaced
+			# through a temp file and a rename and the hoisted symlinks under .pnpm/node_modules are
+			# re-created, so .pnpm gets a throwaway overlay: those writes succeed and are discarded,
+			# sibling packages stay readable and unmodified. The package directory is bound
+			# read-write on top of the overlay, so its build output persists.
+			[ -d "$PNPM_LOCK_DIR" ] || mkdir -m 700 "$PNPM_LOCK_DIR"
+			bw+=(--bind "$nm/.modules.yaml" "$nm/.modules.yaml")
+			bw+=(--overlay-src "$nm/.pnpm" --tmp-overlay "$nm/.pnpm")
+			bw+=(--bind "$PNPM_LOCK_DIR" "$PNPM_LOCK_DIR")
+		fi
+		bw+=(--bind "$pkgdir" "$pkgdir")
+		bw+=(--bind "$NODE_GYP_CACHE" "$NODE_GYP_CACHE" --bind "$SCRATCH" "$SCRATCH")
+		bw+=(--unshare-pid --die-with-parent --clearenv --chdir "$PROJECT")
+		local kv
+		for kv in "${env[@]:2}"; do bw+=(--setenv "${kv%%=*}" "${kv#*=}"); done
+		"${bw[@]}" "$@"
+		;;
+	*) return 1 ;;
+	esac
+}
+
+build_command() { # $1 name -> the package manager's rebuild command for that one package
+	case $PM in
+	pnpm) printf '%s\n' pnpm rebuild "$1" --no-ignore-scripts ;;
+	npm) printf '%s\n' npm rebuild "$1" --ignore-scripts=false --no-audit --no-fund ;;
+	esac
+}
+
+# ---------------------------------------------------------------- log
+
+append_log() { # $1 record -> prints and appends the log line
+	local line
+	line=$(jq -c --arg time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg host "$(hostname -s 2>/dev/null || hostname)" \
+		--arg project "$PROJECT" --arg pm "$PM" '
+		{time: $time, host: $host, project: $project, pm: $pm, package: .name, version: .version,
+		 integrity: .integrity, files: (.files | map({(.path): .sha256}) | add // {}), hosts: .hosts,
+		 outcome: .outcome, exit: .exit}' <<<"$1")
+	mkdir -p "$(dirname "$LOG_FILE")"
+	printf '%s\n' "$line" >>"$LOG_FILE"
+	say "log: $line"
+}
+
+# ---------------------------------------------------------------- output
+
+finish() { # prints the run and exits with the first non-zero package exit
+	local records code
+	records=$(printf '%s\n' "${RECORDS[@]}" | jq -sc '.')
+	if [ "$JSON" = 1 ]; then
+		jq -n --arg pm "$PM" --arg project "$PROJECT" --argjson packages "$records" '{pm: $pm, project: $project, packages: $packages}'
+	fi
+	code=$(jq -r '[.[].exit | select(. != null and . != 0)] | .[0] // 0' <<<"$records")
+	exit "$code"
+}
+
+for i in "${!RECORDS[@]}"; do
+	if [ "$JSON" = 0 ] || [ "$DRY_RUN" = 0 ]; then
+		render "${RECORDS[$i]}" | if [ "$JSON" = 1 ]; then cat >&2; else cat; fi
+	fi
+done
+
+if [ "$DRY_RUN" = 1 ]; then
+	finish
+fi
+
+if jq -e 'select(.allowlisted == false)' <<<"$(printf '%s\n' "${RECORDS[@]}")" >/dev/null; then
+	say "build_dep: a package is not allowlisted in this pnpm project; add the line shown above, then run build_dep again"
+	finish
+fi
+
+SCRATCH=$(mktemp -d "${TMPDIR:-/tmp}/build_dep.XXXXXX")
+SCRATCH=$(realdir "$SCRATCH")
+
+for i in "${!RECORDS[@]}"; do
+	record=${RECORDS[$i]}
+	name=$(jq -r .name <<<"$record")
+	version=$(jq -r .version <<<"$record")
+	pkgdir=$(jq -r .dir <<<"$record")
+	printf 'Run the install scripts of %s@%s inside the cage? Type yes: ' "$name" "$version" >/dev/tty
+	IFS= read -r answer </dev/tty || answer=""
+	if [ "$answer" != yes ]; then
+		RECORDS[i]=$(jq -c '.outcome = "declined" | .exit = 5' <<<"$record")
+		append_log "${RECORDS[$i]}"
+		say "build_dep: not building $name@$version"
+		for j in "${!RECORDS[@]}"; do
+			[ "$j" -gt "$i" ] && RECORDS[j]=$(jq -c '.outcome = "not-attempted" | .exit = null' <<<"${RECORDS[$j]}")
+		done
+		finish
+	fi
+	mapfile -t cmd < <(build_command "$name")
+	say "build_dep: running inside the cage: ${cmd[*]}"
+	if [ "$JSON" = 1 ]; then
+		cage_run "$pkgdir" "${cmd[@]}" >&2 && rc=0 || rc=$?
+	else
+		cage_run "$pkgdir" "${cmd[@]}" && rc=0 || rc=$?
+	fi
+	if [ "$rc" = 0 ]; then
+		RECORDS[i]=$(jq -c '.outcome = "built" | .exit = 0' <<<"$record")
+	else
+		RECORDS[i]=$(jq -c --argjson rc "$rc" '.outcome = "build-failed" | .exit = 1 | .build_exit = $rc' <<<"$record")
+	fi
+	if git -C "$PROJECT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+		status=$(git -C "$PROJECT" status --porcelain)
+		RECORDS[i]=$(jq -c --arg s "$status" '.git_status = $s' <<<"${RECORDS[$i]}")
+		if [ -z "$status" ]; then
+			say "git status --porcelain: clean (nothing outside node_modules changed)"
+		else
+			say "git status --porcelain:"
+			say "$status"
+		fi
+	fi
+	append_log "${RECORDS[$i]}"
+	say "build_dep: $name@$version $(jq -r .outcome <<<"${RECORDS[$i]}")"
+done
+finish
