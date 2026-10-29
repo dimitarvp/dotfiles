@@ -99,8 +99,16 @@ elif [ -f package-lock.json ]; then
 else
 	die 2 "no pnpm-lock.yaml or package-lock.json in $PROJECT; run build_dep inside the project directory"
 fi
-PM_BIN=$(command -v "$PM" 2>/dev/null) || die 2 "$PM is not on PATH"
-NODE_BIN=$(command -v node 2>/dev/null) || die 2 "node is not on PATH"
+real_bin() { # $1 tool -> its real executable; a mise shim is a symlink to mise, which the cage cannot see
+	local p
+	p=$(command -v "$1" 2>/dev/null) || return 1
+	case $p in
+	*/mise/shims/*) mise which "$1" 2>/dev/null ;;
+	*) printf '%s\n' "$p" ;;
+	esac
+}
+PM_BIN=$(real_bin "$PM") || die 2 "$PM is not on PATH"
+NODE_BIN=$(real_bin node) || die 2 "node is not on PATH"
 for name in "${PKGS[@]}"; do
 	[ -d "node_modules/$name" ] || die 2 "$name is not installed under node_modules; run the normal $PM install first"
 	[ -f "node_modules/$name/package.json" ] || die 2 "node_modules/$name has no package.json"
@@ -215,13 +223,15 @@ allowlist_verdict() { # $1 name, $2 version -> {allowlisted, allowlist_key}
 	fi
 	local spec
 	spec=$(jq -r --arg n "$1" '(.dependencies // {})[$n] // (.devDependencies // {})[$n] // (.optionalDependencies // {})[$n] // empty' package.json)
+	# pnpm's own `approve-builds` writes a file: key without the leading ./ ; accept both spellings
 	jq -nc --arg n "$1" --arg v "$2" --arg spec "$spec" --argjson cfg "$PNPM_CONFIG" '
 		($cfg.allowBuilds // {}) as $ab
 		| ($cfg.onlyBuiltDependencies // []) as $only
-		| ([$n] + (if $spec != "" then [$n + "@" + $spec] else [] end) + [$n + "@" + $v]) as $keys
+		| ($spec | sub("^file:\\./"; "file:")) as $spec2
+		| ([$n] + (if $spec != "" then [$n + "@" + $spec, $n + "@" + $spec2] else [] end) + [$n + "@" + $v] | unique) as $keys
 		| (($keys | map($ab[.] == true) | any) or ($only | index($n) != null)) as $ok
 		| ($keys | map(select($ab[.] == true)) | .[0]) as $hit
-		| (if ($spec | startswith("file:")) then $n + "@" + $spec else $n end) as $suggest
+		| (if ($spec | startswith("file:")) then $n + "@" + $spec2 else $n end) as $suggest
 		| {allowlisted: $ok, allowlist_key: (if $ok then ($hit // $n) else $suggest end)}'
 }
 
@@ -374,7 +384,7 @@ build_command() { # $1 name -> the package manager's rebuild command for that on
 
 append_log() { # $1 record -> prints and appends the log line
 	local line
-	line=$(jq -c --arg time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg host "$(hostname -s 2>/dev/null || hostname)" \
+	line=$(jq -c --arg time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg host "$( (hostname -s 2>/dev/null || hostname) | tr '[:upper:]' '[:lower:]')" \
 		--arg project "$PROJECT" --arg pm "$PM" '
 		{time: $time, host: $host, project: $project, pm: $pm, package: .name, version: .version,
 		 integrity: .integrity, files: (.files | map({(.path): .sha256}) | add // {}), hosts: .hosts,
