@@ -50,6 +50,14 @@ The ledger is kept for good: on the hub and in each machine's `records.jsonl`. R
 stay on the machine until the task's owner removes the task (`pueue remove`); after that,
 only the record and its tail remain.
 
+## Waiting records
+
+A record the hub did not take waits in `~/.local/state/pueue_ledger/unsent.jsonl` on its
+machine and goes out with the next finished task there. On a Mac the daemon itself cannot
+reach the hub (macOS keeps a launchd-started program off the local network), so its records
+wait until someone runs `pueue_ledger_record --flush` from a terminal shell on that Mac; a
+Claude Code session counts as one. The command prints how many it sent and how many wait.
+
 ## Labels
 
 A label is free text given at `pueue add --label`. It is the filter key, so put in it what

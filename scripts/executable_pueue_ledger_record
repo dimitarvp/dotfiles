@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # pueue_ledger_record — pueue's callback: one run-ledger record per finished task.
 #
-#   pueue_ledger_record <task id>
+#   pueue_ledger_record <task id>     the callback form
+#   pueue_ledger_record --flush       from a terminal shell: send the waiting records, nothing else
 #
 # Reads the task and the last 50 lines of its output from the daemon and builds one JSON
 # line (v1): machine, id, group, label, command, path, created_at, start, end, duration_s,
@@ -13,7 +14,9 @@
 #
 # State directory: $PUEUE_LEDGER_DIR, default ~/.local/state/pueue_ledger.
 # Hub config: ~/.config/fleet/agents.conf (or $FLEET_CONF), the file the fleet wrapper reads.
-# Always exits 0: the task is finished either way, and a callback cannot change it.
+# The callback form always exits 0: the task is finished either way, and a callback cannot
+# change it. --flush exits 1 while records still wait. On a Mac the launchd-started daemon
+# cannot reach the local network, a terminal shell can, so --flush is how its records leave.
 
 set -uo pipefail
 # the daemon that spawns this runs under launchd or systemd with a bare PATH
@@ -21,20 +24,28 @@ export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.local/share/mise/shims:$PA
 
 warn() { printf 'pueue_ledger_record: %s\n' "$*" >&2; }
 
-id=${1:-}
-[[ $id =~ ^[0-9]+$ ]] || {
-	warn "usage: pueue_ledger_record <task id>"
-	exit 0
-}
+flush_only=0
+if [[ ${1:-} == --flush ]]; then
+	flush_only=1
+else
+	id=${1:-}
+	[[ $id =~ ^[0-9]+$ ]] || {
+		warn "usage: pueue_ledger_record <task id> | --flush"
+		exit 0
+	}
+fi
 machine=$(hostname -s | tr "[:upper:]" "[:lower:]") # the hub identity is lowercase; some hosts report theirs in capitals
 dir=${PUEUE_LEDGER_DIR:-$HOME/.local/state/pueue_ledger}
 
-if ! task=$(pueue status --json 2>/dev/null | jq -ce --arg id "$id" '.tasks[$id] | select(.status.Done != null)'); then
-	warn "task $id is unknown, unfinished, or the daemon is not reachable"
-	exit 0
+record=""
+if ((flush_only == 0)); then
+	if ! task=$(pueue status --json 2>/dev/null | jq -ce --arg id "$id" '.tasks[$id] | select(.status.Done != null)'); then
+		warn "task $id is unknown, unfinished, or the daemon is not reachable"
+		exit 0
+	fi
+	tail=$(pueue log --json --lines 50 "$id" 2>/dev/null | jq -r --arg id "$id" '.[$id].output // ""') ||
+		warn "task $id: the log tail is not readable"
 fi
-tail=$(pueue log --json --lines 50 "$id" 2>/dev/null | jq -r --arg id "$id" '.[$id].output // ""') ||
-	warn "task $id: the log tail is not readable"
 
 # Daemon times are RFC 3339 with a fraction and an offset; jq's own parser takes neither.
 RECORD='def epoch:
@@ -51,17 +62,19 @@ RECORD='def epoch:
 	   start: $d.start, end: $d.end,
 	   duration_s: (try ([($d.end | epoch) - ($d.start | epoch)] | .[0] | round) catch null),
 	   result: $result, exit_code: $code, tail: $tail, recorded_at: (now | floor | todate)}'
-record=$(jq -c --arg machine "$machine" --arg tail "${tail:-}" "$RECORD" <<<"$task") || {
-	warn "task $id: the record could not be built"
-	exit 0
-}
+if ((flush_only == 0)); then
+	record=$(jq -c --arg machine "$machine" --arg tail "${tail:-}" "$RECORD" <<<"$task") || {
+		warn "task $id: the record could not be built"
+		exit 0
+	}
+fi
 
 mkdir -p "$dir"
 unsent=$dir/unsent.jsonl
 # two tasks can finish at once; one writer at a time keeps the files whole and sends nothing twice
 exec {lock}>>"$dir/.lock"
 flock "$lock"
-printf '%s\n' "$record" >>"$dir/records.jsonl"
+[[ -z $record ]] || printf '%s\n' "$record" >>"$dir/records.jsonl"
 
 conf=${FLEET_CONF:-$HOME/.config/fleet/agents.conf}
 hub=$(awk '$1=="hub"{print $2; exit}' "$conf" 2>/dev/null)
@@ -83,7 +96,7 @@ publish() { # one record line → fleet.runs.<machine>.<group>; the hub's last e
 
 pending=()
 [[ -s $unsent ]] && mapfile -t pending <"$unsent"
-pending+=("$record")
+[[ -z $record ]] || pending+=("$record")
 left=()
 for line in "${pending[@]}"; do
 	[[ -n $line ]] || continue
@@ -97,5 +110,9 @@ if ((${#left[@]})); then
 	warn "the hub did not take ${#left[@]} record(s); they wait in $unsent${hub_error:+ ($hub_error)}"
 else
 	rm -f -- "$unsent"
+fi
+if ((flush_only)); then
+	printf 'pueue_ledger_record: sent %d record(s), %d waiting\n' "$((${#pending[@]} - ${#left[@]}))" "${#left[@]}"
+	((${#left[@]} == 0)) || exit 1
 fi
 exit 0
