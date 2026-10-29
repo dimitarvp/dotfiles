@@ -21,6 +21,7 @@
 set -uo pipefail
 # the daemon that spawns this runs under launchd or systemd with a bare PATH
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.local/share/mise/shims:$PATH"
+export PUEUE_LEDGER_CALLBACK=1 # the macOS pueue wrapper must not start hub sends from the daemon's context
 
 warn() { printf 'pueue_ledger_record: %s\n' "$*" >&2; }
 

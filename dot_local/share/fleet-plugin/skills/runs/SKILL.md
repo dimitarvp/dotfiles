@@ -54,9 +54,10 @@ only the record and its tail remain.
 
 A record the hub did not take waits in `~/.local/state/pueue_ledger/unsent.jsonl` on its
 machine and goes out with the next finished task there. On a Mac the daemon itself cannot
-reach the hub (macOS keeps a launchd-started program off the local network), so its records
-wait until someone runs `pueue_ledger_record --flush` from a terminal shell on that Mac; a
-Claude Code session counts as one. The command prints how many it sent and how many wait.
+reach the hub (macOS keeps a launchd-started program off the local network); there the
+`pueue` command is a small wrapper that sends the waiting records from the terminal's side
+on every call, and `pueue add` leaves a waiter behind that sends the new task's record when
+it finishes. By hand: `pueue_ledger_record --flush` prints how many it sent and how many wait.
 
 ## Labels
 

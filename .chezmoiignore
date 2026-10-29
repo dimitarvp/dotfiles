@@ -7,6 +7,7 @@ scripts/extract_safari_bookmarks
 .zprofile
 .local/bin/flock
 .local/bin/bash
+.local/bin/pueue
 Library
 {{ end }}
 

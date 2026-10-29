@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# pueue on macOS: the real client, plus the hand-off of run-ledger records to the hub.
+#
+# macOS keeps a launchd-started program (the pueue daemon) off the local network, so the
+# records its callback writes cannot leave the machine by themselves. A terminal shell can
+# reach the hub, and every pueue command is typed in one (an agent's shell is a terminal
+# child), so: each call sends the waiting records in the background, and `pueue add` leaves
+# a detached waiter behind that sends the new task's record once the task has finished and
+# the callback has written it. Output and exit codes are the real client's. Linux needs
+# none of this. PUEUE_WRAPPER_LOG=<file> makes the waiter write its steps there.
+real=$HOME/.cargo/bin/pueue
+[ -x "$real" ] || {
+	printf 'pueue: %s is missing (cargo lane)\n' "$real" >&2
+	exit 127
+}
+dir=${PUEUE_LEDGER_DIR:-$HOME/.local/state/pueue_ledger}
+
+send_waiting() { # in the background, quietly; not from the daemon's own callback (it has no hub access)
+	[ -n "${PUEUE_LEDGER_CALLBACK:-}" ] && return 0
+	[ -s "$dir/unsent.jsonl" ] || return 0
+	(pueue_ledger_record --flush >/dev/null 2>&1 &)
+}
+
+if [ "${1:-}" = add ]; then
+	out=$("$real" "$@")
+	rc=$?
+	[ -n "$out" ] && printf '%s\n' "$out"
+	# "New task added (id N)." or, with --print-task-id, the bare number
+	id=""
+	if [[ $out =~ \(id\ ([0-9]+)\) ]]; then
+		id=${BASH_REMATCH[1]}
+	elif [[ $out =~ ^[0-9]+$ ]]; then
+		id=$out
+	fi
+	if [ "$rc" -eq 0 ] && [ -n "$id" ] && [ -z "${PUEUE_LEDGER_CALLBACK:-}" ]; then
+		# the task ends, then the callback writes its record (records.jsonl first, then its own
+		# failed send); only then is there something to flush, so wait for that line, at most 60 s
+		nohup bash -c '
+			[ -n "$3" ] && exec >>"$3" 2>&1
+			echo "waiter for task $1: start $(date +%T)"
+			"$0" wait "$1"
+			echo "task done $(date +%T)"
+			for _ in $(seq 1 120); do
+				grep -q "\"id\":$1," "$2/records.jsonl" 2>/dev/null && break
+				sleep 0.5
+			done
+			echo "record written $(date +%T)"
+			sleep 1
+			pueue_ledger_record --flush
+			echo "flush exit $? $(date +%T)"
+		' "$real" "$id" "$dir" "${PUEUE_WRAPPER_LOG:-}" >/dev/null 2>&1 &
+		disown
+	fi
+	send_waiting
+	exit "$rc"
+fi
+send_waiting
+exec "$real" "$@"
