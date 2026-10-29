@@ -20,6 +20,7 @@ path=(
   # A shim resolves the current version and sets its env (GOROOT etc.).
   $HOME/.local/share/mise/shims
 )
+export PATH # a zsh started without PATH in its environment would keep the list private
 
 # probex (~/bin/probex, chezmoi external): opt-in usage log, read by the tool census.
 # Here and not in .zshrc so agent-spawned shells record too.

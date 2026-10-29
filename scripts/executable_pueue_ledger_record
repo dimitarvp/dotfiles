@@ -16,6 +16,8 @@
 # Always exits 0: the task is finished either way, and a callback cannot change it.
 
 set -uo pipefail
+# the daemon that spawns this runs under launchd or systemd with a bare PATH
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.local/share/mise/shims:$PATH"
 
 warn() { printf 'pueue_ledger_record: %s\n' "$*" >&2; }
 
@@ -24,7 +26,7 @@ id=${1:-}
 	warn "usage: pueue_ledger_record <task id>"
 	exit 0
 }
-machine=$(hostname -s)
+machine=$(hostname -s | tr "[:upper:]" "[:lower:]") # the hub identity is lowercase; some hosts report theirs in capitals
 dir=${PUEUE_LEDGER_DIR:-$HOME/.local/state/pueue_ledger}
 
 if ! task=$(pueue status --json 2>/dev/null | jq -ce --arg id "$id" '.tasks[$id] | select(.status.Done != null)'); then
@@ -67,12 +69,16 @@ pw=$(awk -v n="$machine" '$1==n{print $2; exit}' "$conf" 2>/dev/null)
 export NATS_URL=$hub NATS_USER=$machine NATS_PASSWORD=$pw
 [[ -n $hub && -n $pw ]] || warn "no hub line or no password for $machine in $conf; the record waits in $unsent"
 
-publish() { # one record line → fleet.runs.<machine>.<group>; quiet
-	local subject
+hub_error=""
+publish() { # one record line → fleet.runs.<machine>.<group>; the hub's last error line stays in hub_error
+	local subject out
 	[[ -n $hub && -n $pw ]] || return 1
 	subject=$(jq -r '"fleet.runs.\(.machine).\(.group | gsub("[^A-Za-z0-9_-]"; "_"))"' <<<"$1") || return 1
-	printf '%s' "$1" |
-		nats --no-context --inbox-prefix "_INBOX_$machine" --timeout 10s pub -J --no-templates --force-stdin "$subject" >/dev/null 2>&1
+	if ! out=$(printf '%s' "$1" |
+		nats --no-context --inbox-prefix "_INBOX_$machine" --timeout 10s pub -J --no-templates --force-stdin "$subject" 2>&1); then
+		hub_error=${out##*$'\n'}
+		return 1
+	fi
 }
 
 pending=()
@@ -88,7 +94,7 @@ for line in "${pending[@]}"; do
 done
 if ((${#left[@]})); then
 	printf '%s\n' "${left[@]}" >"$unsent.tmp" && mv -f -- "$unsent.tmp" "$unsent"
-	warn "the hub did not take ${#left[@]} record(s); they wait in $unsent"
+	warn "the hub did not take ${#left[@]} record(s); they wait in $unsent${hub_error:+ ($hub_error)}"
 else
 	rm -f -- "$unsent"
 fi

@@ -14,7 +14,7 @@ every record of every machine, so you can read any machine's runs from anywhere.
 
 One JSON object per finished task:
 `{v, machine, id, group, label, command, path, created_at, start, end, duration_s, result, exit_code, tail, recorded_at}`.
-`machine` is the short host name; `id` is pueue's task number on that machine; `path` is the
+`machine` is the short host name in lowercase; `id` is pueue's task number on that machine; `path` is the
 working directory; `result` is `Success`, `Failed`, `Killed` or another pueue verdict;
 `exit_code` is 0 for Success, the code for Failed, null otherwise; `tail` is the last 50
 lines of output. Times are the machine's own, with an offset; `recorded_at` is UTC.
