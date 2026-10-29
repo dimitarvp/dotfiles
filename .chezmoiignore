@@ -6,6 +6,7 @@ CLAUDE.md
 scripts/extract_safari_bookmarks
 .zprofile
 .local/bin/flock
+.local/bin/bash
 Library
 {{ end }}
 
