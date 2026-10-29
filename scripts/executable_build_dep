@@ -99,13 +99,14 @@ elif [ -f package-lock.json ]; then
 else
 	die 2 "no pnpm-lock.yaml or package-lock.json in $PROJECT; run build_dep inside the project directory"
 fi
-real_bin() { # $1 tool -> its real executable; a mise shim is a symlink to mise, which the cage cannot see
+real_bin() { # $1 tool -> its real executable in its real directory: a mise shim is a symlink to mise, which the
+	# cage cannot see, and bwrap refuses to bind a directory reached through a symlink (mise's "latest" links)
 	local p
 	p=$(command -v "$1" 2>/dev/null) || return 1
 	case $p in
-	*/mise/shims/*) mise which "$1" 2>/dev/null ;;
-	*) printf '%s\n' "$p" ;;
+	*/mise/shims/*) p=$(mise which "$1" 2>/dev/null) || return 1 ;;
 	esac
+	printf '%s/%s\n' "$(realdir "$(dirname "$p")")" "$(basename "$p")"
 }
 PM_BIN=$(real_bin "$PM") || die 2 "$PM is not on PATH"
 NODE_BIN=$(real_bin node) || die 2 "node is not on PATH"

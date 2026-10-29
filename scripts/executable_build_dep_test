@@ -225,7 +225,8 @@ for p in ph nh; do
 	check "T5 $p: the run reached the build (exit 0 or 1)" rc_in "$rc" 0 1
 	check "T5 $p: the hostile script ran and recorded its attempts" test -f "$hostile/env.txt"
 	check "T5 $p: no file written into the real home" test ! -e "$REAL_HOME/build_dep_escape"
-	check "T5 $p: the home write was refused" first_line_starts "$hostile/home_write.txt" 'ERROR:'
+	# macOS refuses the write; Linux swallows it in the throwaway home. The real home stays clean on both (checked above).
+	[ "$(uname -s)" = Darwin ] && check "T5 $p: the home write was refused" first_line_starts "$hostile/home_write.txt" 'ERROR:'
 	check "T5 $p: no escape_marker in the project root" test ! -e "$proj/escape_marker"
 	check "T5 $p: the project write targeted this project" file_has "$hostile/project_write.txt" "^target=$proj\$"
 	check "T5 $p: the project write was refused" file_has "$hostile/project_write.txt" '^ERROR:'
