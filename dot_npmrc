@@ -1,13 +1,6 @@
-# npm: never run lifecycle/postinstall scripts implicitly — the main vector of
-# the 2025 npm worms (Shai-Hulud, chalk/debug). Knowing override per install:
-#   npm install --ignore-scripts=false <pkg>
+# npm never runs package install scripts here; ~/.zshenv exports the same as
+# npm_config_ignore_scripts=true, which a project .npmrc cannot undo.
+# Deliberate per-command override: --ignore-scripts=false
 ignore-scripts=true
-
-# pnpm supply-chain cool-down — PRE-STAGED AS COMMENTS ONLY (no pnpm anywhere
-# on the fleet as of 2026-08-29, and npm warns on unknown keys, so an active
-# line would warn-spam every npm run). When pnpm arrives, EITHER uncomment
-# the npmrc spelling below and accept npm's warning, OR (canonical) put this
-# per project into pnpm-workspace.yaml:
-#   minimumReleaseAge: 20160        # minutes = 14 days, incl. transitive deps
-#   minimumReleaseAgeStrict: true
-# npmrc spelling: minimum-release-age=20160
+# install only versions published at least 7 days ago (supply-chain cool-down)
+min-release-age=7

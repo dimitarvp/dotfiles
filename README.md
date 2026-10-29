@@ -91,7 +91,8 @@ Four configs, all templated for per-machine font size. Font: UbuntuMono Nerd Fon
 |------|---------|
 | `private_dot_config/mise/config.toml` | Every mise-managed tool, one owner per tool, the converge task |
 | `dot_cargo/config.toml` | Sparse registry, native CPU, mold (Linux), LTO release |
-| `dot_npmrc` | `ignore-scripts=true` |
+| `dot_npmrc` | npm: install scripts off, 7-day release age; `dot_zshenv` exports the same lock for npm and pnpm, so a repository's own config cannot undo it |
+| `private_dot_config/pnpm/config.yaml` | pnpm: install scripts off, 7-day release age; macOS reaches it through the symlink under `Library/Preferences/pnpm` |
 | `dot_psqlrc` | Pager off |
 | `dot_vimrc` | Minimal (ruler, syntax, indent) |
 | `yt-dlp/config` | AV1 preference, SponsorBlock, subtitles, metadata |

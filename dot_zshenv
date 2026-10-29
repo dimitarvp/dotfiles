@@ -24,3 +24,10 @@ path=(
 # probex (~/bin/probex, chezmoi external): opt-in usage log, read by the tool census.
 # Here and not in .zshrc so agent-spawned shells record too.
 export PROBEX_LOGFILE="$HOME/.probex/usage.jsonl"
+
+# Package install scripts never run on this fleet (npm and pnpm). These two
+# outrank any repository's own .npmrc or pnpm-workspace.yaml, so a cloned
+# project cannot switch scripts back on; only a flag typed at the terminal can
+# (npm --ignore-scripts=false, pnpm --no-ignore-scripts), one package at a time.
+export npm_config_ignore_scripts=true
+export PNPM_CONFIG_IGNORE_SCRIPTS=true

@@ -1,0 +1,6 @@
+# pnpm settings for every machine. ~/.zshenv exports the same lock as
+# PNPM_CONFIG_IGNORE_SCRIPTS=true, which a project's pnpm-workspace.yaml cannot
+# undo. Deliberate per-command override: --no-ignore-scripts, per package.
+ignoreScripts: true
+# install only versions published at least 7 days ago (minutes)
+minimumReleaseAge: 10080
