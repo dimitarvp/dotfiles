@@ -8,3 +8,6 @@ shared:
 daemon:
   # tasks run through zsh, so they get the fleet PATH from ~/.zshenv
   shell_command: ["zsh", "-c", "{{ pueue_command_string }}"]
+  # one run-ledger record per finished task, kept on this machine and published to the hub
+  callback: "pueue_ledger_record {{ id }}"
+  callback_log_lines: 50

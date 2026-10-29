@@ -93,7 +93,8 @@ Four configs, all templated for per-machine font size. Font: UbuntuMono Nerd Fon
 | `dot_cargo/config.toml` | Sparse registry, native CPU, mold (Linux), LTO release |
 | `dot_npmrc` | npm: install scripts off, 7-day release age; `dot_zshenv` exports the same lock for npm and pnpm, so a repository's own config cannot undo it |
 | `private_dot_config/pnpm/config.yaml` | pnpm: install scripts off, 7-day release age; macOS reaches it through the symlink under `Library/Preferences/pnpm` |
-| `private_dot_config/pueue/pueue.yml` | pueue daemon and client settings; `PUEUE_CONFIG_PATH` in `dot_zshenv` points every OS at it; the apply step enables the login daemon (systemd user unit on Linux, launchd agent on macOS) and creates the groups heavy (1) and light (3) |
+| `private_dot_config/pueue/pueue.yml` | pueue daemon and client settings; `PUEUE_CONFIG_PATH` in `dot_zshenv` points every OS at it; the apply step enables the login daemon (systemd user unit on Linux, launchd agent on macOS) and creates the groups heavy (1) and light (3); the callback writes the run ledger |
+| `scripts/executable_pueue_ledger_record` | Run ledger: pueue's callback writes one record per finished task (verdict, exit code, 50-line log tail), keeps it in `~/.local/state/pueue_ledger/records.jsonl` and publishes it to the hub's RUNS stream; `fleet <me> runs` and `fleet <me> run <machine> <id>` read any machine's runs |
 | `dot_psqlrc` | Pager off |
 | `dot_vimrc` | Minimal (ruler, syntax, indent) |
 | `yt-dlp/config` | AV1 preference, SponsorBlock, subtitles, metadata |

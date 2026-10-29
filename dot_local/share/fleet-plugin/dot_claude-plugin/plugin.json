@@ -1,5 +1,5 @@
 {
   "name": "fleet",
   "version": "0.2.0",
-  "description": "Fleet chat (NATS hub on the server): the /fleet:chat skill teaches the vocabulary, the two monitors deliver this session's feeds. Identity = FLEET_NAME or .fleet-identity in the project root."
+  "description": "Fleet chat (NATS hub on the server): the /fleet:chat skill teaches the vocabulary, the two monitors deliver this session's feeds; the /fleet:runs skill reads the run ledger of the fleet's task queue. Identity = FLEET_NAME or .fleet-identity in the project root."
 }
