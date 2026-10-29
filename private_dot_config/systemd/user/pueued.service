@@ -1,0 +1,11 @@
+[Unit]
+Description=pueue task queue daemon (the heavy and light groups)
+
+[Service]
+Environment=PUEUE_CONFIG_PATH=%h/.config/pueue/pueue.yml
+ExecStart=%h/.cargo/bin/pueued -v
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

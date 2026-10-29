@@ -1,0 +1,46 @@
+{{ if eq .role "server" -}}
+#!/bin/bash
+: # pueue daemon — workstations only, no-op on the server
+{{ else -}}
+#!/bin/bash
+# Arms the pueue daemon as a login service and creates its two groups in the
+# daemon's state. Re-runs whenever one of its pieces changes (hashes baked in
+# below); a changed piece restarts the daemon.
+# config:  {{ include "private_dot_config/pueue/pueue.yml" | sha256sum }}
+# service: {{ include "private_dot_config/systemd/user/pueued.service" | sha256sum }}
+# agent:   {{ include "private_Library/LaunchAgents/local.pueued.plist.tmpl" | sha256sum }}
+set -euo pipefail
+export PUEUE_CONFIG_PATH="$HOME/.config/pueue/pueue.yml"
+export PATH="$HOME/.cargo/bin:$HOME/.local/share/mise/shims:$PATH"
+{{ if eq .chezmoi.os "darwin" -}}
+domain="gui/$(id -u)"
+if launchctl print "$domain/local.pueued" >/dev/null 2>&1; then
+	launchctl bootout "$domain/local.pueued"
+fi
+launchctl bootstrap "$domain" "$HOME/Library/LaunchAgents/local.pueued.plist"
+{{ else -}}
+systemctl --user daemon-reload
+systemctl --user enable pueued.service
+systemctl --user restart pueued.service
+{{ end -}}
+for _ in $(seq 1 20); do
+	pueue status >/dev/null 2>&1 && break
+	sleep 0.5
+done
+pueue status >/dev/null 2>&1 || {
+	echo "pueued: the daemon did not answer within 10 s" >&2
+	exit 1
+}
+# a group is read from the daemon's state and only created when missing;
+# the parallel count is set either way, so a re-run converges
+ensure_group() {
+	if pueue group --json | jq -e --arg g "$1" 'has($g)' >/dev/null; then
+		pueue parallel "$2" -g "$1" >/dev/null
+	else
+		pueue group add "$1" -p "$2" >/dev/null
+	fi
+}
+ensure_group heavy 1
+ensure_group light 3
+echo "pueued: groups $(pueue group --json | jq -c 'map_values(.parallel_tasks)')"
+{{ end -}}

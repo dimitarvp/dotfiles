@@ -1,0 +1,10 @@
+# pueue daemon and client settings, one file on every machine: ~/.zshenv exports
+# PUEUE_CONFIG_PATH to it (pueue's own default path differs per OS) and the login
+# service reads the same path. Groups are state, not settings: the apply step
+# creates heavy (one task at a time) and light (three) in the daemon's state.
+shared:
+  pueue_directory: ~/.local/share/pueue
+  use_unix_socket: true
+daemon:
+  # tasks run through zsh, so they get the fleet PATH from ~/.zshenv
+  shell_command: ["zsh", "-c", "{{ pueue_command_string }}"]

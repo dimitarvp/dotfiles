@@ -31,3 +31,6 @@ export PROBEX_LOGFILE="$HOME/.probex/usage.jsonl"
 # (npm --ignore-scripts=false, pnpm --no-ignore-scripts), one package at a time.
 export npm_config_ignore_scripts=true
 export PNPM_CONFIG_IGNORE_SCRIPTS=true
+
+# pueue: one config path on every OS (pueue's own default differs per OS)
+export PUEUE_CONFIG_PATH="$HOME/.config/pueue/pueue.yml"
