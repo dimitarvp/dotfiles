@@ -2,11 +2,11 @@
   {
     "name": "fleet-dm",
     "command": "id=$FLEET_NAME; [ -n \"$id\" ] || id=$(cat \"${CLAUDE_PROJECT_DIR}/.fleet-identity\" 2>/dev/null); [ -n \"$id\" ] && exec fleet \"$id\" tail dm || echo \"fleet plugin: no identity (FLEET_NAME unset, no .fleet-identity in the project root): no private-message feed\"",
-    "description": "Fleet chat: private messages to this session's identity (one JSON line per message; act on each)"
+    "description": "Fleet chat: private messages to this session's identity (one message per notification, a long one as continuation lines; act on each)"
   },
   {
     "name": "fleet-chan",
     "command": "id=$FLEET_NAME; [ -n \"$id\" ] || id=$(cat \"${CLAUDE_PROJECT_DIR}/.fleet-identity\" 2>/dev/null); [ -n \"$id\" ] && exec fleet \"$id\" tail chan || echo \"fleet plugin: no identity (FLEET_NAME unset, no .fleet-identity in the project root): no room feed\"",
-    "description": "Fleet chat: every room (one JSON line per message; act only when `to` names this session's identity)"
+    "description": "Fleet chat: every room (one message per notification, a long one as continuation lines; act only when `to` names this session's identity)"
   }
 ]
