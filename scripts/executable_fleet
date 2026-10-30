@@ -11,15 +11,18 @@
 #   fleet <me> say '#room' TEXT        information for the room; nobody has to act
 #   fleet <me> say @name TEXT          private message; the recipient has to act
 #   fleet <me> ask '#room' NAMES TEXT  room message naming who must act: a,b or a prefix like team-
-#   fleet <me> tail dm|chan            follow a feed forever, one JSON line per message (the plugin monitor)
+#   fleet <me> tail dm|chan            follow a feed forever, one notification per message (the plugin monitor)
 #   fleet <me> since dm|chan [N]       print the next unread messages of a feed (at most N, default 20), exit
+#   fleet <me> show SEQ [--json]       one message from this machine's archive, whole
+#   fleet <me> last dm|chan [N] [--json]  the last N archived messages of a feed (default 10), oldest first
+#   fleet <me> render FILE             debug: one spooled message file, printed the way `tail` prints it
 #   fleet <me> runs [--machine M] [--group G] [--label TEXT] [--since DURATION] [--failed] [--json] [N]
 #                                      the newest finished pueue tasks of the fleet (at most N, default 20;
 #                                      --since 30d unless given; --label matches a substring, any case)
 #   fleet <me> run MACHINE ID [--json] one run's record, its log tail last
 #
 # TEXT = the remaining arguments; with none, the text is read from stdin (multi-line is fine).
-# A message on stdout is one JSON line:
+# A message on stdout is one JSON line (`tail` splits a long one, see RENDER):
 #   {"seq":12,"time":"2026-09-25T13:00:00Z","from":"xqlite","in":"#general","to":["dotfiles"],"text":"…"}
 #   in = "#room", or "@name" for a private message to name      to = who must act; [] = nobody
 #   time = when the hub stored it, UTC. Your own room lines are not printed (the feed skips them).
@@ -27,6 +30,10 @@
 # identity and feed (a durable consumer named <me>-dm / <me>-chan, created by the operator):
 # a killed `tail` resumes after the last message it printed; `since` pages what waits.
 # Never run `tail` and `since` on the same feed at the same time: they would split the messages.
+#
+# Archive: `tail` and `since` append every message they receive, whole and own room lines
+# included, as one JSON line to ~/.local/state/fleet/<me>/<feed>.jsonl before printing it.
+# Past 1100 lines the newest 1000 stay. `show` and `last` read it; the hub is not asked.
 #
 # How a feed is read: `nats sub --dump DIR` writes every received message as DIR/<seq>.json
 # before it acknowledges it; this script prints those files in sequence order and deletes
@@ -52,6 +59,7 @@ die() {
 }
 usage() {
 	print -u2 -- "usage: fleet <me> join | who | say '#room'|@name [TEXT] | ask '#room' NAMES [TEXT] | tail dm|chan | since dm|chan [N]" \
+		"| show SEQ [--json] | last dm|chan [N] [--json]" \
 		"| runs [--machine M] [--group G] [--label TEXT] [--since DURATION] [--failed] [--json] [N] | run MACHINE ID [--json]"
 	exit 2
 }
@@ -73,29 +81,62 @@ n() { nats --no-context --inbox-prefix "_INBOX_$me" "$@"; }
 
 # A dumped message: {"Subject","Reply","Header":{"To":["a,b"]}|null,"Data":"<base64>"}.
 # The read-position metadata rides in Reply: $JS.ACK.<stream>.<consumer>.<delivered>.<seq>.<cseq>.<ns>.<pending>
-# $chunk > 0 splits a long text into continuation lines: Claude Code cuts a monitor
-# event at 500 characters per LINE but delivers several lines printed together as one
-# notification, so a long message becomes {…,"part":"1/3","text":…} plus
-# {"seq":N,"part":"2/3","text":…} lines, all in one wake-up. A message whose text
-# encodes within $chunk characters keeps the single-line form.
-FILTER='def pieces($t; $n; $lim):
-		[range(0; ($t | length); $n) as $i | $t[$i:$i + $n]]
-		| if (map(tojson | length) | max) > $lim and $n > 16 then pieces($t; ($n / 2 | floor); $lim) else . end;
-	(.Subject | split(".")) as $p
+# RECORD turns it into the message, the line the archive keeps.
+RECORD='(.Subject | split(".")) as $p
 	| ((.Reply // "") | split(".")) as $r
 	| {seq: ($r[5] | tonumber? // null),
 	   time: (($r[7] | tonumber? // 0) / 1e9 | floor | todate),
 	   from: $p[3],
 	   in: (if $p[1] == "dm" then "@" + $p[2] else "#" + $p[2] end),
 	   to: ((.Header.To // [""])[0] | split(",") | map(select(length > 0))),
-	   text: ((.Data // "") | @base64d | sub("\n+$"; ""))} as $m
-	| if $chunk > 0 and ($m.text | tojson | length) > $chunk then
-		pieces($m.text; $chunk; $chunk) as $parts | ($parts | length) as $n
-		| range(0; $n) as $i
-		| if $i == 0 then $m + {text: $parts[0], part: "1/\($n)"}
-		  else {seq: $m.seq, part: "\($i + 1)/\($n)", text: $parts[$i]} end
-	  else $m end'
-CHUNK=320 # characters of encoded text per line; the first line's envelope stays under 180
+	   text: ((.Data // "") | @base64d | sub("\n+$"; ""))}'
+
+# RENDER turns a message into the lines printed for it; own room lines print none.
+# For the monitor ($form == "monitor") the lines fit one Claude Code notification, which
+# keeps 500 characters per line and 3000 in all (lines joined by newlines; lengths as
+# JavaScript counts them, so a character above U+FFFF counts twice). A message whose line
+# is too long becomes {…,"part":"1/N","text":…} plus {"seq":S,"part":"2/N","text":…} lines
+# of at most 480 characters each, at most 2900 together. When they do not all fit, the
+# last line printed is {"seq":S,"part":"k/N","cut":true,"text":"(cut: fleet <me> show S …)"}.
+RENDER='def width: explode | map(if . > 65535 then 2 else 1 end) | add // 0;
+	def line_max: 480;
+	def burst_max: 2900;
+	# how many codepoints of $c, from the start, encode within $room
+	def fit($c; $room):
+		if ($c | implode | tojson | width) - 2 <= $room then $c | length
+		else [0, ($c | length)]
+			| until(.[1] - .[0] <= 1; ((.[0] + .[1]) / 2 | floor) as $k
+				| if ($c[:$k] | implode | tojson | width) - 2 <= $room then [$k, .[1]] else [.[0], $k] end)
+			| .[0] end;
+	def pieces($t; $room1; $room):
+		($t | explode) as $c
+		| {i: 0, out: []}
+		| until(.i >= ($c | length);
+			(if .out == [] then $room1 else $room end) as $r
+			| ([fit($c[.i:.i + $r]; $r), 1] | max) as $k
+			| .out += [$c[.i:.i + $k] | implode] | .i += $k)
+		| .out;
+	. as $m
+	| def cut($part): {seq: $m.seq, part: $part, cut: true, text: "(cut: fleet \($me) show \($m.seq) prints the whole message)"};
+	if .from == $me and (.in | startswith("#")) then empty
+	elif $form != "monitor" or (tojson | width) <= line_max then tojson
+	else
+		"999999/999999" as $wide
+		| pieces(.text; line_max - (. + {part: $wide, text: ""} | tojson | width);
+			line_max - ({seq, part: $wide, text: ""} | tojson | width)) as $p
+		| ($p | length) as $n
+		| [range(0; $n) as $i
+			| if $i == 0 then $m + {text: $p[0], part: "1/\($n)"} else {seq: $m.seq, part: "\($i + 1)/\($n)", text: $p[$i]} end
+			| tojson] as $all
+		| [foreach $all[] as $l (0; . + ($l | width) + 1)] as $sum
+		| if $sum[-1] - 1 <= burst_max then $all[]
+		  else ($sum | map(select(. + (cut($wide) | tojson | width) <= burst_max)) | length) as $k
+			| $all[:$k][], (cut("\($k + 1)/\($n)") | tojson)
+		  end
+	end'
+
+# an archived message for a human: a header line, a blank line, the text
+SHOWN='def shown: "\(.seq)  \(.time)  \(.from)  \(.in)  \(if .to == [] then "-" else .to | join(",") end)", "", .text;'
 
 spool_of() { # feed → the spool directory, created
 	local d=${XDG_CACHE_HOME:-$HOME/.cache}/fleet/$me/$1
@@ -104,12 +145,43 @@ spool_of() { # feed → the spool directory, created
 	print -- "$d"
 }
 
-drain() { # dir [chunk]: print the spooled messages in stream order, then delete them
-	local f chunk=${2:-0}
+archive_dir=${XDG_STATE_HOME:-$HOME/.local/state}/fleet/$me
+archive_of() { # feed → the archive file, its directory created
+	mkdir -p "$archive_dir"
+	chmod 700 "$archive_dir"
+	print -- "$archive_dir/$1.jsonl"
+}
+
+archive_add() { # file message: append the message, once; past 1100 lines keep the newest 1000
+	# a spool file printed again after a kill must not add a second line
+	if [[ -s $1 && $(tail -n 1 "$1") == "${2%%,*},"* ]]; then
+		return 0
+	fi
+	print -r -- "$2" >>"$1"
+	if (($(wc -l <"$1") > 1100)); then
+		tail -n 1000 "$1" >"$1.tmp"
+		mv -f -- "$1.tmp" "$1"
+	fi
+}
+
+drain() { # spool archive [monitor]: archive, print and delete the spooled messages in stream
+	# order; for the monitor only the next message, in lines that fit one notification.
+	# Sets printed to the number of messages printed.
+	local f rec out form=${3:-plain}
+	printed=0
 	for f in "$1"/<->.json(N.n); do
-		# own room lines are skipped (the room feed carries every sender, me included)
-		if jq -c --arg me "$me" --argjson chunk "$chunk" "$FILTER"' | select(.part != null or .from != $me or (.in | startswith("@")))' "$f" 2>/dev/null; then
+		# an empty file is a write in progress, like an unreadable one
+		if rec=$(jq -c "$RECORD" "$f" 2>/dev/null) && [[ -n $rec ]]; then
+			archive_add "$2" "$rec"
+			out=$(jq -r --arg me "$me" --arg form "$form" "$RENDER" <<<"$rec") || out=$rec
+			if [[ -n $out ]]; then
+				print -r -- "$out"
+				printed=$((printed + 1))
+			fi
 			rm -f -- "$f"
+			if [[ $form == monitor ]] && ((printed)); then
+				return 0
+			fi
 		elif [[ -z $f(#qNms-5) ]]; then # older than 5 s and still unreadable: not a write in progress
 			print -u2 -- "fleet: unreadable spool file set aside: $f.bad"
 			mv -f -- "$f" "$f.bad"
@@ -224,8 +296,23 @@ tail)
 		n sub --stream FLEET --durable "$me-$feed" --dump "$spool" >"$spool/natscli.log" 2>&1 || true
 		sleep 5
 	done) &
+	archive=$(archive_of "$feed")
+	# Claude Code joins the lines printed within 200 ms into one notification, and passes a
+	# monitor 10 notifications at once, then one per 2 s, dropping the rest: one message
+	# per notification, at most 8 at once, then one per 2.1 s; the spool holds the others
+	zmodload zsh/datetime
+	integer tokens=8 refills
+	float since_refill=$EPOCHREALTIME
 	while :; do
-		drain "$spool" "$CHUNK"
+		refills=$(((EPOCHREALTIME - since_refill) / 2.1))
+		if ((refills > 0)); then
+			tokens=$((tokens + refills < 8 ? tokens + refills : 8))
+			since_refill=$((since_refill + refills * 2.1))
+		fi
+		if ((tokens > 0)); then
+			drain "$spool" "$archive" monitor
+			tokens=$((tokens - printed))
+		fi
 		sleep 0.3
 	done
 	;;
@@ -236,7 +323,43 @@ since)
 	spool=$(spool_of "$feed")
 	n sub --stream FLEET --durable "$me-$feed" --dump "$spool" --count "$count" -T --wait 3s >"$spool/natscli.log" 2>&1 ||
 		die "cannot read the $feed feed ($(tail -n 1 "$spool/natscli.log"))"
-	drain "$spool"
+	drain "$spool" "$(archive_of "$feed")"
+	;;
+show)
+	zparseopts -D -E -F -- -json=o_json || usage
+	(($# == 1)) || usage
+	[[ $1 == <-> ]] || die "SEQ must be a message number"
+	files=("$archive_dir"/{dm,chan}.jsonl(N))
+	record=
+	if ((${#files})); then
+		record=$(jq -cn --argjson s "$((10#$1))" 'last(inputs | select(.seq == $s)) // empty' "${files[@]}")
+	fi
+	[[ -n $record ]] || die "message $1 is not in this machine's archive (received elsewhere, or before the archive existed);" \
+		"the server's admin can read it from stream FLEET, sequence $1"
+	if ((${#o_json})); then
+		print -r -- "$record"
+	else
+		jq -r "$SHOWN"' shown' <<<"$record"
+	fi
+	;;
+last)
+	zparseopts -D -E -F -- -json=o_json || usage
+	(($# == 1 || $# == 2)) || usage
+	feed=$(feed_of "$1")
+	count=${2:-10}
+	[[ $count == <1-> ]] || die "N must be a positive number"
+	[[ -s $archive_dir/$feed.jsonl ]] || exit 0
+	tail -n "$count" "$archive_dir/$feed.jsonl" |
+		if ((${#o_json})); then
+			cat
+		else
+			jq -rn "$SHOWN"'foreach inputs as $m (0; . + 1; (if . > 1 then "" else empty end), ($m | shown))'
+		fi
+	;;
+render)
+	(($# == 1)) || usage
+	[[ -r $1 ]] || die "cannot read $1"
+	jq -c "$RECORD" "$1" | jq -r --arg me "$me" --arg form monitor "$RENDER"
 	;;
 runs)
 	zparseopts -D -E -F -- -machine:=o_machine -group:=o_group -label:=o_label -since:=o_since -failed=o_failed -json=o_json || usage
