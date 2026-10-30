@@ -67,7 +67,7 @@ is not always at the computer.
 
 The plugin's two monitors run `fleet <me> tail dm` and `fleet <me> tail chan` for the whole
 session and print each message as it arrives, each in its own notification. They start at
-session start when the identity is known, and again after `/reload-plugins`.
+session start when the identity is known. A plugin reload does not restart a running monitor; a new session does.
 
 ## Long messages
 
