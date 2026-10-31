@@ -1,3 +1,9 @@
 # Added by OrbStack: command-line tools and integration
 # This won't be added again if you remove it.
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
+
+# /etc/zprofile's path_helper has just put the system directories (Homebrew's
+# /usr/local/bin among them) ahead of everything zshenv ordered; put the user
+# lanes and MacPorts back in front, so login shells without a .zshrc (zsh -lc)
+# resolve the same copies as interactive ones. typeset -U (zshenv) dedupes.
+path=($HOME/.local/bin $HOME/.cargo/bin $HOME/go/bin $HOME/bin $HOME/scripts /opt/local/bin(N) /opt/local/sbin(N) $path)
