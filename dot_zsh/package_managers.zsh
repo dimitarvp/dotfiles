@@ -26,9 +26,6 @@ if is_macos && [[ -n "$HOMEBREW_PREFIX" ]]; then
     export PATH="$HOMEBREW_PREFIX/opt/mysql-client/bin:$PATH"
   [[ -d "$HOMEBREW_PREFIX/opt/sqlite/bin" ]] && \
     export PATH="$HOMEBREW_PREFIX/opt/sqlite/bin:$PATH"
-  local _pg_dir
-  _pg_dir=$(ls -d "$HOMEBREW_PREFIX"/opt/postgresql@*/bin 2>/dev/null | sort -t@ -k2 -rn | head -1)
-  [[ -n "$_pg_dir" ]] && export PATH="$_pg_dir:$PATH"
 
   # curl (prefer Homebrew's newer version)
   [[ -d "$HOMEBREW_PREFIX/opt/curl/bin" ]] && \
