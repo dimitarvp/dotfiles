@@ -20,6 +20,7 @@ source $HOME/.zsh/fuzzy_finders/fzf.zsh
 source $HOME/.zsh/fuzzy_finders/fzf_tab.zsh
 source $HOME/.zsh/programs/atuin.zsh
 source $HOME/.zsh/programs/postgres.zsh
+source $HOME/.zsh/programs/gcloud.zsh
 
 source $HOME/.zsh/languages/erlang.zsh
 source $HOME/.zsh/languages/elixir.zsh

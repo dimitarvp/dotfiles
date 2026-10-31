@@ -20,6 +20,11 @@ scripts/extract_safari_bookmarks
 .local/bin/gcut
 .local/bin/rrsync
 .local/bin/dbtoepub
+.local/bin/gcloud
+.local/bin/gsutil
+.local/bin/bq
+.local/bin/docker-credential-gcloud
+.local/bin/git-credential-gcloud
 .gnupg/gpg-agent.conf
 Library
 {{ end }}
