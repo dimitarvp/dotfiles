@@ -14,3 +14,25 @@
         args = ["--rebase", "--autostash"]
 
 {{- end }}
+{{- if eq .chezmoi.os "darwin" }}
+
+# Single-file tools on the Mac, taken from their upstream releases (no package
+# manager builds them as binaries); the version sits in the URL, bump by hand.
+# ack — grep for programmers, one Perl script.
+[".local/bin/ack"]
+    type = "file"
+    url = "https://beyondgrep.com/ack-v3.10.0"
+    executable = true
+# timedog — sizes of Time Machine backups, one Perl script.
+[".local/bin/timedog"]
+    type = "file"
+    url = "https://raw.githubusercontent.com/nlfiedler/timedog/v1.4/timedog"
+    executable = true
+# sqlite3_rsync — the official sqlite.org x64 tools build, one file out of the zip.
+[".local/bin/sqlite3_rsync"]
+    type = "archive-file"
+    url = "https://sqlite.org/2026/sqlite-tools-osx-x64-3540100.zip"
+    path = "sqlite3_rsync"
+    executable = true
+
+{{- end }}

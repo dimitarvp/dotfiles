@@ -8,6 +8,15 @@ scripts/extract_safari_bookmarks
 .local/bin/flock
 .local/bin/bash
 .local/bin/pueue
+.local/bin/7z
+.local/bin/7za
+.local/bin/7zr
+.local/bin/vncviewer
+.local/bin/ack
+.local/bin/timedog
+.local/bin/sqlite3_rsync
+.local/bin/rename
+.gnupg/gpg-agent.conf
 Library
 {{ end }}
 
