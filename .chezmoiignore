@@ -16,6 +16,10 @@ scripts/extract_safari_bookmarks
 .local/bin/timedog
 .local/bin/sqlite3_rsync
 .local/bin/rename
+.local/bin/xml
+.local/bin/gcut
+.local/bin/rrsync
+.local/bin/dbtoepub
 .gnupg/gpg-agent.conf
 Library
 {{ end }}

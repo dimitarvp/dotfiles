@@ -1,0 +1,3 @@
+#!/bin/sh
+# dbtoepub from the MacPorts docbook-xsl-nons port (the port ships it without the execute bit)
+exec ruby /opt/local/share/xsl/docbook-xsl-nons/epub/bin/dbtoepub "$@"

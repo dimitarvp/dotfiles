@@ -34,5 +34,11 @@
     url = "https://sqlite.org/2026/sqlite-tools-osx-x64-3540100.zip"
     path = "sqlite3_rsync"
     executable = true
+# rrsync — restricted rsync for authorized_keys command= lines; rsync's own support
+# script, which the MacPorts rsync port does not install.
+[".local/bin/rrsync"]
+    type = "file"
+    url = "https://raw.githubusercontent.com/RsyncProject/rsync/v3.5.1/support/rrsync"
+    executable = true
 
 {{- end }}
