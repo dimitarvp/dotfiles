@@ -13,6 +13,9 @@ path=(
   $HOME/go/bin
   $HOME/bin
   $HOME/scripts
+  # MacPorts on the Mac (the (N) drops the entry where the directory is absent)
+  /opt/local/bin(N)
+  /opt/local/sbin(N)
   $path
   # last-resort fallback: `mise activate` puts version-specific dirs like
   # installs/go/1.26.6/bin on PATH; after `mise upgrade` prunes that version,

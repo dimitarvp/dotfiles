@@ -22,4 +22,8 @@ if is_macos && [[ -n "$HOMEBREW_PREFIX" ]]; then
   # GNU texinfo
   [[ -d "$HOMEBREW_PREFIX/opt/texinfo/bin" ]] && \
     export PATH="$HOMEBREW_PREFIX/opt/texinfo/bin:$PATH"
+
+  # GNU names of the MacPorts ports (coreutils, grep, gnutar, ...), ahead of the Homebrew copies
+  [[ -d /opt/local/libexec/gnubin ]] && \
+    export PATH="/opt/local/libexec/gnubin:$PATH"
 fi
