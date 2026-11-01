@@ -96,6 +96,9 @@ rebar = "latest"
 # of the rustup proxy on PATH; the rustup converge script removes the component.
 rust-analyzer = "latest"
 "aqua:google-antigravity/antigravity-cli" = "latest"
+# 7-Zip on every workstation: upstream's own build (7zz); 7z, 7za and 7zr in ~/.local/bin
+# link to it, the distro p7zip packages leave (Dimi 2026-11-01: fewer distro packages)
+"aqua:ip7z/7zip" = "latest"
 # otel-cli: OpenTelemetry spans from shell steps (exec, span background/end), the
 # fleet's tracing wrapper for pre-commit chains and the update runs; no-op until an
 # OTLP endpoint is set. Release binaries per OS/arch (last release 0.4.5, 2024-04).
@@ -155,8 +158,6 @@ btop = "latest"
 python = "latest"
 # bash 5 for scripts that need bash 4+ (macOS ships 3.2); Linux has it from the OS
 "github:robxu9/bash-static" = { version = "latest", asset_pattern = "bash-macos-x86_64" }
-# 7-Zip: upstream's own macOS build (7zz); 7z, 7za and 7zr in ~/.local/bin link to it
-"aqua:ip7z/7zip" = "latest"
 # protoc: the protobuf compiler from its release zips
 "aqua:protocolbuffers/protobuf/protoc" = "latest"
 {{- end }}
