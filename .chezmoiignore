@@ -34,6 +34,9 @@ Library
 .local/bin/rust-analyzer
 .config/pueue
 .config/systemd/user/pueued.service
+.config/openobserve
+.config/systemd/user/openobserve.service
+.local/bin/openobserve-run
 {{ end }}
 
 {{ if not .adblock }}

@@ -1,0 +1,30 @@
+#!/bin/sh
+# Runs the per-machine OpenObserve in the foreground for systemd (Linux) and
+# launchd (macOS): localhost only, data under XDG, the root login from the
+# encrypted env file. Base-system tools only: the service environment carries
+# no user tool lanes.
+set -eu
+bin="$HOME/.local/share/mise/installs/http-openobserve/latest/openobserve"
+env_file="$HOME/.config/openobserve/env"
+data_dir="$HOME/.local/share/openobserve/data"
+state_dir="$HOME/.local/state/openobserve"
+[ -x "$bin" ] || {
+	echo "openobserve-run: binary missing: $bin (mise install)" >&2
+	exit 1
+}
+[ -r "$env_file" ] || {
+	echo "openobserve-run: env file missing: $env_file (chezmoi apply)" >&2
+	exit 1
+}
+mkdir -p "$data_dir" "$state_dir"
+set -a
+. "$env_file"
+set +a
+export ZO_DATA_DIR="$data_dir/"
+export ZO_HTTP_ADDR=127.0.0.1 ZO_HTTP_PORT=5080
+export ZO_GRPC_ADDR=127.0.0.1 ZO_GRPC_PORT=5081
+export ZO_WEB_URL=http://127.0.0.1:5080
+export ZO_TELEMETRY=false ZO_MMDB_DISABLE_DOWNLOAD=true
+export ZO_MODEL_PRICING_ENABLED=false ZO_PRODUCT_ANALYTICS_ENABLED=false ZO_RUM_ENABLED=false
+cd "$state_dir"
+exec "$bin"

@@ -1,0 +1,39 @@
+{{ if eq .role "server" -}}
+#!/bin/bash
+: # OpenObserve — workstations only, no-op on the server
+{{ else -}}
+#!/bin/bash
+# Arms the per-machine OpenObserve as a login service and waits until it
+# answers on localhost. Re-runs whenever one of its pieces changes (hashes
+# baked in below); a changed piece restarts the daemon.
+# launcher: {{ include "dot_local/bin/executable_openobserve-run" | sha256sum }}
+# service:  {{ include "private_dot_config/systemd/user/openobserve.service" | sha256sum }}
+# agent:    {{ include "private_Library/LaunchAgents/local.openobserve.plist.tmpl" | sha256sum }}
+# env:      {{ include "private_dot_config/openobserve/encrypted_private_env.age" | sha256sum }}
+set -euo pipefail
+{{ if eq .chezmoi.os "darwin" -}}
+domain="gui/$(id -u)"
+if launchctl print "$domain/local.openobserve" >/dev/null 2>&1; then
+	launchctl bootout "$domain/local.openobserve"
+	# bootout tears the service down asynchronously; a bootstrap before it is gone fails with I/O error
+	for _ in $(seq 1 40); do
+		launchctl print "$domain/local.openobserve" >/dev/null 2>&1 || break
+		sleep 0.25
+	done
+fi
+launchctl bootstrap "$domain" "$HOME/Library/LaunchAgents/local.openobserve.plist"
+{{ else -}}
+systemctl --user daemon-reload
+systemctl --user enable openobserve.service
+systemctl --user restart openobserve.service
+{{ end -}}
+for _ in $(seq 1 60); do
+	curl -fsS http://127.0.0.1:5080/healthz >/dev/null 2>&1 && break
+	sleep 0.5
+done
+curl -fsS http://127.0.0.1:5080/healthz >/dev/null 2>&1 || {
+	echo "openobserve: no answer on 127.0.0.1:5080 within 30 s" >&2
+	exit 1
+}
+echo "openobserve: up on http://127.0.0.1:5080"
+{{ end -}}

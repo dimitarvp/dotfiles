@@ -1,0 +1,10 @@
+[Unit]
+Description=OpenObserve, the per-machine trace store for otel-cli spans (127.0.0.1:5080)
+
+[Service]
+ExecStart=%h/.local/bin/openobserve-run
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
