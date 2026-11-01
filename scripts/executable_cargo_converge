@@ -76,9 +76,20 @@ else
 fi
 echo ""
 
-# 2. Update all installed crates
+# 2. Update all installed crates. With binstall: one resolve over every
+# configured crate, a binary download where a newer version exists, a skip
+# where the installed one is current; a crate without a binary release
+# compiles (binstall's own fallback) and the run log says so. Without
+# binstall: cargo install-update, which compiles every update.
 echo ">>> Phase 2: Updating all crates to latest..."
-if command -v cargo-install-update &>/dev/null; then
+if command -v cargo-binstall &>/dev/null; then
+	if cargo binstall -y ${(f)configured}; then
+		echo "[OK] Update completed"
+	else
+		echo "[FAILED] Update had errors"
+		update_failed=true
+	fi
+elif command -v cargo-install-update &>/dev/null; then
 	if cargo install-update -a; then
 		echo "[OK] Update completed"
 	else
@@ -86,8 +97,7 @@ if command -v cargo-install-update &>/dev/null; then
 		update_failed=true
 	fi
 else
-	echo "WARNING: cargo-install-update not found. Skipping updates."
-	echo "Install with: cargo install cargo-update"
+	echo "WARNING: neither cargo-binstall nor cargo-install-update found. Skipping updates."
 fi
 echo ""
 
