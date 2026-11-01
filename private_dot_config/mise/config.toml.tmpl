@@ -96,6 +96,10 @@ rebar = "latest"
 # of the rustup proxy on PATH; the rustup converge script removes the component.
 rust-analyzer = "latest"
 "aqua:google-antigravity/antigravity-cli" = "latest"
+# otel-cli: OpenTelemetry spans from shell steps (exec, span background/end), the
+# fleet's tracing wrapper for pre-commit chains and the update runs; no-op until an
+# OTLP endpoint is set. Release binaries per OS/arch (last release 0.4.5, 2024-04).
+"github:equinix-labs/otel-cli" = "latest"
 # neovim from the upstream release builds on every workstation: distro packages lag
 # (Debian sid sat on 0.12.4 for 17 days), brew builds no Intel bottles.
 "aqua:neovim/neovim" = "latest"
