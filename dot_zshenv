@@ -46,3 +46,6 @@ if [[ -r "$HOME/.config/openobserve/env" ]]; then
 	export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT OTEL_EXPORTER_OTLP_HEADERS
 	unset ZO_ROOT_USER_EMAIL ZO_ROOT_USER_PASSWORD
 fi
+
+# every span names its machine: otel-cli folds this variable into --attrs
+export OTEL_CLI_ATTRIBUTES="host.name=${(L)${HOST%%.*}}"
