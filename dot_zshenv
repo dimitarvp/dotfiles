@@ -38,3 +38,11 @@ export PNPM_CONFIG_IGNORE_SCRIPTS=true
 
 # pueue: one config path on every OS (pueue's own default differs per OS)
 export PUEUE_CONFIG_PATH="$HOME/.config/pueue/pueue.yml"
+
+# otel-cli → the per-machine OpenObserve: spans land in the local store; a
+# machine without the store (no env file) leaves otel-cli a no-op
+if [[ -r "$HOME/.config/openobserve/env" ]]; then
+	. "$HOME/.config/openobserve/env"
+	export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT OTEL_EXPORTER_OTLP_HEADERS
+	unset ZO_ROOT_USER_EMAIL ZO_ROOT_USER_PASSWORD
+fi
