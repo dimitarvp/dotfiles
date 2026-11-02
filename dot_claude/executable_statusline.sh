@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # statusline.sh — Claude Code status line.
 # Reads session JSON on stdin, prints:
-#   cwd • model • effort • ctx • 5h limit • 7d all-other • 7d fable
+#   cwd • model • effort • ctx • 5h limit • 7d all • 7d fable
 # rate_limits is absent until the session's first API response; parts degrade away.
 # The Fable weekly bucket is NOT in the statusline payload (still true at CC
 # 2.1.252) — it is fetched from Anthropic's undocumented OAuth usage endpoint
