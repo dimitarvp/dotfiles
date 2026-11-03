@@ -3,6 +3,7 @@
 # zl [NAME]             the same on this machine
 # zs [HOST]             list sessions here or on HOST
 # zd [HOST] NAME|--all  delete an exited session, or every exited one
+# zk [HOST] NAME        kill a running session (its panes and programs with it)
 zr() {
 	ssh -t "${1:?host}" "zellij attach --create ${2:-main}"
 }
@@ -29,5 +30,13 @@ zd() {
 		"${run[@]}" delete-all-sessions
 	else
 		"${run[@]}" delete-session "${1:?session name or --all}"
+	fi
+}
+
+zk() {
+	if (($# == 2)); then
+		ssh "$1" "zellij kill-session $2"
+	else
+		zellij kill-session "${1:?session name}"
 	fi
 }
