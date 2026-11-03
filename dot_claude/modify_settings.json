@@ -1,12 +1,22 @@
 #!/bin/sh
-# Ensure statusLine + transcript retention are configured in
-# ~/.claude/settings.json; pass all other keys through untouched
+# Ensure statusLine, transcript retention and the prompt-free permissions
+# (every tool pre-approved, the project memory directories readable) are
+# configured in ~/.claude/settings.json; pass all other keys through untouched
 # (Claude Code rewrites this file itself).
 input=$(cat)
 [ -z "$input" ] && input='{}'
-current=$(printf '%s\n' "$input" | jq -r '[(.statusLine.command // ""), (.cleanupPeriodDays // "" | tostring)] | join("|")')
-if [ "$current" = '~/.claude/statusline.sh|1825' ]; then
+current=$(printf '%s\n' "$input" | jq -r '[
+	(.statusLine.command // ""),
+	(.cleanupPeriodDays // "" | tostring),
+	((.permissions.allow // []) | contains(["Agent","Bash","Edit","Glob","Grep","MultiEdit","NotebookEdit","Read","WebFetch","WebSearch","Write"]) | tostring),
+	((.permissions.additionalDirectories // []) | index("~/.claude/projects") != null | tostring)
+] | join("|")')
+if [ "$current" = '~/.claude/statusline.sh|1825|true|true' ]; then
 	printf '%s\n' "$input"
 else
-	printf '%s\n' "$input" | jq '.statusLine = {"type": "command", "command": "~/.claude/statusline.sh"} | .cleanupPeriodDays = 1825'
+	printf '%s\n' "$input" | jq '
+		.statusLine = {"type": "command", "command": "~/.claude/statusline.sh"}
+		| .cleanupPeriodDays = 1825
+		| .permissions.allow = ((.permissions.allow // []) + ["Agent","Bash","Edit","Glob","Grep","MultiEdit","NotebookEdit","Read","WebFetch","WebSearch","Write"] | unique)
+		| .permissions.additionalDirectories = ((.permissions.additionalDirectories // []) + ["~/.claude/projects"] | unique)'
 fi
