@@ -49,3 +49,7 @@ fi
 
 # every span names its machine: otel-cli folds this variable into --attrs
 export OTEL_CLI_ATTRIBUTES="host.name=${(L)${HOST%%.*}}"
+
+# Claude Code: the per-session web-search budget, shared by every subagent of a
+# session; the default runs dry in a research-heavy session
+export CLAUDE_CODE_MAX_WEB_SEARCHES_PER_SESSION=1000000
