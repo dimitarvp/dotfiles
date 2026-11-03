@@ -31,6 +31,7 @@ source $HOME/.zsh/languages/python.zsh
 
 source $HOME/.zsh/programs/docker.zsh
 source $HOME/.zsh/programs/git.zsh
+source $HOME/.zsh/programs/zellij.zsh
 source $HOME/.zsh/programs/pspg.zsh
 source $HOME/.zsh/programs/mise.zsh
 source $HOME/.zsh/programs/direnv.zsh # after mise: see the note in the file

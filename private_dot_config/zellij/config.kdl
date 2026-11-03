@@ -1,0 +1,10 @@
+// Every key goes to the program in the pane; Ctrl+g unlocks zellij's own keys
+// (Alt+h/j/k/l, Alt+n and Alt+f work while locked)
+default_mode "locked"
+// Closing the terminal tab or losing the ssh link detaches; the session keeps running
+on_force_close "detach"
+mouse_mode true
+copy_on_select true
+scroll_buffer_size 50000
+show_startup_tips false
+show_release_notes false
