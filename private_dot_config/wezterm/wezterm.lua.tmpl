@@ -72,6 +72,10 @@ config.bold_brightens_ansi_colors = true
 config.send_composed_key_when_left_alt_is_pressed = false
 config.send_composed_key_when_right_alt_is_pressed = false
 
+-- Apps that ask for the kitty keyboard protocol get it: Ctrl+Enter and Shift+Enter
+-- stay distinct from Enter, also through a zellij hop
+config.enable_kitty_keyboard = true
+
 -- Key bindings
 config.keys = {
   { key = 'n', mods = 'CMD', action = wezterm.action.SpawnWindow },
