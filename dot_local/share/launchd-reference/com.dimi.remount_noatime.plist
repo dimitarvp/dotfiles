@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Reads do not rewrite file access times on the data volume: fewer metadata writes to the SSD. -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.dimi.remount_noatime</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/sbin/mount</string>
+		<string>-uwo</string>
+		<string>noatime</string>
+		<string>/System/Volumes/Data</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+</dict>
+</plist>

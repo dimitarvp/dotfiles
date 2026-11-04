@@ -1,0 +1,47 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# Installs the root launch daemons kept in ~/.local/share/launchd-reference: the kernel's
+# low-priority I/O throttle off at boot (Time Machine and other background I/O at full speed)
+# and the data volume remounted noatime (reads do not rewrite access times). Retires the two
+# 2020 login agents whose programs no longer exist. Re-runs whenever a daemon's plist changes.
+# throttle: {{ include "dot_local/share/launchd-reference/com.dimi.disable_disk_throttling.plist" | sha256sum }}
+# noatime:  {{ include "dot_local/share/launchd-reference/com.dimi.remount_noatime.plist" | sha256sum }}
+set -euo pipefail
+ref="$HOME/.local/share/launchd-reference"
+uid=$(id -u)
+for old in com.dimi.disable_disk_throttling com.dimi.remount_noatime; do
+	if launchctl print "gui/$uid/$old" >/dev/null 2>&1; then
+		launchctl bootout "gui/$uid/$old" || true
+	fi
+	sudo -n rm -f "/Library/LaunchAgents/$old.plist"
+done
+for label in com.dimi.disable_disk_throttling com.dimi.remount_noatime; do
+	dst="/Library/LaunchDaemons/$label.plist"
+	if sudo -n launchctl print "system/$label" >/dev/null 2>&1; then
+		sudo -n launchctl bootout "system/$label"
+		# bootout tears the service down asynchronously; a bootstrap before it is gone fails
+		for _ in $(seq 1 40); do
+			sudo -n launchctl print "system/$label" >/dev/null 2>&1 || break
+			sleep 0.25
+		done
+	fi
+	sudo -n install -o root -g wheel -m 0644 "$ref/$label.plist" "$dst"
+	sudo -n launchctl bootstrap system "$dst"
+done
+for _ in $(seq 1 20); do
+	[ "$(sysctl -n debug.lowpri_throttle_enabled)" = 0 ] && mount | grep -q ' on /System/Volumes/Data (.*noatime' && break
+	sleep 0.25
+done
+[ "$(sysctl -n debug.lowpri_throttle_enabled)" = 0 ] || {
+	echo "launch-daemons: debug.lowpri_throttle_enabled is still 1" >&2
+	exit 1
+}
+mount | grep -q ' on /System/Volumes/Data (.*noatime' || {
+	echo "launch-daemons: the data volume is not mounted noatime" >&2
+	exit 1
+}
+echo "launch-daemons: throttle off, data volume noatime"
+{{ else -}}
+#!/bin/bash
+: # macOS-only launch daemons — no-op on this machine
+{{ end -}}
