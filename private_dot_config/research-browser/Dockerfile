@@ -8,6 +8,11 @@ RUN apt-get update \
 		chromium xvfb xauth ca-certificates curl python3 python3-venv \
 		fonts-liberation fonts-dejavu-core fonts-noto-core \
 	&& rm -rf /var/lib/apt/lists/*
+# Two extensions, force-installed from the Chrome Web Store by a managed policy (his go 2026-11-04): uBlock
+# Origin Lite (ddkj...) keeps ads and trackers out of the pages the researchers read, "I still don't care about
+# cookies" (edib...) answers the consent banners. The store keeps them current; an unpacked --load-extension
+# made Chromium 156 hang before opening its debugging port.
+COPY policies.json /etc/chromium/policies/managed/research.json
 RUN groupadd -g 1001 browser && useradd -m -u 1000 -g 1001 browser
 RUN python3 -m venv /app/venv && /app/venv/bin/pip install --no-cache-dir playwright==1.63.0
 COPY fetch.py entrypoint.sh /app/
