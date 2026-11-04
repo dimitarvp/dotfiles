@@ -1,6 +1,6 @@
 # The research browser: a headful Chromium under a virtual display for the page fetches of research
-# delegates. Brought up per research wave by `research_browser up`, taken down by `research_browser down`;
-# nothing runs between waves. The browser profile and the fetched files live under ~/.local/share.
+# delegates. Always on (his go 2026-11-04: no start ceremony before a wave); `research_browser up|down`
+# remain for maintenance. The browser profile and the fetched files live under ~/.local/share.
 services:
   browser:
     build: .
@@ -35,7 +35,7 @@ services:
       timeout: 5s
       retries: 12
       start_period: 20s
-    restart: "no"
+    restart: unless-stopped
     logging:
       driver: json-file
       options:

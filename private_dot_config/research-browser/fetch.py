@@ -196,6 +196,13 @@ def fetch(url, out):
                 log(f"READ download http={resp.status if resp else '?'} {url} -> {os.path.basename(out)}")
                 return Outcome.READ
             status = wait_wall(page)
+            if status != "ok":
+                # a first visit sometimes gets a challenge that the next load does not; one reload, as a person would
+                try:
+                    page.reload(wait_until="domcontentloaded", timeout=60000)
+                    status = wait_wall(page)
+                except PlaywrightError:
+                    pass
             try:
                 page.wait_for_load_state("networkidle", timeout=15000)
             except PlaywrightError:

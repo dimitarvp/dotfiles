@@ -10,5 +10,5 @@ exec xvfb-run -a -s "-screen 0 1920x1080x24 -nolisten tcp" chromium \
 	--remote-debugging-port=9222 --remote-debugging-address=127.0.0.1 \
 	--no-first-run --no-default-browser-check --password-store=basic \
 	--disable-features=TranslateUI --disable-session-crashed-bubble --hide-crash-restore-bubble \
-	--window-size=1920,1080 --lang=en-US \
+	--window-size=1920,1080 --lang=en-US --disk-cache-size=268435456 \
 	about:blank
