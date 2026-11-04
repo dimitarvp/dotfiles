@@ -4,4 +4,5 @@ ConditionPathExists=%h/.claude/.credentials.json
 
 [Service]
 Type=oneshot
+Environment=PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.cargo/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=/bin/sh -c "echo '{}' | %h/.claude/statusline.sh >/dev/null"
