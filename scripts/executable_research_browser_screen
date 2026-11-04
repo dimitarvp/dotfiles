@@ -1,0 +1,19 @@
+#!/bin/zsh
+# research_browser_screen — look at the research browser's screen on the server and act in it by hand
+# (sign in to a site, answer a prompt); the browser profile keeps what you did. Opens an ssh tunnel to the
+# server's VNC port and the Screen Sharing app on it; Ctrl-C here closes the tunnel when you are done.
+set -u
+HOST=s1
+PORT=5900
+if nc -z 127.0.0.1 $PORT 2>/dev/null; then
+	echo "research_browser_screen: port $PORT is already taken on this machine" >&2
+	exit 1
+fi
+ssh -N -o ExitOnForwardFailure=yes -L "$PORT:127.0.0.1:$PORT" "$HOST" &
+tunnel=$!
+trap 'kill $tunnel 2>/dev/null' EXIT INT TERM
+for _ in {1..50}; do nc -z 127.0.0.1 $PORT 2>/dev/null && break; sleep 0.2; done
+nc -z 127.0.0.1 $PORT 2>/dev/null || { echo "research_browser_screen: no tunnel to $HOST:$PORT" >&2; exit 1; }
+open "vnc://127.0.0.1:$PORT"
+echo "research browser screen open in Screen Sharing; Ctrl-C here closes the tunnel"
+wait $tunnel

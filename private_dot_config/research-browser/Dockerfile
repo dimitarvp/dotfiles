@@ -5,7 +5,7 @@ FROM debian:stable-slim
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
-		chromium xvfb xauth ca-certificates curl python3 python3-venv \
+		chromium xvfb x11vnc ca-certificates curl python3 python3-venv \
 		fonts-liberation fonts-dejavu-core fonts-noto-core \
 	&& rm -rf /var/lib/apt/lists/*
 # Two extensions, force-installed from the Chrome Web Store by a managed policy (his go 2026-11-04): uBlock

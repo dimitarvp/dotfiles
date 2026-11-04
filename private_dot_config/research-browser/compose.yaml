@@ -23,12 +23,16 @@ services:
       resources:
         limits:
           cpus: "3"
-          memory: 4g
+          memory: 8g
     volumes:
       - ${HOME}/.local/share/research-browser/profile:/profile
       - ${HOME}/.local/share/research-browser/out:/out
     tmpfs:
       - /tmp:size=512m,uid=1000,gid=1001
+    ports:
+      # the VNC view of the virtual display, on the server's loopback only; reach it from a workstation with
+      # research_browser_screen (an ssh tunnel + the Screen Sharing app)
+      - "127.0.0.1:5900:5900"
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://127.0.0.1:9222/json/version"]
       interval: 10s
