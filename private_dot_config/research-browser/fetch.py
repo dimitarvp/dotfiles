@@ -26,7 +26,7 @@ SLOTS = 3
 SLOT_WAIT = 100
 SLOT_STALE = 300
 WALL_WAIT = 90
-LOG = "/out/.fetch.log"
+LOG = "/out/.fetch.log"  # one line per fetch with its outcome; the server keeps it across waves
 
 WALL = re.compile(
     r"just a moment|attention required|access denied|verify you are human|checking your browser"
@@ -174,7 +174,6 @@ def fetch(url, out):
             return Outcome.NO_BROWSER
         ctx = browser.contexts[0] if browser.contexts else browser.new_context()
         page = ctx.new_page()
-        log(f"{url.split('/')[2] if '//' in url else url} -> {os.path.basename(out)}")
         try:
             try:
                 resp = page.goto(url, wait_until="domcontentloaded", timeout=60000)
@@ -182,8 +181,10 @@ def fetch(url, out):
                 msg = str(e)
                 if "Download is starting" in msg or "ERR_ABORTED" in msg:
                     save_download(ctx, url, out, "download")
+                    log(f"READ download {url} -> {os.path.basename(out)}")
                     return Outcome.READ
                 print(f"fetch: navigation failed: {msg.splitlines()[0][:160]}", file=sys.stderr)
+                log(f"NAV_FAILED {url} -> {os.path.basename(out)} {msg.splitlines()[0][:100]}")
                 return Outcome.NAV_FAILED
             ctype = resp.headers.get("content-type", "") if resp else ""
             is_html = ctype.startswith("text/html") or ctype == ""
@@ -192,6 +193,7 @@ def fetch(url, out):
                 if is_html or (resp and resp.status in (403, 429, 503)):
                     wait_wall(page)
                 save_download(ctx, url, out, ctype or "pdf by name")
+                log(f"READ download http={resp.status if resp else '?'} {url} -> {os.path.basename(out)}")
                 return Outcome.READ
             status = wait_wall(page)
             try:
@@ -216,7 +218,9 @@ def fetch(url, out):
                 f"{'consent dismissed; ' if consent else ''}"
                 f"html {len(html)} chars -> {out}; text {len(text)} chars -> {out}.txt"
             )
-            return Outcome.READ if status == "ok" else Outcome.WALLED
+            outcome = Outcome.READ if status == "ok" else Outcome.WALLED
+            log(f"{outcome.name} http={code} text={len(text)} {url} -> {os.path.basename(out)} title={page.title()[:80]!r}")
+            return outcome
         finally:
             page.close()
 
