@@ -1,0 +1,54 @@
+#!/bin/bash
+# research_browser up|down|status|fetch URL NAME|clean — the research browser on the server.
+# A headful Chromium in a container (compose file in ~/.config/research-browser), brought up for a
+# research wave and taken down after it. `fetch` reads one page from inside the container into
+# a tar stream on stdout holding NAME (and NAME.txt), its message on stderr; the exit code is fetch.py's:
+# 0 read, 2 bot wall, 3 browser not running, 4 no slot, 6 navigation failed. Base tools only.
+set -euo pipefail
+compose_dir="$HOME/.config/research-browser"
+data_dir="$HOME/.local/share/research-browser"
+container=research-browser
+compose() { docker compose --project-directory "$compose_dir" "$@"; }
+case "${1:-}" in
+up)
+	mkdir -p "$data_dir/profile" "$data_dir/out"
+	compose up -d --build --wait --quiet-pull
+	docker exec "$container" curl -sf http://127.0.0.1:9222/json/version | sed -n 's/.*"Browser": *"\([^"]*\)".*/research browser up: \1/p'
+	;;
+down)
+	compose down
+	;;
+status)
+	compose ps --format 'table {{.Name}}\t{{.Status}}'
+	docker exec "$container" curl -sf http://127.0.0.1:9222/json/version 2>/dev/null | sed -n 's/.*"Browser": *"\([^"]*\)".*/browser: \1/p' || echo "browser: not listening"
+	;;
+fetch)
+	url=${2:?usage: research_browser fetch URL NAME}
+	name=${3:?usage: research_browser fetch URL NAME}
+	case "$name" in
+	*/* | .* | '')
+		echo "research_browser: NAME is a plain file name, no slashes, no leading dot" >&2
+		exit 64
+		;;
+	esac
+	# the fetch's own line goes to stderr; stdout carries the result files as a tar stream, so one ssh
+	# session per fetch is enough (sshd allows ten sessions per shared connection)
+	rc=0
+	docker exec "$container" /app/venv/bin/python /app/fetch.py "$url" "/out/$name" 1>&2 || rc=$?
+	if [ "$rc" -eq 0 ] || [ "$rc" -eq 2 ]; then
+		files=()
+		for f in "$name" "$name.txt"; do [ -e "$data_dir/out/$f" ] && files+=("$f"); done
+		[ ${#files[@]} -gt 0 ] && tar -C "$data_dir/out" -cf - "${files[@]}"
+		rm -f "${files[@]/#/$data_dir/out/}"
+	fi
+	exit "$rc"
+	;;
+clean)
+	find "$data_dir/out" -mindepth 1 -maxdepth 1 ! -name '.fetch.log' -delete
+	echo "research browser: fetched files removed"
+	;;
+*)
+	echo "usage: research_browser up|down|status|fetch URL NAME|clean" >&2
+	exit 64
+	;;
+esac
