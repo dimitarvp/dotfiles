@@ -1,0 +1,12 @@
+#!/bin/zsh
+# research_browser_paste — type this machine's clipboard into the field you clicked in the research browser's
+# screen (research_browser_screen). VNC viewers do not pass a clipboard to that server, so the text travels
+# over ssh into the container and the browser types it; nothing is stored or shown.
+set -u
+HOST=s1
+text=$(pbpaste)
+if [[ -z $text ]]; then
+	echo "research_browser_paste: the clipboard is empty" >&2
+	exit 64
+fi
+printf '%s' "$text" | ssh -o BatchMode=yes "$HOST" 'docker exec -i research-browser /app/venv/bin/python /app/paste.py'

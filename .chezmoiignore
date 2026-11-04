@@ -59,6 +59,7 @@ scripts/research_browser
 .config/systemd/user/claude-usage-refresh.timer
 scripts/rfetch
 scripts/research_browser_screen
+scripts/research_browser_paste
 {{ else }}
 .config/systemd/user/fleet-nats.service
 .config/systemd/user/fleet-archive.service
