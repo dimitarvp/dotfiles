@@ -267,6 +267,9 @@ ask)
 	text_of "$@" | send "fleet.chan.$room.$me" -H "To:$names"
 	;;
 tail)
+	# waits are zsh built-ins (zselect takes hundredths of a second): a forked sleep three
+	# times a second would be an unsigned GNU binary launch each time
+	zmodload zsh/zselect
 	feed=$(feed_of "${1:-}")
 	spool=$(spool_of "$feed")
 	# one tail per identity and feed on this machine: a plugin reload starts the
@@ -289,12 +292,12 @@ tail)
 	# presence heartbeat; it stops within 30 s of this process dying
 	(while kill -0 $$ 2>/dev/null; do
 		n kv put presence "$me" "$(hostname -s)" >/dev/null 2>&1 || true
-		sleep 30
+		zselect -t 3000 || true
 	done) &
 	# the reader, restarted 5 s after every exit (hub restart, network blip)
 	(while kill -0 $$ 2>/dev/null; do
 		n sub --stream FLEET --durable "$me-$feed" --dump "$spool" >"$spool/natscli.log" 2>&1 || true
-		sleep 5
+		zselect -t 500 || true
 	done) &
 	archive=$(archive_of "$feed")
 	# Claude Code joins the lines printed within 200 ms into one notification, and passes a
@@ -313,7 +316,7 @@ tail)
 			drain "$spool" "$archive" monitor
 			tokens=$((tokens - printed))
 		fi
-		sleep 0.3
+		zselect -t 30 || true
 	done
 	;;
 since)
