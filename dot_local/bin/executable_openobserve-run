@@ -27,5 +27,6 @@ export ZO_GRPC_ADDR=127.0.0.1 ZO_GRPC_PORT=5081
 export ZO_WEB_URL=http://127.0.0.1:5080
 export ZO_TELEMETRY=false ZO_MMDB_DISABLE_DOWNLOAD=true
 export ZO_MODEL_PRICING_ENABLED=false ZO_PRODUCT_ANALYTICS_ENABLED=false ZO_RUM_ENABLED=false
+export OS_ACTIVITY_MODE=disable
 cd "$state_dir"
 exec "$bin"
