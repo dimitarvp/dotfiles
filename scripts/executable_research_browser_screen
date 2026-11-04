@@ -26,8 +26,9 @@ if [[ $banner != RFB ]]; then
 	echo "research_browser_screen: the research browser's screen is not up on $HOST (no VNC answer through the tunnel)" >&2
 	exit 2
 fi
-# the server's password of this container start goes to the clipboard, never to the terminal
-ssh -n "$HOST" 'cat .local/share/research-browser/out/.vnc-password' | tr -d '\n' | pbcopy
+# the server's password of this container start: shown here for the owner and copied to the clipboard
+vncpw=$(ssh -n "$HOST" 'cat .local/share/research-browser/out/.vnc-password' | tr -d '\n')
+printf '%s' "$vncpw" | pbcopy
 open "vnc://127.0.0.1:$PORT"
-echo "research browser screen open in Screen Sharing; the VNC password is in your clipboard (paste it); Ctrl-C here closes the tunnel"
+echo "research browser screen open in Screen Sharing; VNC password: $vncpw (also in your clipboard; leave the name field empty); Ctrl-C here closes the tunnel"
 wait $tunnel
