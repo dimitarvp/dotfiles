@@ -15,8 +15,15 @@ trap 'kill $tunnel 2>/dev/null' EXIT INT TERM
 for _ in {1..50}; do nc -z 127.0.0.1 $PORT 2>/dev/null && break; sleep 0.2; done
 nc -z 127.0.0.1 $PORT 2>/dev/null || { echo "research_browser_screen: no tunnel to $HOST:$PORT" >&2; exit 1; }
 # the tunnel's local end listens even when nothing answers on the server: ask the far end for its VNC banner
-if [[ $(timeout 5 nc 127.0.0.1 $PORT 2>/dev/null | head -c 3) != RFB ]]; then
-	echo "research_browser_screen: the research browser's screen is not up on $HOST (the container has no VNC server running yet)" >&2
+zmodload zsh/net/tcp
+banner=""
+if ztcp 127.0.0.1 $PORT 2>/dev/null; then
+	fd=$REPLY
+	read -t 5 -u $fd -k 3 banner
+	ztcp -c $fd
+fi
+if [[ $banner != RFB ]]; then
+	echo "research_browser_screen: the research browser's screen is not up on $HOST (no VNC answer through the tunnel)" >&2
 	exit 2
 fi
 # the server's password of this container start goes to the clipboard, never to the terminal
