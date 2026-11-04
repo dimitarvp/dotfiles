@@ -1,0 +1,43 @@
+# The research browser: a headful Chromium under a virtual display for the page fetches of research
+# delegates. Brought up per research wave by `research_browser up`, taken down by `research_browser down`;
+# nothing runs between waves. The browser profile and the fetched files live under ~/.local/share.
+services:
+  browser:
+    build: .
+    image: research-browser:local
+    container_name: research-browser
+    hostname: research-browser
+    init: true
+    user: "1000:1001"
+    shm_size: 1g
+    environment:
+      TZ: Europe/Sofia
+      LANG: C.UTF-8
+    security_opt:
+      - no-new-privileges:true
+      # Chromium's own sandbox needs user namespaces, which Docker's default seccomp profile blocks
+      - seccomp=unconfined
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "3"
+          memory: 4g
+    volumes:
+      - ${HOME}/.local/share/research-browser/profile:/profile
+      - ${HOME}/.local/share/research-browser/out:/out
+    tmpfs:
+      - /tmp:size=512m,uid=1000,gid=1001
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:9222/json/version"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: "no"
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
