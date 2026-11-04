@@ -33,6 +33,7 @@ services:
       # the VNC view of the virtual display, on the server's loopback only; reach it from a workstation with
       # research_browser_screen (an ssh tunnel + the Screen Sharing app)
       - "127.0.0.1:5900:5900"
+      - "127.0.0.1:6080:6080"
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://127.0.0.1:9222/json/version"]
       interval: 10s

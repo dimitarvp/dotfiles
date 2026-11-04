@@ -1,27 +1,36 @@
 #!/bin/zsh
-# research_browser_screen — look at the research browser's screen on the server and act in it by hand
-# (sign in to a site, answer a prompt); the browser profile keeps what you did. Opens an ssh tunnel to the
-# server's VNC port and the Screen Sharing app on it; Ctrl-C here closes the tunnel when you are done.
+# research_browser_screen [--apple] — look at the research browser's screen on the server and act in it by
+# hand (sign in to a site, answer a prompt); the browser profile keeps what you did. Default: the screen in
+# your web browser (noVNC) with a clipboard panel that reaches the container; --apple: the Screen Sharing
+# app instead (no clipboard). Both run over an ssh tunnel; Ctrl-C here closes it when you are done.
 set -u
 HOST=s1
-PORT=5900
-if nc -z 127.0.0.1 $PORT 2>/dev/null; then
-	echo "research_browser_screen: port $PORT is already taken on this machine" >&2
-	exit 1
-fi
-ssh -N -o ExitOnForwardFailure=yes -L "$PORT:127.0.0.1:$PORT" "$HOST" &
+VNC_PORT=5900
+WEB_PORT=6080
+mode=${1:-web}
+[[ $mode == --apple ]] && mode=apple
+for p in $VNC_PORT $WEB_PORT; do
+	zmodload zsh/net/tcp
+	if ztcp 127.0.0.1 $p 2>/dev/null; then
+		ztcp -c $REPLY
+		echo "research_browser_screen: port $p is already taken on this machine" >&2
+		exit 1
+	fi
+done
+ssh -N -o ExitOnForwardFailure=yes -L "$VNC_PORT:127.0.0.1:$VNC_PORT" -L "$WEB_PORT:127.0.0.1:$WEB_PORT" "$HOST" &
 tunnel=$!
 trap 'kill $tunnel 2>/dev/null' EXIT INT TERM
-for _ in {1..50}; do nc -z 127.0.0.1 $PORT 2>/dev/null && break; sleep 0.2; done
-nc -z 127.0.0.1 $PORT 2>/dev/null || { echo "research_browser_screen: no tunnel to $HOST:$PORT" >&2; exit 1; }
 # the tunnel's local end listens even when nothing answers on the server: ask the far end for its VNC banner
-zmodload zsh/net/tcp
 banner=""
-if ztcp 127.0.0.1 $PORT 2>/dev/null; then
-	fd=$REPLY
-	read -t 5 -u $fd -k 3 banner
-	ztcp -c $fd
-fi
+for _ in {1..50}; do
+	if ztcp 127.0.0.1 $VNC_PORT 2>/dev/null; then
+		fd=$REPLY
+		read -t 5 -u $fd -k 3 banner
+		ztcp -c $fd
+		break
+	fi
+	sleep 0.2
+done
 if [[ $banner != RFB ]]; then
 	echo "research_browser_screen: the research browser's screen is not up on $HOST (no VNC answer through the tunnel)" >&2
 	exit 2
@@ -29,6 +38,11 @@ fi
 # the server's password of this container start: shown here for the owner and copied to the clipboard
 vncpw=$(ssh -n "$HOST" 'cat .local/share/research-browser/out/.vnc-password' | tr -d '\n')
 printf '%s' "$vncpw" | pbcopy
-open "vnc://127.0.0.1:$PORT"
-echo "research browser screen open in Screen Sharing; VNC password: $vncpw (also in your clipboard; leave the name field empty); Ctrl-C here closes the tunnel"
+if [[ $mode == apple ]]; then
+	open "vnc://127.0.0.1:$VNC_PORT"
+	echo "Screen Sharing opens; VNC password: $vncpw (in your clipboard too; leave the name field empty). Ctrl-C here closes the tunnel."
+else
+	open "http://127.0.0.1:$WEB_PORT/vnc.html?autoconnect=1&resize=scale"
+	echo "the screen opens in your web browser; VNC password: $vncpw (in your clipboard too). Paste text into the clipboard panel at the left edge, then Ctrl-V in the remote browser. Ctrl-C here closes the tunnel."
+fi
 wait $tunnel

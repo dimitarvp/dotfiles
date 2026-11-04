@@ -17,6 +17,9 @@ printf '%s\n' "$vncpw" > /out/.vnc-password
 x11vnc -storepasswd "$vncpw" /tmp/vncpass >/dev/null 2>&1
 umask 022
 x11vnc -display :99 -forever -shared -rfbauth /tmp/vncpass -quiet -rfbport 5900 >/dev/null 2>&1 &
+# the same screen in a web browser (noVNC): a clipboard panel that reaches the container, which Apple's
+# Screen Sharing cannot do with a VNC server
+websockify --web /usr/share/novnc 6080 localhost:5900 >/dev/null 2>&1 &
 exec chromium \
 	--user-data-dir=/profile \
 	--remote-debugging-port=9222 --remote-debugging-address=127.0.0.1 \
