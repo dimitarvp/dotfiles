@@ -46,6 +46,8 @@ adguard
 {{ if ne .role "server" }}
 .config/vikunja
 scripts/vikunja_dump
+.config/research-browser
+scripts/research_browser
 {{ end }}
 
 {{ if eq .chezmoi.os "darwin" }}
@@ -55,6 +57,7 @@ scripts/vikunja_dump
 {{ if eq .role "server" }}
 .config/systemd/user/claude-usage-refresh.service
 .config/systemd/user/claude-usage-refresh.timer
+scripts/rfetch
 {{ else }}
 .config/systemd/user/fleet-nats.service
 .config/systemd/user/fleet-archive.service
