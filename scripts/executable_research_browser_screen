@@ -14,6 +14,11 @@ tunnel=$!
 trap 'kill $tunnel 2>/dev/null' EXIT INT TERM
 for _ in {1..50}; do nc -z 127.0.0.1 $PORT 2>/dev/null && break; sleep 0.2; done
 nc -z 127.0.0.1 $PORT 2>/dev/null || { echo "research_browser_screen: no tunnel to $HOST:$PORT" >&2; exit 1; }
+# the tunnel's local end listens even when nothing answers on the server: ask the far end for its VNC banner
+if [[ $(timeout 5 nc 127.0.0.1 $PORT 2>/dev/null | head -c 3) != RFB ]]; then
+	echo "research_browser_screen: the research browser's screen is not up on $HOST (the container has no VNC server running yet)" >&2
+	exit 2
+fi
 open "vnc://127.0.0.1:$PORT"
 echo "research browser screen open in Screen Sharing; Ctrl-C here closes the tunnel"
 wait $tunnel
