@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# context_guard.sh — Stop hook. Asks Claude to checkpoint before the context window
-# fills, so the session ends on a curated boarding instead of a lossy auto-compaction.
-#
+# context_guard.sh — Stop hook. Raises the context alarm before the window fills: a
+# pair-mode session checkpoints, a fully autonomous one writes its hydration files
+# and continues through the compaction (both readings are in the message below).#
 # Claude Code hands a Stop hook the session id and transcript path but no token
 # counts, so occupancy comes from ccctx reading the transcript. The threshold is a
 # fraction of whatever window the running model actually has (published by
@@ -28,7 +28,10 @@ jq_get() { printf '%s' "$input" | jq -r "$1 // empty" 2>/dev/null; }
 transcript=$(jq_get '.transcript_path')
 session=$(jq_get '.session_id')
 
-emit() { printf '%s\n' "$1"; exit 0; }
+emit() {
+	printf '%s\n' "$1"
+	exit 0
+}
 note() { # loud, non-blocking: the guard is not working and should be fixed
 	emit "$(jq -n --arg m "context guard inactive: $1" '{systemMessage: $m}')"
 }
@@ -57,11 +60,15 @@ pct=$(printf '%s' "$report" | jq -r 'if .used_pct then (.used_pct | round | tost
 
 reason="Context is at ${used} of ${window} tokens (${pct}%), past the ${FRACTION} guard.
 
-Invoke the checkpoint skill now: write the boarding document, land any pending
-memory and ledger work, and print the restart prompt. Then tell Dimi the session
-is ready for /clear.
+Two readings of this alarm (Dimi, 2026-11-07):
+- Pair mode (Dimi is in the loop): invoke the checkpoint skill now — write the
+  boarding document, land any pending memory and ledger work, print the restart
+  prompt, then tell Dimi the session is ready for /clear.
+- Fully autonomous mode (Dimi declared the session autonomous): no pause. Write
+  the hydration files (the boarding document, the live step briefs), let the
+  auto-compaction land, re-read them through the compact hook and continue.
 
-If you are mid-task, finish only what would be lost otherwise, then checkpoint —
+If you are mid-task, finish only what would be lost otherwise, then act as above —
 auto-compaction is close, and it summarizes lossily instead of curating."
 
 jq -n --arg r "$reason" '{decision: "block", reason: $r}'
