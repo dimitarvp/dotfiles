@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # context_guard.sh — Stop hook. Raises the context alarm before the window fills: a
 # pair-mode session checkpoints, a fully autonomous one writes its hydration files
-# and continues through the compaction (both readings are in the message below).#
+# and continues through the compaction (both readings are in the message below).
+#
 # Claude Code hands a Stop hook the session id and transcript path but no token
 # counts, so occupancy comes from ccctx reading the transcript. The threshold is a
 # fraction of whatever window the running model actually has (published by
