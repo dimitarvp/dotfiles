@@ -46,11 +46,10 @@ Modular config split across `~/.zsh/`. Oh-My-Zsh still used as plugin store on m
 
 ## Terminal emulators
 
-Four configs, all templated for per-machine font size. Font: UbuntuMono Nerd Font. Color scheme: Dracula-inspired.
+Three configs, all templated for per-machine font size. Font: UbuntuMono Nerd Font. Color scheme: Dracula-inspired.
 
 | Terminal | Config format |
 |----------|--------------|
-| WezTerm | Lua (primary — Alt/Meta key handling, word navigation, middle-click paste) |
 | Kitty | INI |
 | Alacritty | TOML |
 | Ghostty | custom |
@@ -116,7 +115,6 @@ Create `~/.config/chezmoi/chezmoi.toml`:
     ghostty_font_size = 22
     ghostty_adjust_cell_height = 1
     kitty_font_size = 20
-    wezterm_font_size = 20
 ```
 
 All default to 18.

@@ -52,3 +52,6 @@ go/bin/usql
 
 # the cached starship init: the prompt is rendered in-process since the switch
 .cache/zsh/starship.zsh
+
+# WezTerm left the fleet (Ghostty is the terminal); the applied config goes on apply
+.config/wezterm
