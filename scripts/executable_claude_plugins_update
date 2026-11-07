@@ -1,0 +1,79 @@
+#!/bin/zsh
+#
+# claude_plugins_update - Update every marketplace-installed Claude Code plugin
+#
+# 1. Refresh every configured marketplace catalog (claude plugin marketplace update)
+# 2. Read the installed plugins (claude plugin list --json); skills-directory
+#    plugins (*@skills-dir) are local files, not updatable, and are skipped
+# 3. Update each record at its own scope: user records from $HOME, project and
+#    local records from their project directory (the version records live in
+#    ~/.claude/plugins/installed_plugins.json, never in the project)
+#
+# A marketplace-declared install command is never accepted here (no -y): that
+# update fails loud with the CLI's own message, for a person to look at.
+# Failures are collected and reported at the end; one failing plugin won't stop
+# the rest. A running Claude Code session keeps the old texts until it restarts.
+
+set -uo pipefail
+
+for tool in claude jq; do
+	command -v $tool >/dev/null 2>&1 || {
+		print -u2 -- "claude_plugins_update: $tool is not on PATH"
+		exit 1
+	}
+done
+
+claude plugin marketplace update </dev/null || {
+	print -u2 -- "claude_plugins_update: the marketplace refresh failed; no new version is visible without it"
+	exit 1
+}
+
+# one record per line: id, scope, project directory (empty for user scope)
+listing=$(claude plugin list --json </dev/null | jq -r '
+	map(select(.id | endswith("@skills-dir") | not))
+	| unique_by([.id, .scope, (.projectPath // "")])
+	| .[] | [.id, .scope, (.projectPath // "")] | @tsv') || {
+	print -u2 -- "claude_plugins_update: cannot read the plugin list (claude plugin list --json | jq)"
+	exit 1
+}
+[[ -n $listing ]] || {
+	print -- "claude plugins: none installed from a marketplace"
+	exit 0
+}
+
+updated=() current=() failed=()
+for rec in "${(@f)listing}"; do
+	IFS=$'\t' read -r id scope project <<<"$rec"
+	dir=${project:-$HOME}
+	if [[ ! -d $dir ]]; then
+		print -u2 -- "!!! $id ($scope): project directory missing: $dir"
+		failed+=("$id ($scope)")
+		continue
+	fi
+	out=$(cd "$dir" && claude plugin update "$id" --scope "$scope" --json </dev/null 2>&1)
+	rc=$?
+	# the result is the last stdout line, one JSON object
+	lines=("${(@f)out}")
+	line=${lines[-1]}
+	IFS=$'\t' read -r outcome old new <<<"$(print -r -- "$line" | jq -r '[(.outcome // ""), (.oldVersion // "?"), (.newVersion // "?")] | @tsv' 2>/dev/null)"
+	if ((rc == 0)) && [[ $outcome == ok ]]; then
+		if [[ $old == "$new" ]]; then
+			current+=("$id")
+			print -- "  $id ($scope): $new current"
+		else
+			updated+=("$id")
+			print -- "  $id ($scope): $old -> $new updated"
+		fi
+	else
+		failed+=("$id ($scope)")
+		print -u2 -- "!!! $id ($scope) failed (exit $rc); the CLI said:"
+		print -u2 -- "$out"
+	fi
+done
+
+print -- "claude plugins: ${#updated} updated, ${#current} current, ${#failed} failed"
+((${#updated})) && print -- "restart running Claude Code sessions to load the updated plugins"
+if ((${#failed})); then
+	print -u2 -- "!!! claude_plugins_update: failed: ${(j:, :)failed}"
+	exit 1
+fi
