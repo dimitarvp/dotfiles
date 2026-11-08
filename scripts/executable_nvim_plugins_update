@@ -1,0 +1,237 @@
+#!/bin/zsh
+#
+# nvim_plugins_update - Update Neovim's lazy.nvim plugins and Mason packages headless
+#
+# Default: lazy.nvim sync (install missing, clean removed, update all), then
+# every installed Mason package whose version differs from the registry's.
+# One line per change; failures are collected and the run exits 1.
+# --check: read-only; lists what :Lazy and :Mason would offer as updates and
+# exits 1 when anything is pending.
+#
+# nvim runs with the full user config: lua/plugins/mason.lua sets the npm
+# release age that Mason's npm installs need.
+
+set -uo pipefail
+
+case ${1-} in
+"") mode=update ;;
+--check) mode=check ;;
+*)
+	print -u2 -- "usage: nvim_plugins_update [--check]"
+	exit 2
+	;;
+esac
+
+for tool in nvim jq; do
+	command -v $tool >/dev/null 2>&1 || {
+		print -u2 -- "nvim_plugins_update: $tool is not on PATH"
+		exit 1
+	}
+done
+
+lock=$HOME/.config/nvim/lazy-lock.json
+[[ -f $lock ]] || {
+	print -u2 -- "nvim_plugins_update: no lazy.nvim lock file at $lock"
+	exit 1
+}
+
+tmp=$(mktemp -d) || exit 1
+trap 'rm -rf -- "$tmp"' EXIT
+lua=$tmp/nvim_plugins_update.lua
+
+cat >$lua <<'LUA'
+local M = {}
+local TIMEOUT = 15 * 60 * 1000
+
+local function out(line)
+  io.stdout:write(line .. "\n")
+  io.stdout:flush()
+end
+
+local function text(v)
+  return type(v) == "string" and v or vim.inspect(v)
+end
+
+local function plugins()
+  local list = require("lazy").plugins()
+  table.sort(list, function(a, b)
+    return a.name < b.name
+  end)
+  return list
+end
+
+local function lazy_failures()
+  local failed = 0
+  for _, plugin in ipairs(plugins()) do
+    for _, task in ipairs(plugin._.tasks or {}) do
+      if task:has_errors() then
+        failed = failed + 1
+        local msg = vim.split(vim.trim(task:output(vim.log.levels.ERROR)), "\n")[1]
+        out(("lazy  %s  FAILED: %s: %s"):format(plugin.name, task.name, msg))
+      end
+    end
+  end
+  return failed
+end
+
+-- nvim-treesitter's build hook and LazyVim's config start parser installs
+-- without waiting for them; nvim must not quit while they compile.
+function M.parsers()
+  local ts = require("lazy.core.config").plugins["nvim-treesitter"]
+  if not (ts and ts._.loaded) then
+    return true
+  end
+  local TS = require("nvim-treesitter")
+  local ensure = require("lazy.core.plugin").values(ts, "opts", false).ensure_installed or {}
+  local ok_install, installed = TS.install(ensure):pwait(TIMEOUT)
+  local ok_update, updated = TS.update():pwait(TIMEOUT)
+  if ok_install and installed and ok_update and updated then
+    return true
+  end
+  out("lazy  nvim-treesitter  FAILED: parser install or update did not finish, see :TSLog")
+  return false
+end
+
+function M.lazy()
+  require("lazy").sync({ wait = true, show = false })
+  local settled = M.parsers()
+  return lazy_failures() == 0 and settled
+end
+
+local function mason_registry()
+  require("lazy").load({ plugins = { "mason.nvim" } })
+  local registry = require("mason-registry")
+  local done, ok, err
+  registry.update(function(success, result)
+    done, ok, err = true, success, result
+  end)
+  vim.wait(TIMEOUT, function()
+    return done
+  end, 200)
+  assert(ok, "the Mason registry update failed: " .. text(err or "no result"))
+  return registry
+end
+
+local function mason_outdated(registry)
+  local outdated = {}
+  local names = registry.get_installed_package_names()
+  table.sort(names)
+  for _, name in ipairs(names) do
+    local pkg = registry.get_package(name)
+    local installed, latest = pkg:get_installed_version(), pkg:get_latest_version()
+    if installed ~= latest then
+      outdated[#outdated + 1] = { pkg = pkg, installed = installed or "none", latest = latest }
+    end
+  end
+  return outdated
+end
+
+function M.mason()
+  local outdated = mason_outdated(mason_registry())
+  local pending = #outdated
+  for _, item in ipairs(outdated) do
+    if item.pkg:is_installable({ version = item.latest }) then
+      item.err = "no result within 15 minutes"
+      item.pkg:install({ version = item.latest }, function(success, err)
+        item.err = not success and text(err) or nil
+        pending = pending - 1
+      end)
+    else
+      item.err = item.latest .. " is not installable here"
+      pending = pending - 1
+    end
+  end
+  vim.wait(TIMEOUT, function()
+    return pending == 0
+  end, 200)
+  local failed = 0
+  for _, item in ipairs(outdated) do
+    local now = item.pkg:get_installed_version()
+    if item.err or now ~= item.latest then
+      failed = failed + 1
+      out(("mason %s  FAILED: %s, see :MasonLog"):format(item.pkg.name, item.err or ("still at " .. text(now))))
+    else
+      out(("mason %s  %s -> %s"):format(item.pkg.name, item.installed, now))
+    end
+  end
+  return failed == 0
+end
+
+function M.check()
+  require("lazy").check({ wait = true, show = false })
+  local pending = lazy_failures()
+  for _, plugin in ipairs(plugins()) do
+    local updates = plugin._.updates
+    if updates then
+      pending = pending + 1
+      out(("lazy  %s  %s -> %s"):format(plugin.name, updates.from.commit:sub(1, 7), updates.to.commit:sub(1, 7)))
+    end
+  end
+  for _, item in ipairs(mason_outdated(mason_registry())) do
+    pending = pending + 1
+    out(("mason %s  %s -> %s"):format(item.pkg.name, item.installed, item.latest))
+  end
+  if pending == 0 then
+    out("nothing pending")
+  end
+  return pending == 0
+end
+
+function M.run(name)
+  -- lazy.nvim's headless mode echoes every task and git line to stdout; these
+  -- settings give the interactive behavior, where errors land in the task log
+  require("lazy.core.config").options.headless = { process = false, log = false, task = false, colors = false }
+  local ok, result = xpcall(M[name], debug.traceback)
+  if not ok then
+    out(("%s  FAILED: %s"):format(name, result))
+  end
+  vim.cmd(ok and result and "qa!" or "cquit 1")
+end
+
+return M
+LUA
+
+# nvim's own messages are kept aside and shown only when a step fails without a
+# FAILED line of its own (nvim did not start, the lua file did not load).
+# The trailing cquit runs only when the lua command dies before it quits:
+# headless nvim would otherwise wait forever.
+run() {
+	nvim --headless -c "lua dofile([[$lua]]).run([[$1]])" -c 'cquit 1' 2>$tmp/$1.stderr
+	local rc=$?
+	((rc)) && [[ -s $tmp/$1.stderr ]] && tail -n 5 -- $tmp/$1.stderr >&2
+	return $rc
+}
+
+if [[ $mode == check ]]; then
+	run check
+	exit
+fi
+
+failed=0
+cp -- $lock $tmp/lock.before || exit 1
+
+run lazy || failed=1
+lazy_changes=$(jq -rn --slurpfile old $tmp/lock.before --slurpfile new $lock '
+	$old[0] as $o | $new[0] as $n
+	| ([$o, $n] | map(keys) | add | unique)[] as $k
+	| [($o[$k].commit // ""), ($n[$k].commit // "")] as [$a, $b]
+	| select($a != $b)
+	| "lazy  \($k)  " + (if $a == "" then "added \($b[:7])"
+		elif $b == "" then "removed \($a[:7])"
+		else "\($a[:7]) -> \($b[:7])" end)') || failed=1
+[[ -n $lazy_changes ]] && print -r -- $lazy_changes
+
+mason_out=$(run mason) || failed=1
+[[ -n $mason_out ]] && print -r -- $mason_out
+
+lazy_lines=(${(f)lazy_changes})
+mason_lines=(${(M)${(f)mason_out}:#* -> *})
+if ((${#lazy_lines} + ${#mason_lines})); then
+	print -- "nvim plugins: ${#lazy_lines} lazy plugin(s), ${#mason_lines} Mason package(s) updated"
+else
+	print -- "nvim plugins: nothing to update"
+fi
+if ((failed)); then
+	print -u2 -- "!!! nvim_plugins_update: failed, see the FAILED lines above"
+	exit 1
+fi
