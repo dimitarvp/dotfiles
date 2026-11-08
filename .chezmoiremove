@@ -55,3 +55,7 @@ go/bin/usql
 
 # WezTerm left the fleet (Ghostty is the terminal); the applied config goes on apply
 .config/wezterm
+
+# the fleet's house rules moved from the kybo-mode skill into the kybo skills-dir plugin
+# (/kybo:build); the old skill folder goes on apply, klodsync alone never deletes it
+.claude/skills/kybo-mode
