@@ -59,3 +59,6 @@ go/bin/usql
 # the fleet's house rules moved from the kybo-mode skill into the kybo skills-dir plugin
 # (/kybo:build); the old skill folder goes on apply, klodsync alone never deletes it
 .claude/skills/kybo-mode
+
+# dbtoepub (MacPorts docbook-xsl's EPUB tool, a Ruby program behind a wrapper): Ruby left the fleet
+.local/bin/dbtoepub
