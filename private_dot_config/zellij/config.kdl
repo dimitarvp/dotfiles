@@ -8,3 +8,13 @@ copy_on_select true
 scroll_buffer_size 50000
 show_startup_tips false
 show_release_notes false
+
+// Scrollback by keyboard without leaving the pane's program: Alt+PgUp scrolls the
+// pane a page; once scrolled, plain PgUp/PgDn keep scrolling until the bottom.
+// Every other key stays with the program (plain PgUp belongs to nvim, less, …).
+keybinds {
+    shared {
+        bind "Alt PageUp" { PageScrollUp; }
+        bind "Alt PageDown" { PageScrollDown; }
+    }
+}
