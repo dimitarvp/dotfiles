@@ -30,7 +30,6 @@ Modular config split across `~/.zsh/`. Oh-My-Zsh still used as plugin store on m
 | Go | homebrew | `GOPATH`, `~/.go/bin` on PATH |
 | Java | homebrew | OpenJDK path |
 | Python | homebrew | 3.12 path, linker flags |
-| Ruby | homebrew | path |
 | OCaml | opam | opam init |
 
 ## Programs
