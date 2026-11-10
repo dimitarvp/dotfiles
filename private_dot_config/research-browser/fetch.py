@@ -6,7 +6,7 @@ HTML to OUTFILE and the visible text to OUTFILE.txt. A PDF or any other download
 zip, JSON served as a file) is saved as-is to OUTFILE. At most SLOTS fetches run at a time
 across every caller; a caller waits up to SLOT_WAIT seconds for a free slot.
 
-Exit codes, shared with the robeast wrapper rfetch and the delegates' briefs:
+Exit codes, shared with the wrapper rfetch and the delegates' briefs:
   0 page read · 2 still behind a bot wall after WALL_WAIT seconds (files written anyway)
   3 browser not listening · 4 no free slot within SLOT_WAIT seconds · 6 navigation failed
 """
