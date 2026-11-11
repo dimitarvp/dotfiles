@@ -136,6 +136,12 @@ def dismiss_consent(page):
     return None
 
 
+def is_wall(title, body):
+    """True when the page is a human check: its title says so, or it is a short page whose text says so."""
+    body = body[:3000]
+    return bool(WALL.search(title)) or (len(body) < 1500 and bool(WALL.search(body)))
+
+
 def wait_wall(page):
     """Return 'ok' once the page is no longer a challenge page, else a 'STILL WALLED' note."""
     deadline = time.time() + WALL_WAIT
@@ -144,11 +150,10 @@ def wait_wall(page):
         title = page.title() or ""
         body = ""
         try:
-            body = page.inner_text("body")[:3000]
+            body = page.inner_text("body")
         except PlaywrightError:
             pass
-        walled = bool(WALL.search(title)) or (len(body) < 1500 and bool(WALL.search(body)))
-        if not walled:
+        if not is_wall(title, body):
             return "ok"
         if time.time() > deadline:
             return f"STILL WALLED after {WALL_WAIT} s"
