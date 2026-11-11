@@ -1,11 +1,14 @@
-"""shot.py PAGE_DIR OUT_DIR [FILE] [WIDTHS] [SCHEMES] — screenshots of a local page.
+"""shot.py PAGE_DIR OUT_DIR [FILE] [WIDTHS] [SCHEMES] [TILE] — screenshots of a local page.
 
 Runs inside the research-browser container in a headless Chromium of its own, with a fresh temporary
 profile: never the research browser and never its profile. For each width and colour scheme it opens
 PAGE_DIR/FILE in a new context, waits for the page and its fonts, and saves a full-page
-OUT_DIR/WIDTH-SCHEME.png. OUT_DIR/report.json holds per shot the viewport width, the page's
-scrollWidth and clientWidth (unequal means sideways overflow), its console errors and failed requests.
-FILE defaults to index.html; WIDTHS and SCHEMES are comma-separated, by default 390,1280 and light,dark.
+OUT_DIR/WIDTH-SCHEME.png, or with a TILE above 0 that page cut top to bottom into tiles TILE CSS
+pixels high, OUT_DIR/WIDTH-SCHEME-01.png and on (the last one shorter). OUT_DIR/report.json holds per
+shot the PNG or the tile names, the viewport width, the page's scrollWidth and clientWidth (unequal
+means sideways overflow), document.compatMode (BackCompat means no doctype), its console errors and
+failed requests. FILE defaults to index.html; WIDTHS and SCHEMES are comma-separated, by default
+390,1280 and light,dark; TILE is 0 (no tiles, the default) or 200 to 20000.
 
 Exit codes: 0 done · 1 bad usage · 6 the render failed
 """
@@ -23,7 +26,14 @@ from playwright.sync_api import sync_playwright
 CHROMIUM = "/usr/bin/chromium"
 SCHEMES = ("light", "dark")
 MIN_WIDTH, MAX_WIDTH = 200, 3840
+MIN_TILE, MAX_TILE = 200, 20000
 PHONE_BELOW = 600  # narrower viewports render at scale 2, as a phone screen does
+# the full-page size exactly as Playwright measures it, so the tile clips cover its full-page PNG
+PAGE_SIZE_JS = """() => {
+  const b = document.body, d = document.documentElement;
+  return [Math.max(b.scrollWidth, d.scrollWidth, b.offsetWidth, d.offsetWidth, b.clientWidth, d.clientWidth),
+          Math.max(b.scrollHeight, d.scrollHeight, b.offsetHeight, d.offsetHeight, b.clientHeight, d.clientHeight)];
+}"""
 
 
 class Outcome(enum.IntEnum):
@@ -37,11 +47,11 @@ class Usage(Exception):
 
 
 def parse(args):
-    """Return (page file path, out dir, [(width, scheme), ...]) from the command line."""
-    if not 2 <= len(args) <= 5:
-        raise Usage("expected PAGE_DIR OUT_DIR [FILE] [WIDTHS] [SCHEMES]")
+    """Return (page file path, out dir, [(width, scheme), ...], tile height or 0) from the command line."""
+    if not 2 <= len(args) <= 6:
+        raise Usage("expected PAGE_DIR OUT_DIR [FILE] [WIDTHS] [SCHEMES] [TILE]")
     page_dir, out_dir, *given = args
-    file, widths, schemes = given + ["index.html", "390,1280", "light,dark"][len(given) :]
+    file, widths, schemes, tile = given + ["index.html", "390,1280", "light,dark", "0"][len(given) :]
     root = os.path.realpath(page_dir)
     path = os.path.realpath(os.path.join(root, file))
     if not path.startswith(root + os.sep):
@@ -55,10 +65,12 @@ def parse(args):
     scheme_list = schemes.split(",")
     if not all(s in SCHEMES for s in scheme_list):
         raise Usage(f"SCHEMES {schemes!r}: each scheme is light or dark")
-    return path, out_dir, list(itertools.product(width_list, scheme_list))
+    if not (tile.isdigit() and (int(tile) == 0 or MIN_TILE <= int(tile) <= MAX_TILE)):
+        raise Usage(f"TILE {tile!r}: 0 for no tiles, or {MIN_TILE} to {MAX_TILE}")
+    return path, out_dir, list(itertools.product(width_list, scheme_list)), int(tile)
 
 
-def shoot(browser, url, width, scheme, out_dir):
+def shoot(browser, url, width, scheme, tile, out_dir):
     phone = width < PHONE_BELOW
     ctx = browser.new_context(
         viewport={"width": width, "height": 844 if phone else 800},
@@ -78,19 +90,31 @@ def shoot(browser, url, width, scheme, out_dir):
         except PlaywrightError:
             pass
         page.evaluate("document.fonts.ready.then(() => null)")
-        scroll_width, client_width = page.evaluate(
-            "[document.documentElement.scrollWidth, document.documentElement.clientWidth]"
+        scroll_width, client_width, compat_mode = page.evaluate(
+            "[document.documentElement.scrollWidth, document.documentElement.clientWidth, document.compatMode]"
         )
-        png = f"{width}-{scheme}.png"
-        page.screenshot(path=os.path.join(out_dir, png), full_page=True)
+        png, tiles = None, []
+        if tile:
+            page_width, page_height = page.evaluate(PAGE_SIZE_JS)
+            tops = range(0, page_height, tile)
+            digits = max(2, len(str(len(tops))))
+            for n, top in enumerate(tops, 1):
+                tiles.append(f"{width}-{scheme}-{n:0{digits}}.png")
+                clip = {"x": 0, "y": top, "width": page_width, "height": min(tile, page_height - top)}
+                page.screenshot(path=os.path.join(out_dir, tiles[-1]), full_page=True, clip=clip)
+        else:
+            png = f"{width}-{scheme}.png"
+            page.screenshot(path=os.path.join(out_dir, png), full_page=True)
     finally:
         ctx.close()
     return {
         "png": png,
+        "tiles": tiles,
         "width": width,
         "scheme": scheme,
         "scrollWidth": scroll_width,
         "clientWidth": client_width,
+        "compatMode": compat_mode,
         "consoleErrors": errors,
         "failedRequests": failed,
     }
@@ -98,7 +122,7 @@ def shoot(browser, url, width, scheme, out_dir):
 
 def main():
     try:
-        path, out_dir, shots = parse(sys.argv[1:])
+        path, out_dir, shots, tile = parse(sys.argv[1:])
     except Usage as e:
         print(f"shot: {e}\nusage: {__doc__.splitlines()[0]}", file=sys.stderr)
         return Outcome.USAGE
@@ -109,14 +133,14 @@ def main():
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(executable_path=CHROMIUM, chromium_sandbox=True)
-            report = [shoot(browser, pathlib.Path(path).as_uri(), w, s, out_dir) for w, s in shots]
+            report = [shoot(browser, pathlib.Path(path).as_uri(), w, s, tile, out_dir) for w, s in shots]
             browser.close()
     except Exception as e:  # any failure here is a failed render to the caller, never a usage error
         print(f"shot: render failed: {type(e).__name__}: {str(e).splitlines()[0][:200]}", file=sys.stderr)
         return Outcome.RENDER_FAILED
     with open(os.path.join(out_dir, "report.json"), "w") as f:
         json.dump(report, f, indent=1)
-    overflow = [r["png"] for r in report if r["scrollWidth"] > r["clientWidth"]]
+    overflow = [f"{r['width']}-{r['scheme']}" for r in report if r["scrollWidth"] > r["clientWidth"]]
     print(f"shot: {len(report)} screenshots of {os.path.basename(path)}; sideways overflow: {', '.join(overflow) or 'none'}")
     return Outcome.DONE
 
