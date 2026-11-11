@@ -1,0 +1,203 @@
+#!/usr/bin/env bash
+# context_guard_test: acceptance test for the context_guard.sh Stop hook. Each case
+# puts a fake ccctx in a scratch directory that fixes what ccctx prints on stdout and
+# stderr and how it exits, feeds the hook a Stop payload and checks the hook's answer.
+#
+# Usage: context_guard_test <path to context_guard.sh>
+# Scratch goes under $CONTEXT_GUARD_TEST_TMP, else $TMPDIR, else /tmp; removed when every case passes.
+set -uo pipefail
+
+case ${1:-} in
+"")
+	echo "usage: context_guard_test <path to context_guard.sh>" >&2
+	exit 2
+	;;
+esac
+HOOK=$1
+[ -f "$HOOK" ] || {
+	echo "no hook at $HOOK" >&2
+	exit 2
+}
+command -v jq >/dev/null || {
+	echo "jq is required" >&2
+	exit 2
+}
+ROOT=$(mktemp -d "${CONTEXT_GUARD_TEST_TMP:-${TMPDIR:-/tmp}}/context_guard_test.XXXXXX")
+ROOT=$(cd "$ROOT" && pwd -P)
+# the hook's own temporary file lands in the scratch as well
+export TMPDIR=$ROOT
+
+PASS=0
+FAIL=0
+pass() {
+	PASS=$((PASS + 1))
+	printf 'PASS %s\n' "$1"
+}
+fail() {
+	FAIL=$((FAIL + 1))
+	printf 'FAIL %s\n' "$1"
+}
+check() { # $1 label, $2... a command whose status is the verdict
+	if "${@:2}" >/dev/null 2>&1; then pass "$1"; else fail "$1"; fi
+}
+check_has() { # $1 label, $2 file, $3 text the file must contain
+	if grep -qF -- "$3" "$2" 2>/dev/null; then pass "$1"; else fail "$1"; fi
+}
+check_lacks() { # $1 label, $2 file, $3 text the file must not contain
+	if grep -qF -- "$3" "$2" 2>/dev/null; then fail "$1"; else pass "$1"; fi
+}
+check_empty() { # $1 label, $2 file that must exist and be empty
+	if [ -f "$2" ] && [ ! -s "$2" ]; then pass "$1"; else fail "$1"; fi
+}
+check_reason() { # $1 label, $2 hook output, $3 the opening its block reason must have
+	if jq -e --arg t "$3" '.decision == "block" and (.reason | startswith($t))' "$2" >/dev/null 2>&1; then
+		pass "$1"
+	else
+		fail "$1"
+	fi
+}
+check_message() { # $1 label, $2 hook output, $3... texts its systemMessage must contain
+	local label=$1 out=$2 text
+	shift 2
+	if ! jq -e '.systemMessage | startswith("context guard inactive: ")' "$out" >/dev/null 2>&1; then
+		fail "$label"
+		return
+	fi
+	for text in "$@"; do
+		if ! jq -e --arg t "$text" '.systemMessage | contains($t)' "$out" >/dev/null 2>&1; then
+			fail "$label"
+			return
+		fi
+	done
+	pass "$label"
+}
+
+# ---------------------------------------------------------------- fixtures
+
+fake() { # $1 name, $2 exit code, $3 stdout, $4 stderr; writes an executable fake ccctx at $ROOT/$1
+	local bin=$ROOT/$1
+	printf '%s' "$3" >"$bin.stdout"
+	printf '%s' "$4" >"$bin.stderr"
+	cat >"$bin" <<EOF
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >"$bin.args"
+cat "$bin.stderr" >&2
+cat "$bin.stdout"
+exit $2
+EOF
+	chmod +x "$bin"
+}
+
+hook() { # $1 fake name, $2 payload; the hook's stdout lands in $ROOT/$1.out, its status is returned
+	CTX_GUARD_CCCTX=$ROOT/$1 bash "$HOOK" <<<"$2" >"$ROOT/$1.out" 2>"$ROOT/$1.err"
+}
+
+PAYLOAD='{"session_id":"test-session","transcript_path":"/sessions/test-session.jsonl","stop_hook_active":false}'
+UNDER='{"high_water_tokens":864444,"usable_tokens":966000,"checkpoint_line_tokens":936000,"left_to_checkpoint_tokens":71556,"left_to_compaction_tokens":101556,"over_checkpoint_line":false}'
+OVER='{"high_water_tokens":940000,"usable_tokens":966000,"checkpoint_line_tokens":936000,"left_to_checkpoint_tokens":-4000,"left_to_compaction_tokens":26000,"over_checkpoint_line":true}'
+OLDER='{"high_water_tokens":940000,"window_tokens":1000000,"usable_tokens":966000,"threshold_tokens":927360,"over_threshold":true}'
+OVER_OPENING='Context is at 940000 tokens and the checkpoint line is 936000. Claude Code forces a compaction at 966000: 26000 tokens are left, and a checkpoint can cost 25,000 to 30,000.'
+INSTALL='go install github.com/dimitarvp/ccctx@latest'
+
+# ---------------------------------------------------------------- under and over the line
+
+fake under 0 "$UNDER" ""
+hook under "$PAYLOAD"
+check "under the line: the hook exits 0" test "$?" = 0
+check_empty "under the line: the hook prints nothing" "$ROOT/under.out"
+check_has "under the line: ccctx gets the transcript path" "$ROOT/under.args" "-transcript /sessions/test-session.jsonl"
+check_lacks "under the line: ccctx gets no limit of the hook's own" "$ROOT/under.args" "-threshold"
+
+fake over 10 "$OVER" ""
+hook over "$PAYLOAD"
+check "over the line: the hook exits 0" test "$?" = 0
+check_reason "over the line: blocks, the reason opening with the four numbers" "$ROOT/over.out" "$OVER_OPENING"
+check_has "over the line: the rest of the reason follows" "$ROOT/over.out" "Two readings of this alarm"
+
+# ---------------------------------------------------------------- the hook already steering the turn
+
+fake active 10 "$OVER" ""
+hook active '{"session_id":"test-session","transcript_path":"/sessions/test-session.jsonl","stop_hook_active":true}'
+check "stop_hook_active: the hook exits 0" test "$?" = 0
+check_empty "stop_hook_active: the hook prints nothing" "$ROOT/active.out"
+check "stop_hook_active: ccctx is not run" test ! -e "$ROOT/active.args"
+
+# ---------------------------------------------------------------- a report without the checkpoint line
+
+LACKS_LINE="gave a report without a numeric checkpoint_line_tokens: it is older than this hook, or broken. Update it: $INSTALL"
+for code in 0 10; do
+	fake "older$code" "$code" "$OLDER" ""
+	hook "older$code" "$PAYLOAD"
+	check "older ccctx, exit $code: the hook exits 0" test "$?" = 0
+	check_message "older ccctx, exit $code: says so and names the cure" "$ROOT/older$code.out" \
+		"the ccctx at $ROOT/older$code $LACKS_LINE"
+
+	fake "array$code" "$code" '[]' ""
+	hook "array$code" "$PAYLOAD"
+	check "report not an object, exit $code: the hook exits 0" test "$?" = 0
+	check_message "report not an object, exit $code: says so and names the cure" "$ROOT/array$code.out" \
+		"the ccctx at $ROOT/array$code $LACKS_LINE"
+done
+
+# ---------------------------------------------------------------- ccctx failures
+
+drift_text='ccctx: FORMAT DRIFT — all 3 usable turns reported 0 output tokens.'
+fake drift 2 "" "$drift_text"
+hook drift "$PAYLOAD"
+check "exit 2: the hook exits 0" test "$?" = 0
+check_message "exit 2: the drift note carries ccctx's stderr" "$ROOT/drift.out" "ccctx reports FORMAT DRIFT" "Details: $drift_text"
+
+fail_text='ccctx: cannot read transcript /sessions/test-session.jsonl: no such file or directory'
+fake failed 1 "" "$fail_text"
+hook failed "$PAYLOAD"
+check "exit 1: the hook exits 0" test "$?" = 0
+check_message "exit 1: the failure note carries the code and ccctx's stderr" "$ROOT/failed.out" "ccctx failed (exit 1)" "Details: $fail_text"
+
+# far more stderr than one command-line argument to jq may carry
+huge_head='ccctx: the first line of 2 MB of stderr'
+huge=$(printf '%s\n' "$huge_head" && head -c 2000000 /dev/zero | tr '\0' x)
+for code in 2 1; do
+	fake "huge$code" "$code" "" "$huge"
+	hook "huge$code" "$PAYLOAD"
+	check "2 MB of stderr, exit $code: the hook exits 0" test "$?" = 0
+	check_message "2 MB of stderr, exit $code: the note carries its head" "$ROOT/huge$code.out" "Details: $huge_head"
+	check "2 MB of stderr, exit $code: the note stays under 4,000 bytes" test "$(wc -c <"$ROOT/huge$code.out")" -lt 4000
+done
+
+# ---------------------------------------------------------------- warnings beside a valid report
+
+warning='ccctx warning: no usage meters: open /cache/claude_usage_limits.json: no such file or directory'
+fake warned_under 0 "$UNDER" "$warning"
+hook warned_under "$PAYLOAD"
+check_empty "warning, under the line: the hook prints nothing" "$ROOT/warned_under.out"
+fake warned_over 10 "$OVER" "$warning"
+hook warned_over "$PAYLOAD"
+check_reason "warning, over the line: still blocks with the four numbers" "$ROOT/warned_over.out" "$OVER_OPENING"
+check_lacks "warning, over the line: the warning stays out of the reason" "$ROOT/warned_over.out" "no usage meters"
+
+# ---------------------------------------------------------------- no binary, no session
+
+hook absent "$PAYLOAD"
+check "missing ccctx: the hook exits 0" test "$?" = 0
+check_message "missing ccctx: the note names the path and the install command" "$ROOT/absent.out" \
+	"ccctx not executable at $ROOT/absent" "$INSTALL"
+
+fake by_session 0 "$UNDER" ""
+hook by_session '{"session_id":"test-session"}'
+check_has "session id only: ccctx gets the session id" "$ROOT/by_session.args" "test-session"
+check_empty "session id only: the hook prints nothing" "$ROOT/by_session.out"
+
+fake nothing 0 "$UNDER" ""
+hook nothing '{}'
+check_message "no session in the payload: the note says so" "$ROOT/nothing.out" "neither .transcript_path nor .session_id"
+check "no session in the payload: ccctx is not run" test ! -e "$ROOT/nothing.args"
+
+# ---------------------------------------------------------------- summary
+
+printf 'SUMMARY: %d passed, %d failed\n' "$PASS" "$FAIL"
+if [ "$FAIL" = 0 ]; then
+	rm -rf "$ROOT"
+	exit 0
+fi
+printf 'scratch kept for inspection: %s\n' "$ROOT"
+exit 1

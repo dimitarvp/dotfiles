@@ -1,22 +1,24 @@
 #!/usr/bin/env bash
-# context_guard.sh — Stop hook. Raises the context alarm before the window fills: a
-# pair-mode session checkpoints, a fully autonomous one writes its hydration files
-# and continues through the compaction (both readings are in the message below).
+# context_guard.sh — Stop hook. Raises the context alarm at the checkpoint line, before
+# Claude Code forces a compaction: a pair-mode session checkpoints, a fully autonomous
+# one writes its hydration files and continues through the compaction (both readings
+# are in the message below).
 #
 # Claude Code hands a Stop hook the session id and transcript path but no token
-# counts, so occupancy comes from ccctx reading the transcript. The threshold is a
-# fraction of whatever window the running model actually has (published by
-# statusline.sh), never a hardcoded ceiling.
+# counts, so occupancy comes from ccctx reading the transcript. The two limits are
+# ccctx's defaults, token counts below whatever window the running model actually
+# has (published by statusline.sh): the forced compaction, and the checkpoint line
+# under it. The hook passes no limits of its own.
 #
-# Checks only at turn boundaries, so a single turn that starts well below the
-# threshold can still overshoot it. That is accepted: the alternative is no check.
+# Checks only at turn boundaries, so a single turn that starts below the checkpoint
+# line can still run into the forced compaction. That is accepted: the alternative is
+# no check.
 #
 # Output contract, from Claude Code's own hook schema:
 #   {"decision":"block","reason":"..."} — reason goes to Claude, which then acts
 #   {"systemMessage":"..."}             — warning shown, turn still ends
 set -uo pipefail
 
-FRACTION="${CTX_GUARD_FRACTION:-0.96}"
 CCCTX="${CTX_GUARD_CCCTX:-$HOME/go/bin/ccctx}"
 
 input=$(cat)
@@ -37,29 +39,46 @@ note() { # loud, non-blocking: the guard is not working and should be fixed
 	emit "$(jq -n --arg m "context guard inactive: $1" '{systemMessage: $m}')"
 }
 
-[ -x "$CCCTX" ] || note "ccctx not executable at ${CCCTX}. Build it: cd ~/kod/ccctx && go build -o \$HOME/go/bin/ccctx ."
+[ -x "$CCCTX" ] || note "ccctx not executable at ${CCCTX}. Install it: go install github.com/dimitarvp/ccctx@latest"
+
+# The report (stdout) stays apart from ccctx's warnings and errors (stderr): a warning
+# printed before the report would break the JSON parse.
+errfile=$(mktemp "${TMPDIR:-/tmp}/context_guard.XXXXXX") || note "cannot create a temporary file for ccctx's stderr"
+trap 'rm -f "$errfile"' EXIT
 
 if [ -n "$transcript" ]; then
-	report=$("$CCCTX" -threshold "$FRACTION" -transcript "$transcript" 2>&1)
+	report=$("$CCCTX" -transcript "$transcript" 2>"$errfile")
 elif [ -n "$session" ]; then
-	report=$("$CCCTX" -threshold "$FRACTION" "$session" 2>&1)
+	report=$("$CCCTX" "$session" 2>"$errfile")
 else
 	note "the Stop hook payload carried neither .transcript_path nor .session_id, so there is no session to measure"
 fi
 status=$?
+# The details reach jq as one command-line argument, and the OS caps an argument's size.
+details=$(head -c 2000 "$errfile")
 
 case $status in
-0) exit 0 ;; # under threshold
-10) ;;       # over — fall through and ask for a checkpoint
-2) note "ccctx reports FORMAT DRIFT, so context size is unknown and the session can still hit auto-compaction. Details: ${report}" ;;
-*) note "ccctx failed (exit ${status}), so context size is unknown and the session can still hit auto-compaction. Details: ${report}" ;;
+0 | 10) ;; # under, or at or over, the checkpoint line
+2) note "ccctx reports FORMAT DRIFT, so context size is unknown and the session can still hit auto-compaction. Details: ${details}" ;;
+*) note "ccctx failed (exit ${status}), so context size is unknown and the session can still hit auto-compaction. Details: ${details}" ;;
 esac
 
-used=$(printf '%s' "$report" | jq -r '.high_water_tokens // "?"' 2>/dev/null)
-window=$(printf '%s' "$report" | jq -r '.window_tokens // "?"' 2>/dev/null)
-pct=$(printf '%s' "$report" | jq -r 'if .used_pct then (.used_pct | round | tostring) else "?" end' 2>/dev/null)
+# Only the first document of the report counts: a broken ccctx that printed many must
+# not flood the message below.
+field() { printf '%s' "$report" | jq -rn "first(inputs) | $1" 2>/dev/null; }
 
-reason="Context is at ${used} of ${window} tokens (${pct}%), past the ${FRACTION} guard.
+# Both answers need a report that knows the checkpoint line; one without it comes from
+# a ccctx older than this hook, whose exit code means something else, or a broken one.
+line=$(field '.checkpoint_line_tokens | numbers')
+[ -n "$line" ] || note "the ccctx at ${CCCTX} gave a report without a numeric checkpoint_line_tokens: it is older than this hook, or broken. Update it: go install github.com/dimitarvp/ccctx@latest"
+
+[ "$status" = 0 ] && exit 0
+
+used=$(field '(.high_water_tokens | numbers) // "?"')
+compaction=$(field '(.usable_tokens | numbers) // "?"')
+left=$(field '(.left_to_compaction_tokens | numbers) // "?"')
+
+reason="Context is at ${used} tokens and the checkpoint line is ${line}. Claude Code forces a compaction at ${compaction}: ${left} tokens are left, and a checkpoint can cost 25,000 to 30,000.
 
 Two readings of this alarm (Dimi, 2026-11-07):
 - Pair mode (Dimi is in the loop): invoke the checkpoint skill now — write the
