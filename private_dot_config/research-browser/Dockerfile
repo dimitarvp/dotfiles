@@ -15,7 +15,7 @@ RUN apt-get update \
 COPY policies.json /etc/chromium/policies/managed/research.json
 RUN groupadd -g 1001 browser && useradd -m -u 1000 -g 1001 browser
 RUN python3 -m venv /app/venv && /app/venv/bin/pip install --no-cache-dir playwright==1.63.0
-COPY fetch.py paste.py entrypoint.sh /app/
+COPY fetch.py paste.py shot.py entrypoint.sh /app/
 RUN chmod 0755 /app/entrypoint.sh
 USER browser
 ENTRYPOINT ["/app/entrypoint.sh"]

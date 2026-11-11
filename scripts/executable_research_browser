@@ -1,9 +1,13 @@
 #!/bin/bash
-# research_browser up|down|status|fetch URL NAME|clean — the research browser on the server.
+# research_browser up|down|status|fetch URL NAME|shot NAME [FILE] [WIDTHS] [SCHEMES]|clean — the research
+# browser on the server.
 # A headful Chromium in a container (compose file in ~/.config/research-browser), brought up for a
 # research wave and taken down after it. `fetch` reads one page from inside the container into
 # a tar stream on stdout holding NAME (and NAME.txt), its message on stderr; the exit code is fetch.py's:
-# 0 read, 2 bot wall, 3 browser not running, 4 no slot, 6 navigation failed. Base tools only.
+# 0 read, 2 bot wall, 3 browser not running, 4 no slot, 6 navigation failed. `shot` reads a tar of a page
+# folder on stdin and writes a tar of its screenshots and report.json (shot.py's) to stdout:
+# 0 done, 1 bad usage or a tar member outside the folder, 3 container not running, 6 render failed.
+# Base tools only.
 set -euo pipefail
 compose_dir="$HOME/.config/research-browser"
 data_dir="$HOME/.local/share/research-browser"
@@ -43,12 +47,42 @@ fetch)
 	fi
 	exit "$rc"
 	;;
+shot)
+	name=${2:-}
+	case "$name" in
+	'' | *[!A-Za-z0-9._-]*)
+		echo "research_browser: NAME takes letters, digits, dot, dash and underscore only" >&2
+		echo "usage: research_browser shot NAME [FILE] [WIDTHS] [SCHEMES] < page.tar > shots.tar" >&2
+		exit 1
+		;;
+	esac
+	if [ "$(docker inspect -f '{{.State.Running}}' "$container" 2>/dev/null)" != true ]; then
+		echo "research_browser: the container $container is not running" >&2
+		exit 3
+	fi
+	# the out folder is the one host folder the container shares besides the profile
+	run=$(mktemp -d "$data_dir/out/shot-$name.XXXXXX")
+	trap 'rm -rf "$run"' EXIT
+	mkdir "$run/page" "$run/shots"
+	# GNU tar skips a member whose name climbs out with .. and then fails; a leading / is stripped
+	if ! tar -x -C "$run/page" --warning=no-unknown-keyword; then
+		echo "research_browser: the page tar was refused" >&2
+		exit 1
+	fi
+	rc=0
+	docker exec "$container" /app/venv/bin/python /app/shot.py "/out/${run##*/}/page" "/out/${run##*/}/shots" "${@:3}" 1>&2 || rc=$?
+	if [ "$rc" -eq 0 ]; then
+		shots=("$run"/shots/*)
+		tar -C "$run/shots" -cf - "${shots[@]##*/}"
+	fi
+	exit "$rc"
+	;;
 clean)
 	find "$data_dir/out" -mindepth 1 -maxdepth 1 ! -name '.fetch.log' -delete
 	echo "research browser: fetched files removed"
 	;;
 *)
-	echo "usage: research_browser up|down|status|fetch URL NAME|clean" >&2
+	echo "usage: research_browser up|down|status|fetch URL NAME|shot NAME [FILE] [WIDTHS] [SCHEMES]|clean" >&2
 	exit 64
 	;;
 esac
