@@ -7,7 +7,8 @@ OUT_DIR/WIDTH-SCHEME.png, or with a TILE above 0 that page cut top to bottom int
 pixels high, OUT_DIR/WIDTH-SCHEME-01.png and on (the last one shorter). OUT_DIR/report.json holds per
 shot the PNG or the tile names, the viewport width, the page's scrollWidth and clientWidth (unequal
 means sideways overflow), document.compatMode (BackCompat means no doctype), its console errors and
-failed requests. FILE defaults to index.html; WIDTHS and SCHEMES are comma-separated, by default
+failed requests, and its anchors: the first 300 elements with an id, in document order, each as tag, id
+and top (its top edge in CSS pixels from the top of the page, so it starts in tile top // TILE + 1). FILE defaults to index.html; WIDTHS and SCHEMES are comma-separated, by default
 390,1280 and light,dark; TILE is 0 (no tiles, the default) or 200 to 20000.
 
 Exit codes: 0 done · 1 bad usage · 6 the render failed
@@ -34,6 +35,10 @@ PAGE_SIZE_JS = """() => {
   return [Math.max(b.scrollWidth, d.scrollWidth, b.offsetWidth, d.offsetWidth, b.clientWidth, d.clientWidth),
           Math.max(b.scrollHeight, d.scrollHeight, b.offsetHeight, d.offsetHeight, b.clientHeight, d.clientHeight)];
 }"""
+MAX_ANCHORS = 300
+# floor, so floor(top / TILE) + 1 is the tile holding the element's first pixel row
+ANCHORS_JS = f"""() => Array.from(document.querySelectorAll("[id]")).filter(e => e.id).slice(0, {MAX_ANCHORS})
+  .map(e => ({{tag: e.tagName.toLowerCase(), id: e.id, top: Math.floor(e.getBoundingClientRect().top + window.scrollY)}}))"""
 
 
 class Outcome(enum.IntEnum):
@@ -93,6 +98,7 @@ def shoot(browser, url, width, scheme, tile, out_dir):
         scroll_width, client_width, compat_mode = page.evaluate(
             "[document.documentElement.scrollWidth, document.documentElement.clientWidth, document.compatMode]"
         )
+        anchors = page.evaluate(ANCHORS_JS)
         png, tiles = None, []
         if tile:
             page_width, page_height = page.evaluate(PAGE_SIZE_JS)
@@ -110,6 +116,7 @@ def shoot(browser, url, width, scheme, tile, out_dir):
     return {
         "png": png,
         "tiles": tiles,
+        "anchors": anchors,
         "width": width,
         "scheme": scheme,
         "scrollWidth": scroll_width,
