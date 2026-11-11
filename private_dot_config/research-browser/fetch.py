@@ -35,9 +35,12 @@ WALL = re.compile(
     r"|proof.of.work|verifying your browser|checking if the site connection is secure|ddos-guard"
     r"|please wait while we verify|one more step|human verification|press and hold|press & hold"
     r"|security verification|security check|robot check|verify to continue|checking your connection"
-    r"|please verify yourself|verify yourself|slide to verify|prove your humanity|blocked by network security",
+    r"|please verify yourself|verify yourself|slide to verify|prove your humanity|blocked by network security"
+    r"|bots use duckduckgo too|confirm this search was made by a human",
     re.I,
 )
+# The line a site shows when it hides the reCAPTCHA badge. It marks an ordinary page, not a human check.
+RECAPTCHA_NOTICE = re.compile(r"protected by reCAPTCHA", re.I)
 TURNSTILE = 'iframe[src*="challenges.cloudflare.com"]'
 CONSENT_BUTTONS = (
     "button#onetrust-accept-btn-handler",
@@ -138,7 +141,7 @@ def dismiss_consent(page):
 
 def is_wall(title, body):
     """True when the page is a human check: its title says so, or it is a short page whose text says so."""
-    body = body[:3000]
+    body = RECAPTCHA_NOTICE.sub("", body[:3000])
     return bool(WALL.search(title)) or (len(body) < 1500 and bool(WALL.search(body)))
 
 
