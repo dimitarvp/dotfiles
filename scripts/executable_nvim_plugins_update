@@ -132,7 +132,8 @@ function M.mason()
   for _, item in ipairs(outdated) do
     if item.pkg:is_installable({ version = item.latest }) then
       item.err = "no result within 15 minutes"
-      item.pkg:install({ version = item.latest }, function(success, err)
+      -- no version named: Mason checks a named version against the tagged releases, and a package pinned to a commit has none
+      item.pkg:install({}, function(success, err)
         item.err = not success and text(err) or nil
         pending = pending - 1
       end)
