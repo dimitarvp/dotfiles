@@ -13,6 +13,8 @@
 # 90-no-auto-default: {{ include "dot_local/share/private_etc-reference/etc/NetworkManager/conf.d/encrypted_private_90-no-auto-default-wan2.conf.age" | sha256sum }}
 # rt_tables wan2:     {{ include "dot_local/share/private_etc-reference/etc/iproute2/rt_tables.d/encrypted_private_wan2.conf.age" | sha256sum }}
 # wan2 name rule:     {{ include "dot_local/share/private_etc-reference/etc/systemd/network/encrypted_private_10-wan2.link.age" | sha256sum }}
+# huge-page rule:     {{ include "dot_local/share/private_etc-reference/etc/tmpfiles.d/encrypted_private_thp-madvise.conf.age" | sha256sum }}
+# tlp switch:         {{ include "dot_local/share/private_etc-reference/etc/tlp.d/encrypted_private_99-off.conf.age" | sha256sum }}
 set -euo pipefail
 SRC="$HOME/.local/share/etc-reference/etc"
 sudo install -m 0644 "$SRC/systemd/system/s1_capture.service" "$SRC/systemd/system/s1_capture.timer" /etc/systemd/system/
@@ -30,7 +32,17 @@ sudo install -m 0644 "$SRC/NetworkManager/conf.d/25-failover.conf" \
 	"$SRC/NetworkManager/conf.d/90-no-auto-default-wan2.conf" /etc/NetworkManager/conf.d/
 sudo install -m 0644 "$SRC/iproute2/rt_tables.d/wan2.conf" /etc/iproute2/rt_tables.d/
 sudo install -m 0644 "$SRC/systemd/network/10-wan2.link" /etc/systemd/network/
-echo "server /etc pieces deployed; capture timer: $(systemctl is-active s1_capture.timer); network files staged (no NM reload)"
+# the rule's line is marked boot-only; --boot applies it now as well
+sudo install -m 0644 "$SRC/tmpfiles.d/thp-madvise.conf" /etc/tmpfiles.d/
+sudo systemd-tmpfiles --create --boot /etc/tmpfiles.d/thp-madvise.conf
+sudo systemctl enable --now fstrim.timer
+# a laptop power manager has no job on a server: off by its own switch, which
+# its udev rules obey too; its service is disabled where the package is installed
+sudo install -D -m 0644 "$SRC/tlp.d/99-off.conf" /etc/tlp.d/99-off.conf
+if systemctl cat tlp.service >/dev/null 2>&1; then
+	sudo systemctl disable --now tlp.service
+fi
+echo "server /etc pieces deployed; capture timer: $(systemctl is-active s1_capture.timer); trim timer: $(systemctl is-active fstrim.timer); huge pages: $(cat /sys/kernel/mm/transparent_hugepage/enabled); network files staged (no NM reload)"
 {{ else -}}
 #!/bin/bash
 : # deployer for the server reference tree — no-op on this machine
