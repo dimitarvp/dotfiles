@@ -12,6 +12,7 @@
 # 25-failover:        {{ include "dot_local/share/private_etc-reference/etc/NetworkManager/conf.d/encrypted_private_25-failover.conf.age" | sha256sum }}
 # 90-no-auto-default: {{ include "dot_local/share/private_etc-reference/etc/NetworkManager/conf.d/encrypted_private_90-no-auto-default-wan2.conf.age" | sha256sum }}
 # rt_tables wan2:     {{ include "dot_local/share/private_etc-reference/etc/iproute2/rt_tables.d/encrypted_private_wan2.conf.age" | sha256sum }}
+# wan2 name rule:     {{ include "dot_local/share/private_etc-reference/etc/systemd/network/encrypted_private_10-wan2.link.age" | sha256sum }}
 set -euo pipefail
 SRC="$HOME/.local/share/etc-reference/etc"
 sudo install -m 0644 "$SRC/systemd/system/s1_capture.service" "$SRC/systemd/system/s1_capture.timer" /etc/systemd/system/
@@ -28,6 +29,7 @@ sudo install -m 0600 "$SRC/NetworkManager/system-connections/wan1.nmconnection" 
 sudo install -m 0644 "$SRC/NetworkManager/conf.d/25-failover.conf" \
 	"$SRC/NetworkManager/conf.d/90-no-auto-default-wan2.conf" /etc/NetworkManager/conf.d/
 sudo install -m 0644 "$SRC/iproute2/rt_tables.d/wan2.conf" /etc/iproute2/rt_tables.d/
+sudo install -m 0644 "$SRC/systemd/network/10-wan2.link" /etc/systemd/network/
 echo "server /etc pieces deployed; capture timer: $(systemctl is-active s1_capture.timer); network files staged (no NM reload)"
 {{ else -}}
 #!/bin/bash
