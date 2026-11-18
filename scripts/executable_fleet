@@ -272,10 +272,15 @@ tail)
 	zmodload zsh/zselect
 	feed=$(feed_of "${1:-}")
 	spool=$(spool_of "$feed")
+	reader=(sub --stream FLEET --durable "$me-$feed" --dump "$spool")
 	# one tail per identity and feed on this machine: a plugin reload starts the
-	# monitors again, and two readers would split the feed
-	exec {lockfd}>"$spool/.lock"
-	flock -n "$lockfd" || die "another 'fleet $me tail $feed' already runs on this machine (lock $spool/.lock)"
+	# monitors again, and two readers would split the feed. Only this process holds
+	# the lock (its children close it), so the lock ends with this process, however
+	# it dies.
+	exec {lockfd}>"$spool/.tail.lock"
+	flock -n "$lockfd" || die "another 'fleet $me tail $feed' already runs on this machine (lock $spool/.tail.lock)"
+	# a tail killed before its trap could run leaves its reader behind: end that reader
+	pkill -U "$UID" -f -- " ${reader[*]}\$" || (($? == 1)) || die "cannot look for a leftover reader of $me-$feed (pkill failed)"
 	# kill the whole tree under this process (subshell, shim, nats), not only
 	# the direct children
 	killtree() {
@@ -290,15 +295,21 @@ tail)
 	trap cleanup EXIT
 	trap 'cleanup; exit 143' INT TERM HUP
 	# presence heartbeat; it stops within 30 s of this process dying
-	(while kill -0 $$ 2>/dev/null; do
-		n kv put presence "$me" "$(hostname -s)" >/dev/null 2>&1 || true
-		zselect -t 3000 || true
-	done) &
+	(
+		exec {lockfd}>&-
+		while kill -0 $$ 2>/dev/null; do
+			n kv put presence "$me" "$(hostname -s)" >/dev/null 2>&1 || true
+			zselect -t 3000 || true
+		done
+	) &
 	# the reader, restarted 5 s after every exit (hub restart, network blip)
-	(while kill -0 $$ 2>/dev/null; do
-		n sub --stream FLEET --durable "$me-$feed" --dump "$spool" >"$spool/natscli.log" 2>&1 || true
-		zselect -t 500 || true
-	done) &
+	(
+		exec {lockfd}>&-
+		while kill -0 $$ 2>/dev/null; do
+			n "${reader[@]}" >"$spool/natscli.log" 2>&1 || true
+			zselect -t 500 || true
+		done
+	) &
 	archive=$(archive_of "$feed")
 	# Claude Code joins the lines printed within 200 ms into one notification, and passes a
 	# monitor 10 notifications at once, then one per 2 s, dropping the rest: one message
