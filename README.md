@@ -10,7 +10,7 @@ Modular config split across `~/.zsh/`. No plugin framework: the plugins are vend
 
 **Prompt:** hand-built powerline with round pill separators, async git via vendored [zsh-async](https://github.com/mafredri/zsh-async). Shows OS icon, full directory, git branch + dirty state (staged/modified/untracked/ahead/behind/stashed), command duration (>3s), background jobs, SSH hostname, and time. Second line: `❯` colored by exit status. Renders in ~3ms.
 
-**History search:** Ctrl-R and Up arrow via [atuin](https://github.com/atuinsh/atuin) (fuzzy search, compact style, preview).
+**History search:** Ctrl-R and Up arrow via [atuin](https://github.com/atuinsh/atuin) (full-text search, compact style, preview).
 
 **Fuzzy pickers:** [fzf](https://github.com/junegunn/fzf) with [fd](https://github.com/sharkdp/fd) as the file source. Ctrl-T for file picker, Ctrl-O for directory picker, Ctrl-U for git uncommitted files. Preview with [bat](https://github.com/sharkdp/bat).
 
