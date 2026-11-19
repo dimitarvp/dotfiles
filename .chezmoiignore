@@ -74,4 +74,5 @@ scripts/fleet_archive
 scripts/s1_capture
 scripts/capture_status
 scripts/s1_health
+scripts/zpool_reopen
 {{ end }}

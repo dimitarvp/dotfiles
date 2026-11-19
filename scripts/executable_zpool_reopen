@@ -1,0 +1,79 @@
+#!/bin/bash
+# zpool_reopen POOL — a member disk of POOL appeared while the system runs:
+# make the pool use it again.
+#
+# A disk that drops off its link and returns gets a new device; the pool keeps
+# waiting on the old one and writes nothing until `zpool reopen` makes it look
+# its disks up again. `zpool clear` then resumes a pool that suspended and
+# zeroes the error counters of the outage; they are logged before that.
+#
+# Started by udev through zpool_reopen@POOL.service. Base-system tools only.
+# Exit: 0 = nothing to do (the system is booting, or POOL is not imported),
+#           or POOL is healthy at the end
+#       1 = after two minutes a member is still missing (the pool was left as
+#           it was), or POOL is still not healthy
+#       2 = bad usage
+set -uo pipefail
+
+pool=${1:-}
+case $pool in '' | *[!A-Za-z0-9_.:-]*)
+	echo "usage: zpool_reopen POOL" >&2
+	exit 2
+	;;
+esac
+
+# journal lines; the number is the syslog level (4 warning, 3 error, 6 info)
+say() { printf '<%s>pool %s: %s\n' "$1" "$pool" "$2"; }
+status_lines() { timeout 20 zpool status "$pool" 2>&1 | sed 's/^/<6>    /'; }
+
+# a transaction group that has waited over a minute to be written: the pool takes no writes
+stuck() {
+	awk -v up="$(cut -d ' ' -f 1 /proc/uptime)" 'NR > 1 && $3 != "C" && up - $2 / 1e9 > 60 { found = 1 } END { exit !found }' \
+		"/proc/spl/kstat/zfs/$pool/txgs" 2>/dev/null
+}
+healthy() {
+	case $(timeout 20 zpool status -x "$pool" 2>&1) in *"is healthy"*) ;; *) return 1 ;; esac
+	! stuck
+}
+# the members whose device is not there (now)
+missing() {
+	timeout 20 zpool status -P "$pool" 2>/dev/null | awk '$1 ~ /^\/dev\// { print $1 }' | while read -r dev; do
+		[ -e "$dev" ] || printf '%s ' "$dev"
+	done
+}
+
+# every disk "appears" while the system boots, and the import opens them all
+case $(systemctl is-system-running 2>/dev/null) in initializing | starting) exit 0 ;; esac
+zpool list -H -o name "$pool" >/dev/null 2>&1 || exit 0
+
+say 4 "a member disk appeared while the pool was in use, so it had dropped off; state before the reopen:"
+status_lines
+
+gone=
+for try in 1 2 3 4 5 6 7 8 9 10 11 12; do
+	# reopen only once every member is back: what a reopen does to the pool while one is still away is untested
+	gone=$(missing)
+	if [ -n "$gone" ]; then
+		[ "$try" -eq 1 ] && say 4 "waiting, still away: $gone"
+		sleep 10
+		continue
+	fi
+	out=$(timeout 60 zpool reopen "$pool" 2>&1) || say 6 "try $try: zpool reopen: ${out:-no output}"
+	if ! healthy; then
+		out=$(timeout 60 zpool clear "$pool" 2>&1) || say 6 "try $try: zpool clear: ${out:-no output}"
+	fi
+	sleep 5
+	if healthy; then
+		say 4 "reopened (try $try); the pool is healthy and takes writes again"
+		exit 0
+	fi
+	sleep 5
+done
+
+if [ -n "$gone" ]; then
+	say 3 "left as it was: two minutes on, still away: $gone"
+else
+	say 3 "still not healthy two minutes after a member disk came back; state now:"
+	status_lines
+fi
+exit 1
