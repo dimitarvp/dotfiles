@@ -42,6 +42,11 @@ sudo install -D -m 0644 "$SRC/tlp.d/99-off.conf" /etc/tlp.d/99-off.conf
 if systemctl cat tlp.service >/dev/null 2>&1; then
 	sudo systemctl disable --now tlp.service
 fi
+# the activity recorder keeps its day files only while its service runs; the
+# nightly rotate job alone does not start it at boot
+if systemctl cat atop.service >/dev/null 2>&1; then
+	sudo systemctl enable --now atop.service
+fi
 echo "server /etc pieces deployed; capture timer: $(systemctl is-active s1_capture.timer); trim timer: $(systemctl is-active fstrim.timer); huge pages: $(cat /sys/kernel/mm/transparent_hugepage/enabled); network files staged (no NM reload)"
 {{ else -}}
 #!/bin/bash
