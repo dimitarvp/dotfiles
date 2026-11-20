@@ -25,8 +25,9 @@ workbench. Everything committed here is world-readable, forever, git history inc
 
 - `.chezmoiignore` lists what chezmoi must not deploy into `$HOME`. `AGENTS.md`, `CLAUDE.md`
   and `README.md` are in it; a new top-level file goes there too.
-- Edit source files here, never the rendered copies in `$HOME`. Apply with
-  `(umask 022; chezmoi apply …)`.
+- Edit source files here, never the rendered copies in `$HOME`. Apply with `chezmoi apply …`.
+  The config template `.chezmoi.toml.tmpl` pins the file mask, so the calling shell's umask
+  does not matter. After a change of that template, run `chezmoi init` on each machine.
 - Shell files: `shfmt` before the first run and before committing; skip `.tmpl` files.
 - Commits: subject up to 50 characters, lowercase, the what only, body wrapped at 72, no
   trailers or attribution of any kind.
