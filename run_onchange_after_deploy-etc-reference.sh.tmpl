@@ -15,19 +15,14 @@
 # wan2 name rule:     {{ include "dot_local/share/private_etc-reference/etc/systemd/network/encrypted_private_10-wan2.link.age" | sha256sum }}
 # huge-page rule:     {{ include "dot_local/share/private_etc-reference/etc/tmpfiles.d/encrypted_private_thp-madvise.conf.age" | sha256sum }}
 # tlp switch:         {{ include "dot_local/share/private_etc-reference/etc/tlp.d/encrypted_private_99-off.conf.age" | sha256sum }}
-# health service:     {{ include "dot_local/share/private_etc-reference/etc/systemd/system/encrypted_private_s1_health.service.age" | sha256sum }}
-# health timer:       {{ include "dot_local/share/private_etc-reference/etc/systemd/system/encrypted_private_s1_health.timer.age" | sha256sum }}
 # reopen unit:        {{ include "dot_local/share/private_etc-reference/etc/systemd/system/encrypted_private_zpool_reopen@.service.age" | sha256sum }}
 # reopen rule:        {{ include "dot_local/share/private_etc-reference/etc/udev/rules.d/encrypted_private_90-zpool-reopen.rules.age" | sha256sum }}
 set -euo pipefail
 SRC="$HOME/.local/share/etc-reference/etc"
 sudo install -m 0644 "$SRC/systemd/system/s1_capture.service" "$SRC/systemd/system/s1_capture.timer" \
-	"$SRC/systemd/system/s1_health.service" "$SRC/systemd/system/s1_health.timer" \
 	"$SRC/systemd/system/zpool_reopen@.service" /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now s1_capture.timer
-# the health check every 15 minutes; its stored result is what the other machines' update runs show
-sudo systemctl enable --now s1_health.timer
 # a pool disk that drops off its link and comes back: the rule starts the unit that reopens the pool
 sudo install -m 0644 "$SRC/udev/rules.d/90-zpool-reopen.rules" /etc/udev/rules.d/
 sudo udevadm control --reload
@@ -58,7 +53,7 @@ fi
 if systemctl cat atop.service >/dev/null 2>&1; then
 	sudo systemctl enable --now atop.service
 fi
-echo "server /etc pieces deployed; capture timer: $(systemctl is-active s1_capture.timer); health timer: $(systemctl is-active s1_health.timer); trim timer: $(systemctl is-active fstrim.timer); huge pages: $(cat /sys/kernel/mm/transparent_hugepage/enabled); network files staged (no NM reload)"
+echo "server /etc pieces deployed; capture timer: $(systemctl is-active s1_capture.timer); trim timer: $(systemctl is-active fstrim.timer); huge pages: $(cat /sys/kernel/mm/transparent_hugepage/enabled); network files staged (no NM reload)"
 {{ else -}}
 #!/bin/bash
 : # deployer for the server reference tree — no-op on this machine
