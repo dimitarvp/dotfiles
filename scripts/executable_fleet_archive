@@ -53,7 +53,14 @@ cd "$ARCHIVE"
 last=$(cat .seq 2>/dev/null || echo 0)
 [[ $last == <0-> ]] || die ".seq holds garbage: $last"
 
-info=$(n stream info FLEET -j) || die "the hub does not answer (stream FLEET)"
+# a boot starts the hub and this run in the same second: ask the hub for up to 30 s before giving up
+info=""
+for try in {1..10}; do
+	info=$(n stream info FLEET -j 2>/dev/null) && break
+	info=""
+	sleep 3
+done
+[[ -n $info ]] || die "the hub does not answer (stream FLEET)"
 top=$(jq -r .state.last_seq <<<"$info")
 first=$(jq -r .state.first_seq <<<"$info")
 if ((top <= last)); then
