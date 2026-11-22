@@ -62,3 +62,12 @@ go/bin/usql
 
 # dbtoepub (MacPorts docbook-xsl's EPUB tool, a Ruby program behind a wrapper): Ruby left the fleet
 .local/bin/dbtoepub
+
+# Google's cloud tools left the fleet: the links into their folder and the
+# shell file that set their python go on apply
+.local/bin/gcloud
+.local/bin/gsutil
+.local/bin/bq
+.local/bin/docker-credential-gcloud
+.local/bin/git-credential-gcloud
+.zsh/programs/gcloud.zsh
