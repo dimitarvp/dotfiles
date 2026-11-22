@@ -1,5 +1,14 @@
 #! /bin/bash
+# Safari's bookmarks as one HTML file in ~/kod, where the backup picks it up.
+# macOS lets a program read Safari's files only when the terminal app it runs
+# under has Full Disk Access; without it plutil is refused. The exit status
+# says whether the export was written.
 
-plutil -convert xml1 -o "$TMPDIR/SafariBookmarks.xml" ~/Library/Safari/Bookmarks.plist
-xsltproc -o ~/kod/SafariBookmarks.html ~/kod/Safari2Firebird.xslt "$TMPDIR/SafariBookmarks.xml"
-rm "$TMPDIR/SafariBookmarks.xml"
+xml="$TMPDIR/SafariBookmarks.xml"
+# --novalid: the file names Apple's DTD by a web address; without the flag
+# xsltproc tries to load it and prints a warning on every run
+plutil -convert xml1 -o "$xml" ~/Library/Safari/Bookmarks.plist &&
+	xsltproc --novalid -o ~/kod/SafariBookmarks.html ~/kod/Safari2Firebird.xslt "$xml"
+rc=$?
+rm -f "$xml"
+exit $rc
