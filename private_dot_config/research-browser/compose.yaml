@@ -35,11 +35,14 @@ services:
       - "127.0.0.1:5900:5900"
       - "127.0.0.1:6080:6080"
     healthcheck:
+      # one probe an hour once the browser is up: every probe adds three entries to Docker's event
+      # list, which keeps 256 for the whole machine, and the server's health check reads that list
       test: ["CMD", "curl", "-sf", "http://127.0.0.1:9222/json/version"]
-      interval: 10s
+      interval: 1h
       timeout: 5s
-      retries: 12
-      start_period: 20s
+      retries: 2
+      start_period: 2m
+      start_interval: 5s
     restart: unless-stopped
     logging:
       driver: json-file
