@@ -45,10 +45,10 @@ if [[ -r "$HOME/.config/openobserve/env" ]]; then
 	. "$HOME/.config/openobserve/env"
 	export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT OTEL_EXPORTER_OTLP_HEADERS
 	unset ZO_ROOT_USER_EMAIL ZO_ROOT_USER_PASSWORD
+	# every sender names its machine and its environment: otel-cli and the
+	# OpenTelemetry SDKs read these resource attributes by themselves
+	export OTEL_RESOURCE_ATTRIBUTES="host.name=${(L)${HOST%%.*}},deployment.environment.name=development"
 fi
-
-# every span names its machine: otel-cli folds this variable into --attrs
-export OTEL_CLI_ATTRIBUTES="host.name=${(L)${HOST%%.*}}"
 
 # Claude Code: the per-session web-search budget, shared by every subagent of a
 # session; the default runs dry in a research-heavy session
