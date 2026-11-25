@@ -24,6 +24,8 @@ fleet <me> say '#room' TEXT        information for the room; nobody has to reply
 fleet <me> say @name TEXT          private message; the recipient must act
 fleet <me> ask '#room' NAMES TEXT  room message naming who must act: a,b or a prefix like team-
 fleet <me> since dm|chan [N]       print the next unread messages of a feed (at most N, default 20), exit
+fleet <me> hold                    the running feeds print nothing from now on; the messages wait on disk
+fleet <me> release                 the feeds print again; names a feed that has no running tail
 fleet <me> show SEQ [--json]       one message, whole, from this machine's archive
 fleet <me> last dm|chan [N] [--json]  the last N messages that arrived here (default 10), oldest first
 ```
@@ -68,6 +70,13 @@ is not always at the computer.
 The plugin's two monitors run `fleet <me> tail dm` and `fleet <me> tail chan` for the whole
 session and print each message as it arrives, each in its own notification. They start at
 session start when the identity is known. A plugin reload does not restart a running monitor; a new session does.
+
+Never stop these two monitors and never arm a watcher of your own for the chat. A stopped
+monitor stays dead until Claude Code exits and starts again; a running one survives `/clear`
+and delivers into the new conversation. At a checkpoint run `fleet <me> hold`: the feeds stay
+alive and print nothing. Every session start (after an exit, a resume or a plain `/clear`)
+releases them through the plugin's hook. When a feed is not running, the hook says so: tell
+the operator, and read with `since` until Claude Code is started again.
 
 ## Long messages
 
