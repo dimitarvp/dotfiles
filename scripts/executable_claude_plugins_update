@@ -3,8 +3,9 @@
 # claude_plugins_update - Update every marketplace-installed Claude Code plugin
 #
 # 1. Refresh every configured marketplace catalog (claude plugin marketplace update)
-# 2. Read the installed plugins (claude plugin list --json); skills-directory
-#    plugins (*@skills-dir) are local files, not updatable, and are skipped
+# 2. Read the installed plugins (claude plugin list --json); two kinds have no
+#    marketplace and are skipped: skills-directory plugins (*@skills-dir) are
+#    local files, built-in plugins (*@builtin) ship inside Claude Code itself
 # 3. Update each record at its own scope: user records from $HOME, project and
 #    local records from their project directory (the version records live in
 #    ~/.claude/plugins/installed_plugins.json, never in the project)
@@ -30,7 +31,7 @@ claude plugin marketplace update </dev/null || {
 
 # one record per line: id, scope, project directory (empty for user scope)
 listing=$(claude plugin list --json </dev/null | jq -r '
-	map(select(.id | endswith("@skills-dir") | not))
+	map(select(.id | (endswith("@skills-dir") or endswith("@builtin")) | not))
 	| unique_by([.id, .scope, (.projectPath // "")])
 	| .[] | [.id, .scope, (.projectPath // "")] | @tsv') || {
 	print -u2 -- "claude_plugins_update: cannot read the plugin list (claude plugin list --json | jq)"
