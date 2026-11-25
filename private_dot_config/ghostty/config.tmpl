@@ -51,9 +51,10 @@ palette = 13=#ff92df
 palette = 14=#a4ffff
 palette = 15=#f8f8f2
 
-# Scrollback: up to 10 million lines, inside Ghostty's default limit of 50 MB
-# per terminal (clear manually with Super+K)
+# Scrollback per terminal: 10 million lines or 1 GB, whichever comes first
+# (clear manually with Super+K)
 scrollback-limit-lines = 10000000
+scrollback-limit-bytes = 1000000000
 
 # Mouse wheel and trackpad, every OS and device: scroll what the OS reports.
 # Ghostty's defaults: discrete:3 = three times each wheel notch; precision:1 with
