@@ -13,6 +13,8 @@
 #   fleet <me> ask '#room' NAMES TEXT  room message naming who must act: a,b or a prefix like team-
 #   fleet <me> tail dm|chan            follow a feed forever, one notification per message (the plugin monitor)
 #   fleet <me> since dm|chan [N]       print the next unread messages of a feed (at most N, default 20), exit
+#   fleet <me> hold                    the running feeds print nothing from now on; the messages wait on disk
+#   fleet <me> release                 the feeds print again; says which feed has no running tail
 #   fleet <me> show SEQ [--json]       one message from this machine's archive, whole
 #   fleet <me> last dm|chan [N] [--json]  the last N archived messages of a feed (default 10), oldest first
 #   fleet <me> render FILE             debug: one spooled message file, printed the way `tail` prints it
@@ -58,7 +60,7 @@ die() {
 	exit 1
 }
 usage() {
-	print -u2 -- "usage: fleet <me> join | who | say '#room'|@name [TEXT] | ask '#room' NAMES [TEXT] | tail dm|chan | since dm|chan [N]" \
+	print -u2 -- "usage: fleet <me> join | who | say '#room'|@name [TEXT] | ask '#room' NAMES [TEXT] | tail dm|chan | since dm|chan [N] | hold | release" \
 		"| show SEQ [--json] | last dm|chan [N] [--json]" \
 		"| runs [--machine M] [--group G] [--label TEXT] [--since DURATION] [--failed] [--json] [N] | run MACHINE ID [--json]"
 	exit 2
@@ -143,6 +145,36 @@ spool_of() { # feed → the spool directory, created
 	mkdir -p "$d"
 	chmod 700 "$d"
 	print -- "$d"
+}
+
+# While this file exists a tail prints nothing: its reader keeps spooling, so a checkpointed
+# conversation is not woken and loses nothing. A session start removes it (the plugin's hook).
+hold_file=${XDG_CACHE_HOME:-$HOME/.cache}/fleet/$me/hold
+feed_runs() { # feed: does a tail of it run on this machine (its lock is taken)
+	local fd
+	if (exec {fd}>"$(spool_of "$1")/.tail.lock" && flock -n "$fd") 2>/dev/null; then
+		return 1
+	fi
+	return 0
+}
+feeds_state() { # held|released: what the caller must know about the two feeds
+	local f tries=0
+	if [[ $1 == released ]]; then
+		# a session that just started is still starting its feeds: give them 6 s
+		zmodload zsh/zselect
+		until { feed_runs dm && feed_runs chan; } || ((++tries > 12)); do
+			zselect -t 50 || true
+		done
+	fi
+	for f in dm chan; do
+		if ! feed_runs "$f"; then
+			print -- "fleet: the $f feed of $me is NOT running on this machine. It starts with the next Claude Code process (exit and start again); until then read it with: fleet $me since $f"
+		elif [[ $1 == held && ! -e $(spool_of "$f")/.tail.holds ]]; then
+			print -- "fleet: the $f feed of $me runs the code from before 'hold' existed and CANNOT be held: stop it for this checkpoint; it starts again with the next Claude Code process"
+		elif [[ $1 == held ]]; then
+			print -- "fleet: the $f feed of $me is held: it prints nothing until 'fleet $me release' or the next session start"
+		fi
+	done
 }
 
 archive_dir=${XDG_STATE_HOME:-$HOME/.local/state}/fleet/$me
@@ -290,10 +322,13 @@ tail)
 	}
 	cleanup() {
 		local c
+		rm -f -- "$spool/.tail.holds"
 		for c in $(pgrep -P $$ 2>/dev/null); do killtree "$c"; done
 	}
 	trap cleanup EXIT
 	trap 'cleanup; exit 143' INT TERM HUP
+	# this tail obeys the hold file; `hold` looks for this mark
+	: >"$spool/.tail.holds"
 	# presence heartbeat; it stops within 30 s of this process dying
 	(
 		exec {lockfd}>&-
@@ -323,12 +358,21 @@ tail)
 			tokens=$((tokens + refills < 8 ? tokens + refills : 8))
 			since_refill=$((since_refill + refills * 2.1))
 		fi
-		if ((tokens > 0)); then
+		if ((tokens > 0)) && [[ ! -e $hold_file ]]; then
 			drain "$spool" "$archive" monitor
 			tokens=$((tokens - printed))
 		fi
 		zselect -t 30 || true
 	done
+	;;
+hold)
+	mkdir -p "${hold_file:h}"
+	: >"$hold_file"
+	feeds_state held
+	;;
+release)
+	rm -f -- "$hold_file"
+	feeds_state released
 	;;
 since)
 	feed=$(feed_of "${1:-}")
