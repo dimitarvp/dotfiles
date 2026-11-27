@@ -18,6 +18,7 @@
 # tlp switch:         {{ include "dot_local/share/private_etc-reference/etc/tlp.d/encrypted_private_99-off.conf.age" | sha256sum }}
 # reopen unit:        {{ include "dot_local/share/private_etc-reference/etc/systemd/system/encrypted_private_zpool_reopen@.service.age" | sha256sum }}
 # reopen rule:        {{ include "dot_local/share/private_etc-reference/etc/udev/rules.d/encrypted_private_90-zpool-reopen.rules.age" | sha256sum }}
+# watchdog switch:    {{ include "dot_local/share/private_etc-reference/etc/modprobe.d/encrypted_private_intel-oc-wdt-off.conf.age" | sha256sum }}
 set -euo pipefail
 SRC="$HOME/.local/share/etc-reference/etc"
 sudo install -m 0644 "$SRC/systemd/system/s1_capture.service" "$SRC/systemd/system/s1_capture.timer" \
@@ -49,6 +50,9 @@ sudo install -D -m 0644 "$SRC/tlp.d/99-off.conf" /etc/tlp.d/99-off.conf
 if systemctl cat tlp.service >/dev/null 2>&1; then
 	sudo systemctl disable --now tlp.service
 fi
+# the firmware shortens one of the two watchdogs at every write of a firmware
+# variable; with that driver out, systemd holds the other one from the next boot
+sudo install -D -m 0644 "$SRC/modprobe.d/intel-oc-wdt-off.conf" /etc/modprobe.d/intel-oc-wdt-off.conf
 # the activity recorder keeps its day files only while its service runs; the
 # nightly rotate job alone does not start it at boot
 if systemctl cat atop.service >/dev/null 2>&1; then
