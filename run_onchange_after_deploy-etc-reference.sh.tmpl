@@ -12,6 +12,7 @@
 # 25-failover:        {{ include "dot_local/share/private_etc-reference/etc/NetworkManager/conf.d/encrypted_private_25-failover.conf.age" | sha256sum }}
 # 90-no-auto-default: {{ include "dot_local/share/private_etc-reference/etc/NetworkManager/conf.d/encrypted_private_90-no-auto-default-wan2.conf.age" | sha256sum }}
 # rt_tables wan2:     {{ include "dot_local/share/private_etc-reference/etc/iproute2/rt_tables.d/encrypted_private_wan2.conf.age" | sha256sum }}
+# wan1 name rule:     {{ include "dot_local/share/private_etc-reference/etc/systemd/network/encrypted_private_10-wan1.link.age" | sha256sum }}
 # wan2 name rule:     {{ include "dot_local/share/private_etc-reference/etc/systemd/network/encrypted_private_10-wan2.link.age" | sha256sum }}
 # huge-page rule:     {{ include "dot_local/share/private_etc-reference/etc/tmpfiles.d/encrypted_private_thp-madvise.conf.age" | sha256sum }}
 # tlp switch:         {{ include "dot_local/share/private_etc-reference/etc/tlp.d/encrypted_private_99-off.conf.age" | sha256sum }}
@@ -37,7 +38,7 @@ sudo install -m 0600 "$SRC/NetworkManager/system-connections/wan1.nmconnection" 
 sudo install -m 0644 "$SRC/NetworkManager/conf.d/25-failover.conf" \
 	"$SRC/NetworkManager/conf.d/90-no-auto-default-wan2.conf" /etc/NetworkManager/conf.d/
 sudo install -m 0644 "$SRC/iproute2/rt_tables.d/wan2.conf" /etc/iproute2/rt_tables.d/
-sudo install -m 0644 "$SRC/systemd/network/10-wan2.link" /etc/systemd/network/
+sudo install -m 0644 "$SRC/systemd/network/10-wan1.link" "$SRC/systemd/network/10-wan2.link" /etc/systemd/network/
 # the rule's line is marked boot-only; --boot applies it now as well
 sudo install -m 0644 "$SRC/tmpfiles.d/thp-madvise.conf" /etc/tmpfiles.d/
 sudo systemd-tmpfiles --create --boot /etc/tmpfiles.d/thp-madvise.conf
