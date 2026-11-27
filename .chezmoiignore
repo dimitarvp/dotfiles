@@ -57,6 +57,7 @@ scripts/research_browser_screen
 scripts/research_browser_paste
 {{ else }}
 .config/systemd/user/fleet-nats.service
+.config/systemd/user/fleet-nats.service.d
 .config/systemd/user/fleet-archive.service
 .config/systemd/user/fleet-archive.timer
 .config/nats
