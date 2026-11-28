@@ -4,27 +4,31 @@ Runs inside the research-browser container. Connects over CDP to the Chromium th
 started, opens the page in a new tab, waits out a bot challenge in front of it, and writes the
 HTML to OUTFILE and the visible text to OUTFILE.txt. A PDF or any other download (a manual, a
 zip, JSON served as a file) is saved as-is to OUTFILE. At most SLOTS fetches run at a time
-across every caller; a caller waits up to SLOT_WAIT seconds for a free slot.
+across every caller, and two fetches of one site (amazon.co.uk, emag.bg) run one after another.
+A caller waits up to SLOT_WAIT seconds in all: first for its site, then for a free slot.
 
 Exit codes, shared with the wrapper rfetch and the delegates' briefs:
   0 page read · 2 still behind a bot wall after WALL_WAIT seconds (files written anyway)
-  3 browser not listening · 4 no free slot within SLOT_WAIT seconds · 6 navigation failed
+  3 browser not listening · 4 no turn (site or slot busy) within SLOT_WAIT seconds · 6 navigation failed
 """
 
 import enum
+import ipaddress
 import os
 import re
 import sys
 import time
+from urllib.parse import urlsplit
 
 from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import sync_playwright
 
 CDP = "http://127.0.0.1:9222"
 SLOT_DIR = "/tmp/fetch-slots"
-SLOTS = 3
+SLOTS = 8
 SLOT_WAIT = 100
 SLOT_STALE = 300
+SLOT_POLL = 0.5  # seconds between tries for a busy lock
 WALL_WAIT = 90
 LOG = "/out/.fetch.log"  # one line per fetch with its outcome; the server keeps it across waves
 
@@ -65,39 +69,72 @@ class Outcome(enum.IntEnum):
     NAV_FAILED = 6
 
 
-class Slot:
-    """One of SLOTS directories under SLOT_DIR; holding one means running."""
+def site_key(url):
+    """The site a URL belongs to, as a name that is safe in a folder name: the host cut to its last two
+    labels (emag.bg), or three under a country's co/com/org/net/gov/edu/ac (amazon.co.uk). An IP address
+    or a one-label host stays whole. Never empty, never raises."""
+    try:
+        host = urlsplit(url).hostname or ""
+    except ValueError:
+        host = ""
+    try:
+        ipaddress.ip_address(host)
+        labels = [host]
+    except ValueError:
+        labels = [label for label in host.split(".") if label]
+        three = len(labels) > 2 and len(labels[-1]) == 2 and labels[-2] in ("co", "com", "org", "net", "gov", "edu", "ac")
+        labels = labels[-3 if three else -2 :]
+    return re.sub(r"[^a-z0-9._-]", "_", ".".join(labels))[:100] or "unknown"
 
-    def __init__(self):
-        self.path = None
+
+def take_first_free(names, deadline, busy_msg):
+    """Create the first folder of names that does not exist yet under SLOT_DIR and return its path. A folder
+    older than SLOT_STALE seconds was left by a reader that died, so it is removed first. Raises
+    TimeoutError(busy_msg) when none could be created by deadline."""
+    while True:
+        for name in names:
+            cand = os.path.join(SLOT_DIR, name)
+            try:
+                if time.time() - os.stat(cand).st_mtime > SLOT_STALE:
+                    os.rmdir(cand)
+            except OSError:
+                pass
+            try:
+                os.mkdir(cand)
+                return cand
+            except FileExistsError:
+                continue
+        if time.time() > deadline:
+            raise TimeoutError(busy_msg)
+        time.sleep(SLOT_POLL)
+
+
+class Turn:
+    """A read's place in line: its site's lock folder first, then one of the SLOTS pool folders, both
+    under SLOT_DIR; holding both means running. The site comes first so that a read waiting for its site
+    holds no pool slot. Both waits share one deadline of SLOT_WAIT seconds."""
+
+    def __init__(self, url):
+        self.site = site_key(url)
+        self.held = []
 
     def __enter__(self):
         os.makedirs(SLOT_DIR, exist_ok=True)
         deadline = time.time() + SLOT_WAIT
-        while True:
-            for i in range(1, SLOTS + 1):
-                cand = os.path.join(SLOT_DIR, str(i))
-                try:
-                    if time.time() - os.stat(cand).st_mtime > SLOT_STALE:
-                        os.rmdir(cand)
-                except FileNotFoundError:
-                    pass
-                except OSError:
-                    pass
-                try:
-                    os.mkdir(cand)
-                    self.path = cand
-                    return self
-                except FileExistsError:
-                    continue
-            if time.time() > deadline:
-                raise TimeoutError(f"all {SLOTS} fetch slots busy for {SLOT_WAIT} s; retry in a minute")
-            time.sleep(2)
+        try:
+            site_msg = f"site {self.site} busy with another read for {SLOT_WAIT} s; retry in a minute"
+            self.held.append(take_first_free(["site-" + self.site], deadline, site_msg))
+            slot_msg = f"all {SLOTS} fetch slots busy for {SLOT_WAIT} s; retry in a minute"
+            self.held.append(take_first_free([str(i) for i in range(1, SLOTS + 1)], deadline, slot_msg))
+        except BaseException:
+            self.__exit__()
+            raise
+        return self
 
     def __exit__(self, *exc):
-        if self.path:
+        while self.held:
             try:
-                os.rmdir(self.path)
+                os.rmdir(self.held.pop())
             except OSError:
                 pass
 
@@ -246,7 +283,7 @@ def main():
         return 64
     url, out = sys.argv[1], sys.argv[2]
     try:
-        with Slot():
+        with Turn(url):
             return int(fetch(url, out))
     except TimeoutError as e:
         print(f"fetch: {e}", file=sys.stderr)
