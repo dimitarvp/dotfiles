@@ -4,7 +4,7 @@
 # A headful Chromium in a container (compose file in ~/.config/research-browser), brought up for a
 # research wave and taken down after it. `fetch` reads one page from inside the container into
 # a tar stream on stdout holding NAME (and NAME.txt), its message on stderr; the exit code is fetch.py's:
-# 0 read, 2 bot wall, 3 browser not running, 4 no slot, 6 navigation failed. `shot` reads a tar of a page
+# 0 read, 2 bot wall, 3 browser not running, 4 no turn (every slot or the page's site is busy), 6 navigation failed. `shot` reads a tar of a page
 # folder on stdin and writes a tar of its screenshots (or their tiles) and report.json (shot.py's) to stdout:
 # 0 done, 1 bad usage or a tar member outside the folder, 3 container not running, 6 render failed.
 # Base tools only.
@@ -78,7 +78,7 @@ shot)
 	exit "$rc"
 	;;
 clean)
-	find "$data_dir/out" -mindepth 1 -maxdepth 1 ! -name '.fetch.log' -delete
+	find "$data_dir/out" -mindepth 1 -maxdepth 1 ! -name '.*' -delete
 	echo "research browser: fetched files removed"
 	;;
 *)
